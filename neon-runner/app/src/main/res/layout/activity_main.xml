@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.hamxanadeem.neonrunner.ui.RunnerView
+        android:id="@+id/runner"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/runner_description" />
+
+    <FrameLayout
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!-- Menu. -->
+        <LinearLayout
+            android:id="@+id/menuPanel"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingHorizontal="28dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/soundButton"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_round_button"
+                    android:contentDescription="@string/sound"
+                    android:src="@drawable/ic_volume_on" />
+
+                <ImageButton
+                    android:id="@+id/vibrationButton"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_round_button"
+                    android:contentDescription="@string/vibration"
+                    android:src="@drawable/ic_vibration" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/titleText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="40dp"
+                android:fontFamily="@font/orbitron_black"
+                android:gravity="center"
+                android:lineSpacingMultiplier="0.9"
+                android:shadowColor="#FF00E5FF"
+                android:shadowRadius="24"
+                android:text="@string/title"
+                android:textColor="#FFE0FCFF"
+                android:textSize="48sp" />
+
+            <TextView
+                android:id="@+id/statsText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_chip"
+                android:fontFamily="@font/orbitron_bold"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="6dp"
+                android:textColor="@color/neon_cyan"
+                android:textSize="13sp" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <com.hamxanadeem.neonrunner.ui.NeonButton
+                android:id="@+id/playButton"
+                style="@style/GameButton"
+                android:layout_width="match_parent"
+                android:layout_height="72dp"
+                android:text="@string/play"
+                android:textSize="26sp"
+                app:neonColor="@color/neon_cyan" />
+
+            <com.hamxanadeem.neonrunner.ui.NeonButton
+                android:id="@+id/skinsButton"
+                style="@style/GameButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="10dp"
+                android:text="@string/skins"
+                app:neonColor="@color/neon_magenta" />
+
+            <Button
+                android:id="@+id/privacyButton"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/privacy_settings"
+                android:textColor="#CCFFFFFF"
+                android:visibility="gone" />
+
+            <FrameLayout
+                android:id="@+id/bannerContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="8dp"
+                android:minHeight="50dp" />
+        </LinearLayout>
+
+        <!-- Pause button while running. -->
+        <com.hamxanadeem.neonrunner.ui.NeonButton
+            android:id="@+id/pauseButton"
+            style="@style/GameButton"
+            android:layout_width="56dp"
+            android:layout_height="52dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="10dp"
+            android:contentDescription="@string/pause"
+            android:text="II"
+            android:textSize="16sp"
+            android:visibility="gone"
+            app:neonColor="@color/neon_violet" />
+
+        <!-- First-run hint. -->
+        <TextView
+            android:id="@+id/hintText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_panel"
+            android:fontFamily="@font/orbitron_bold"
+            android:gravity="center"
+            android:lineSpacingExtra="6dp"
+            android:padding="20dp"
+            android:shadowColor="#FF00E5FF"
+            android:shadowRadius="8"
+            android:text="@string/hint"
+            android:textColor="#FFFFFFFF"
+            android:textSize="14sp"
+            android:visibility="gone" />
+
+        <!-- Pause. -->
+        <FrameLayout
+            android:id="@+id/pausePanel"
+            style="@style/Overlay">
+
+            <LinearLayout style="@style/Card">
+
+                <TextView
+                    style="@style/CardTitle"
+                    android:text="@string/paused" />
+
+                <com.hamxanadeem.neonrunner.ui.NeonButton
+                    android:id="@+id/resumeButton"
+                    style="@style/GameButton"
+                    android:layout_width="match_parent"
+                    android:layout_marginBottom="10dp"
+                    android:text="@string/resume"
+                    app:neonColor="@color/neon_cyan" />
+
+                <com.hamxanadeem.neonrunner.ui.NeonButton
+                    android:id="@+id/quitButton"
+                    style="@style/GameButton"
+                    android:layout_width="match_parent"
+                    android:text="@string/menu"
+                    app:neonColor="@color/neon_violet" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- Game over. -->
+        <FrameLayout
+            android:id="@+id/overPanel"
+            style="@style/Overlay">
+
+            <LinearLayout
+                android:id="@+id/overCard"
+                style="@style/Card">
+
+                <TextView
+                    android:id="@+id/overTitle"
+                    style="@style/CardTitle"
+                    android:text="@string/crashed" />
+
+                <TextView
+                    android:id="@+id/overScore"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/orbitron_black"
+                    android:shadowColor="#FF00E5FF"
+                    android:shadowRadius="16"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="52sp" />
+
+                <TextView
+                    android:id="@+id/overStats"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:fontFamily="@font/orbitron_bold"
+                    android:gravity="center"
+                    android:lineSpacingExtra="4dp"
+                    android:textColor="#CCFFFFFF"
+                    android:textSize="13sp" />
+
+                <com.hamxanadeem.neonrunner.ui.NeonButton
+                    android:id="@+id/reviveButton"
+                    style="@style/GameButton"
+                    android:layout_width="match_parent"
+                    android:layout_marginBottom="10dp"
+                    android:text="@string/revive"
+                    android:textSize="15sp"
+                    app:neonColor="@color/neon_lime" />
+
+                <com.hamxanadeem.neonrunner.ui.NeonButton
+                    android:id="@+id/againButton"
+                    style="@style/GameButton"
+                    android:layout_width="match_parent"
+                    android:layout_marginBottom="10dp"
+                    android:text="@string/play_again"
+                    app:neonColor="@color/neon_cyan" />
+
+                <com.hamxanadeem.neonrunner.ui.NeonButton
+                    android:id="@+id/menuButton"
+                    style="@style/GameButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:text="@string/menu"
+                    app:neonColor="@color/neon_violet" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- Skins. -->
+        <FrameLayout
+            android:id="@+id/skinsPanel"
+            style="@style/Overlay">
+
+            <LinearLayout style="@style/Card">
+
+                <TextView
+                    style="@style/CardTitle"
+                    android:text="@string/skins" />
+
+                <TextView
+                    android:id="@+id/skinsOrbs"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    android:fontFamily="@font/orbitron_bold"
+                    android:textColor="@color/neon_cyan"
+                    android:textSize="14sp" />
+
+                <LinearLayout
+                    android:id="@+id/skinList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+                <com.hamxanadeem.neonrunner.ui.NeonButton
+                    android:id="@+id/skinsClose"
+                    style="@style/GameButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/back"
+                    app:neonColor="@color/neon_violet" />
+            </LinearLayout>
+        </FrameLayout>
+    </FrameLayout>
+</FrameLayout>
