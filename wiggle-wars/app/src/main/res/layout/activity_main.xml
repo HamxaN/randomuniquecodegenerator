@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -66,45 +67,45 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
                 android:background="@drawable/bg_chip"
-                android:fontFamily="sans-serif-black"
+                android:fontFamily="@font/orbitron_black"
                 android:paddingHorizontal="14dp"
                 android:paddingVertical="5dp"
                 android:textColor="@color/gold"
                 android:textSize="14sp" />
 
-            <androidx.appcompat.widget.AppCompatButton
+            <com.hamxanadeem.wigglewars.ui.NeonButton
                 android:id="@+id/cpuButton"
                 style="@style/GameButton"
                 android:layout_width="match_parent"
                 android:layout_marginBottom="10dp"
-                android:background="@drawable/bg_button_play"
-                android:text="@string/vs_cpu" />
+                android:text="@string/vs_cpu"
+                app:neonColor="@color/neon_cyan" />
 
-            <androidx.appcompat.widget.AppCompatButton
+            <com.hamxanadeem.wigglewars.ui.NeonButton
                 android:id="@+id/localButton"
                 style="@style/GameButton"
                 android:layout_width="match_parent"
                 android:layout_marginBottom="10dp"
-                android:background="@drawable/bg_button_secondary"
-                android:text="@string/pass_and_play" />
+                android:text="@string/pass_and_play"
+                app:neonColor="@color/neon_violet" />
 
-            <androidx.appcompat.widget.AppCompatButton
+            <com.hamxanadeem.wigglewars.ui.NeonButton
                 android:id="@+id/onlineButton"
                 style="@style/GameButton"
                 android:layout_width="match_parent"
-                android:background="@drawable/bg_button_revive"
                 android:text="@string/play_online"
-                android:textSize="17sp" />
+                android:textSize="17sp"
+                app:neonColor="@color/neon_lime" />
 
-            <androidx.appcompat.widget.AppCompatButton
+            <com.hamxanadeem.wigglewars.ui.NeonButton
                 android:id="@+id/armoryButton"
                 style="@style/GameButton"
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
                 android:layout_marginTop="10dp"
-                android:background="@drawable/bg_button_secondary"
                 android:text="@string/armory"
-                android:textSize="16sp" />
+                android:textSize="16sp"
+                app:neonColor="@color/neon_violet" />
 
             <Button
                 android:id="@+id/privacyButton"
@@ -145,7 +146,7 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_horizontal"
                         android:layout_marginBottom="10dp"
-                        android:fontFamily="sans-serif-black"
+                        android:fontFamily="@font/orbitron_black"
                         android:shadowColor="#66000000"
                         android:shadowDy="2"
                         android:shadowRadius="2"
@@ -179,14 +180,14 @@
                                 android:layout_marginTop="10dp"
                                 android:text="@string/label_weapons" />
 
-                            <androidx.appcompat.widget.AppCompatButton
+                            <com.hamxanadeem.wigglewars.ui.NeonButton
                                 android:id="@+id/weaponSetButton"
                                 style="@style/GameButton"
                                 android:layout_width="match_parent"
                                 android:layout_height="56dp"
-                                android:background="@drawable/bg_button_secondary"
                                 android:lineSpacingMultiplier="0.9"
-                                android:textSize="14sp" />
+                                android:textSize="14sp"
+                                app:neonColor="@color/neon_violet" />
                         </LinearLayout>
 
                         <!-- Right: who's playing. -->
@@ -203,19 +204,21 @@
                             <LinearLayout
                                 style="@style/StepRow">
 
-                                <androidx.appcompat.widget.AppCompatButton
+                                <com.hamxanadeem.wigglewars.ui.NeonButton
                                     android:id="@+id/teamsMinus"
                                     style="@style/StepButton"
-                                    android:text="@string/minus" />
+                                    android:text="@string/minus"
+                                    app:neonColor="@color/neon_violet" />
 
                                 <TextView
                                     android:id="@+id/teamsText"
                                     style="@style/StepLabel" />
 
-                                <androidx.appcompat.widget.AppCompatButton
+                                <com.hamxanadeem.wigglewars.ui.NeonButton
                                     android:id="@+id/teamsPlus"
                                     style="@style/StepButton"
-                                    android:text="@string/plus" />
+                                    android:text="@string/plus"
+                                    app:neonColor="@color/neon_violet" />
                             </LinearLayout>
 
                             <TextView
@@ -226,38 +229,40 @@
                             <LinearLayout
                                 style="@style/StepRow">
 
-                                <androidx.appcompat.widget.AppCompatButton
+                                <com.hamxanadeem.wigglewars.ui.NeonButton
                                     android:id="@+id/wormsMinus"
                                     style="@style/StepButton"
-                                    android:text="@string/minus" />
+                                    android:text="@string/minus"
+                                    app:neonColor="@color/neon_violet" />
 
                                 <TextView
                                     android:id="@+id/wormsText"
                                     style="@style/StepLabel" />
 
-                                <androidx.appcompat.widget.AppCompatButton
+                                <com.hamxanadeem.wigglewars.ui.NeonButton
                                     android:id="@+id/wormsPlus"
                                     style="@style/StepButton"
-                                    android:text="@string/plus" />
+                                    android:text="@string/plus"
+                                    app:neonColor="@color/neon_violet" />
                             </LinearLayout>
 
-                            <androidx.appcompat.widget.AppCompatButton
+                            <com.hamxanadeem.wigglewars.ui.NeonButton
                                 android:id="@+id/difficultyButton"
                                 style="@style/GameButton"
                                 android:layout_width="match_parent"
                                 android:layout_height="50dp"
                                 android:layout_marginTop="10dp"
-                                android:background="@drawable/bg_button_secondary"
-                                android:textSize="15sp" />
+                                android:textSize="15sp"
+                                app:neonColor="@color/neon_violet" />
 
-                            <androidx.appcompat.widget.AppCompatButton
+                            <com.hamxanadeem.wigglewars.ui.NeonButton
                                 android:id="@+id/bananaButton"
                                 style="@style/GameButton"
                                 android:layout_width="match_parent"
                                 android:layout_height="50dp"
                                 android:layout_marginTop="8dp"
-                                android:background="@drawable/bg_button_revive"
-                                android:textSize="14sp" />
+                                android:textSize="14sp"
+                                app:neonColor="@color/neon_lime" />
                         </LinearLayout>
                     </LinearLayout>
 
@@ -268,24 +273,24 @@
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
-                        <androidx.appcompat.widget.AppCompatButton
+                        <com.hamxanadeem.wigglewars.ui.NeonButton
                             android:id="@+id/backButton"
                             style="@style/GameButton"
                             android:layout_width="120dp"
                             android:layout_height="58dp"
                             android:layout_marginEnd="12dp"
-                            android:background="@drawable/bg_button_secondary"
                             android:text="@string/back"
-                            android:textSize="17sp" />
+                            android:textSize="17sp"
+                            app:neonColor="@color/neon_violet" />
 
-                        <androidx.appcompat.widget.AppCompatButton
+                        <com.hamxanadeem.wigglewars.ui.NeonButton
                             android:id="@+id/startButton"
                             style="@style/GameButton"
                             android:layout_width="0dp"
                             android:layout_height="58dp"
                             android:layout_weight="1"
-                            android:background="@drawable/bg_button_play"
-                            android:text="@string/start" />
+                            android:text="@string/start"
+                            app:neonColor="@color/neon_cyan" />
                     </LinearLayout>
                 </LinearLayout>
             </FrameLayout>

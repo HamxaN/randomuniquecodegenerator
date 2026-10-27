@@ -1,7 +1,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <style name="Theme.WiggleWars" parent="Theme.Material3.Dark.NoActionBar">
         <item name="colorPrimary">@color/gold</item>
-        <item name="android:windowBackground">@color/sky</item>
+        <item name="android:windowBackground">@color/space</item>
         <item name="android:windowLightStatusBar">false</item>
         <!-- Draw behind the camera cutout too; screens pad their controls clear of it. -->
         <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="28">shortEdges</item>
@@ -9,11 +9,11 @@
 
     <style name="GameButton">
         <item name="android:layout_height">64dp</item>
-        <item name="android:fontFamily">sans-serif-black</item>
+        <item name="android:fontFamily">@font/orbitron_bold</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:textColor">#FFFFFFFF</item>
-        <item name="android:textSize">20sp</item>
-        <item name="android:paddingBottom">6dp</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:paddingBottom">0dp</item>
         <item name="android:shadowColor">#66000000</item>
         <item name="android:shadowDy">2</item>
         <item name="android:shadowRadius">3</item>
@@ -24,7 +24,7 @@
         <item name="android:layout_width">58dp</item>
         <item name="android:layout_height">58dp</item>
         <item name="android:background">@drawable/bg_control</item>
-        <item name="android:fontFamily">sans-serif-black</item>
+        <item name="android:fontFamily">@font/orbitron_bold</item>
         <item name="android:textColor">#FFFFFFFF</item>
         <item name="android:textSize">26sp</item>
         <item name="android:padding">0dp</item>
@@ -35,7 +35,7 @@
         <item name="android:layout_width">48dp</item>
         <item name="android:layout_height">48dp</item>
         <item name="android:background">@drawable/bg_button_secondary</item>
-        <item name="android:fontFamily">sans-serif-black</item>
+        <item name="android:fontFamily">@font/orbitron_bold</item>
         <item name="android:textColor">#FFFFFFFF</item>
         <item name="android:textSize">22sp</item>
         <item name="android:paddingBottom">6dp</item>
@@ -46,11 +46,11 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginBottom">4dp</item>
-        <item name="android:fontFamily">sans-serif-black</item>
+        <item name="android:fontFamily">@font/orbitron_bold</item>
         <item name="android:letterSpacing">0.08</item>
         <item name="android:textAllCaps">true</item>
-        <item name="android:textColor">@color/gold</item>
-        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">@color/neon_cyan</item>
+        <item name="android:textSize">10sp</item>
     </style>
 
     <style name="StepRow">
@@ -67,7 +67,7 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_weight">1</item>
         <item name="android:gravity">center</item>
-        <item name="android:fontFamily">sans-serif-black</item>
+        <item name="android:fontFamily">@font/orbitron_bold</item>
         <item name="android:textColor">#FFFFFFFF</item>
         <item name="android:textSize">15sp</item>
     </style>

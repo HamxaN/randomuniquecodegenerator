@@ -2,11 +2,9 @@ package com.hamxanadeem.wigglewars.ui
 
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.LinearGradient
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.RectF
-import android.graphics.Shader
-import android.graphics.Typeface
 import android.os.SystemClock
 import android.text.Layout
 import android.text.StaticLayout
@@ -49,10 +47,11 @@ class WeaponPickerView @JvmOverloads constructor(
 
     private val dp = resources.displayMetrics.density
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val black = Typeface.create("sans-serif-black", Typeface.NORMAL)
+    private val black = Neon.bold(context)
     private val text = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = black; color = 0xFFFFFFFF.toInt() }
     private val body = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFD7E3F4.toInt() }
     private val rect = RectF()
+    private val path = Path()
 
     // Layout, worked out in onSizeChanged / layoutParts.
     private val panel = RectF()
@@ -62,7 +61,6 @@ class WeaponPickerView @JvmOverloads constructor(
     private val tabRects = ArrayList<Pair<WeaponCategory?, RectF>>()
     private val tiles = ArrayList<Pair<Weapon, RectF>>()
     private var descLayout: StaticLayout? = null
-    private var panelShader: Shader? = null
 
     fun open(current: Weapon?) {
         equipped = current
@@ -83,17 +81,17 @@ class WeaponPickerView @JvmOverloads constructor(
         val pw = min(width - 24 * dp, 700 * dp)
         val ph = min(height - 20 * dp, 350 * dp)
         panel.set((width - pw) / 2, (height - ph) / 2, (width + pw) / 2, (height + ph) / 2)
-        panelShader = LinearGradient(0f, panel.top, 0f, panel.bottom, 0xFC243B5E.toInt(), 0xFC142338.toInt(), Shader.TileMode.CLAMP)
         val pad = 12 * dp
 
         // Tabs along the top, after the title.
         tabRects.clear()
-        text.textSize = 13 * dp
-        var x = panel.left + pad + 92 * dp
+        text.textSize = 18 * dp
+        var x = panel.left + 16 * dp + text.measureText(TITLE) + 14 * dp
+        text.textSize = 11 * dp
         val tabTop = panel.top + pad
         for (c in listOf<WeaponCategory?>(null) + WeaponCategory.entries) {
-            val label = c?.displayName ?: "All"
-            val w = text.measureText(label) + 22 * dp
+            val label = (c?.displayName ?: "All").uppercase()
+            val w = text.measureText(label) + 20 * dp
             tabRects += c to RectF(x, tabTop, x + w, tabTop + 30 * dp)
             x += w + 6 * dp
         }
@@ -142,18 +140,20 @@ class WeaponPickerView @JvmOverloads constructor(
         val save = canvas.save()
         canvas.scale(pop, pop, panel.centerX(), panel.centerY())
 
-        paint.shader = panelShader
-        canvas.drawRoundRect(panel, 22 * dp, 22 * dp, paint)
-        paint.shader = null
-        paint.style = Paint.Style.STROKE
-        paint.strokeWidth = 2 * dp
-        paint.color = 0x66FFFFFF
-        canvas.drawRoundRect(panel, 22 * dp, 22 * dp, paint)
-        paint.style = Paint.Style.FILL
+        Neon.panel(canvas, panel, Neon.CYAN, dp, path, paint, glass = 0xF50A1024.toInt())
+        // Faint scan lines across the glass.
+        paint.color = 0x0A00E5FF
+        var sy = panel.top + 4 * dp
+        while (sy < panel.bottom) {
+            canvas.drawRect(panel.left + 2 * dp, sy, panel.right - 2 * dp, sy + 1 * dp, paint)
+            sy += 4 * dp
+        }
 
-        text.textSize = 20 * dp
-        text.color = 0xFFFFD54F.toInt()
-        canvas.drawText("Armory", panel.left + 14 * dp, panel.top + 34 * dp, text)
+        text.textSize = 18 * dp
+        text.color = Neon.CYAN
+        text.setShadowLayer(8 * dp, 0f, 0f, Neon.CYAN)
+        canvas.drawText(TITLE, panel.left + 16 * dp, panel.top + 34 * dp, text)
+        text.clearShadowLayer()
 
         drawTabs(canvas)
         drawClose(canvas)
@@ -164,20 +164,32 @@ class WeaponPickerView @JvmOverloads constructor(
     }
 
     private fun drawTabs(canvas: Canvas) {
-        text.textSize = 13 * dp
+        text.textSize = 11 * dp
         for ((c, r) in tabRects) {
             val on = c == tab
-            paint.color = if (on) 0xFFFFB300.toInt() else 0x33FFFFFF
-            canvas.drawRoundRect(r, r.height() / 2, r.height() / 2, paint)
-            text.color = if (on) 0xFF3E2723.toInt() else 0xFFFFFFFF.toInt()
-            val label = c?.displayName ?: "All"
+            Neon.chamfer(path, r, 7 * dp)
+            paint.style = Paint.Style.FILL
+            paint.color = if (on) Neon.withAlpha(Neon.CYAN, 0x55) else 0x1A00E5FF
+            canvas.drawPath(path, paint)
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = 1.2f * dp
+            paint.color = if (on) Neon.CYAN else 0x5500E5FF
+            canvas.drawPath(path, paint)
+            paint.style = Paint.Style.FILL
+            text.color = if (on) 0xFFFFFFFF.toInt() else 0xFF9FD8E8.toInt()
+            val label = (c?.displayName ?: "All").uppercase()
             canvas.drawText(label, r.centerX() - text.measureText(label) / 2, r.centerY() + 4.5f * dp, text)
         }
     }
 
     private fun drawClose(canvas: Canvas) {
-        paint.color = 0x33FFFFFF
+        paint.color = 0x33FF2BD6
         canvas.drawCircle(closeButton.centerX(), closeButton.centerY(), closeButton.width() / 2, paint)
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = 1.2f * dp
+        paint.color = Neon.MAGENTA
+        canvas.drawCircle(closeButton.centerX(), closeButton.centerY(), closeButton.width() / 2, paint)
+        paint.style = Paint.Style.FILL
         paint.color = 0xFFFFFFFF.toInt()
         paint.strokeWidth = 2.5f * dp
         paint.strokeCap = Paint.Cap.ROUND
@@ -189,18 +201,18 @@ class WeaponPickerView @JvmOverloads constructor(
     private fun drawTile(canvas: Canvas, weapon: Weapon, r: RectF) {
         val ammo = ammoOf(weapon)
         val empty = ammo == 0
-        val radius = 14 * dp
-        paint.color = when {
-            weapon == focus -> 0xFF3D6FA8.toInt()
-            else -> 0xFF2A4469.toInt()
-        }
-        canvas.drawRoundRect(r, radius, radius, paint)
+        Neon.chamfer(path, r, 12 * dp)
+        paint.style = Paint.Style.FILL
+        paint.color = if (weapon == focus) 0xFF16305A.toInt() else 0xFF0E1A38.toInt()
+        canvas.drawPath(path, paint)
         // Soft highlight on the top half.
-        rect.set(r.left, r.top, r.right, r.centerY())
-        paint.color = 0x14FFFFFF
-        canvas.drawRoundRect(rect, radius, radius, paint)
-        if (weapon == equipped) ring(canvas, r, 0xFFFFC107.toInt(), 3 * dp)
-        if (weapon == focus) ring(canvas, r, 0xFFFFFFFF.toInt(), 2 * dp)
+        paint.color = 0x0FFFFFFF
+        canvas.drawRect(r.left + 12 * dp, r.top + 2 * dp, r.right - 2 * dp, r.centerY(), paint)
+        when {
+            weapon == equipped -> ring(canvas, Neon.LIME, 2.5f * dp, glow = true)
+            weapon == focus -> ring(canvas, Neon.CYAN, 2 * dp, glow = true)
+            else -> ring(canvas, 0x4400E5FF, 1 * dp, glow = false)
+        }
 
         val iconSize = r.width() * 0.72f
         if (empty) {
@@ -217,41 +229,47 @@ class WeaponPickerView @JvmOverloads constructor(
         val bw = text.measureText(label) + 10 * dp
         rect.set(r.right - bw - 4 * dp, r.bottom - 20 * dp, r.right - 4 * dp, r.bottom - 4 * dp)
         paint.color = when {
-            empty -> 0xCC5D4037.toInt()
-            ammo < 0 -> 0xCC1B5E20.toInt()
-            else -> 0xCCE65100.toInt()
+            empty -> 0xCC3A2A40.toInt()
+            ammo < 0 -> Neon.withAlpha(Neon.LIME, 0x66)
+            else -> Neon.withAlpha(Neon.MAGENTA, 0x77)
         }
-        canvas.drawRoundRect(rect, 8 * dp, 8 * dp, paint)
+        canvas.drawRect(rect, paint)
         text.color = 0xFFFFFFFF.toInt()
         canvas.drawText(label, rect.centerX() - text.measureText(label) / 2, rect.centerY() + 4 * dp, text)
     }
 
-    private fun ring(canvas: Canvas, r: RectF, color: Int, width: Float) {
+    /** Outlines the tile whose shape is in [path]. */
+    private fun ring(canvas: Canvas, color: Int, width: Float, glow: Boolean) {
         paint.style = Paint.Style.STROKE
         paint.strokeWidth = width
         paint.color = color
-        rect.set(r.left + width / 2, r.top + width / 2, r.right - width / 2, r.bottom - width / 2)
-        canvas.drawRoundRect(rect, 13 * dp, 13 * dp, paint)
+        if (glow) paint.setShadowLayer(7 * dp, 0f, 0f, color)
+        canvas.drawPath(path, paint)
+        paint.clearShadowLayer()
         paint.style = Paint.Style.FILL
     }
 
     private fun drawInfo(canvas: Canvas) {
-        paint.color = 0x33000000
-        canvas.drawRoundRect(info, 16 * dp, 16 * dp, paint)
+        Neon.panel(canvas, info, Neon.MAGENTA, dp, path, paint, glass = 0x66000814, glow = false)
         val left = info.left + 10 * dp
         var y = info.top + 8 * dp
 
         // Icon and name.
         val icon = 50 * dp
-        paint.color = 0x22FFFFFF
+        paint.color = 0x2200E5FF
         canvas.drawCircle(left + icon / 2, y + icon / 2, icon / 2, paint)
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = 1 * dp
+        paint.color = 0x8800E5FF.toInt()
+        canvas.drawCircle(left + icon / 2, y + icon / 2, icon / 2, paint)
+        paint.style = Paint.Style.FILL
         WeaponIcons.draw(canvas, focus, left + icon / 2, y + icon / 2, icon * 0.86f)
         text.textSize = 17 * dp
         text.color = 0xFFFFFFFF.toInt()
         val nameX = left + icon + 8 * dp
         fitText(canvas, focus.displayName, nameX, y + 22 * dp, info.right - 8 * dp - nameX)
-        text.textSize = 11 * dp
-        text.color = 0xFFFFD54F.toInt()
+        text.textSize = 9.5f * dp
+        text.color = Neon.CYAN
         val ammo = ammoOf(focus)
         val ammoText = when {
             ammo < 0 -> "Unlimited"
@@ -273,15 +291,15 @@ class WeaponPickerView @JvmOverloads constructor(
         val bars = listOf("Power" to focus.power, "Blast" to focus.blast, "Range" to focus.range)
         if (y + bars.size * 16 * dp + 22 * dp < equipButton.top) {
             for ((label, value) in bars) {
-                text.textSize = 10 * dp
-                text.color = 0xFFB0C4DE.toInt()
-                canvas.drawText(label, left, y + 9 * dp, text)
-                val barLeft = left + 46 * dp
+                text.textSize = 8.5f * dp
+                text.color = 0xFF9FD8E8.toInt()
+                canvas.drawText(label.uppercase(), left, y + 9 * dp, text)
+                val barLeft = left + 52 * dp
                 val seg = (info.right - 10 * dp - barLeft - 4 * 3 * dp) / 5
                 for (i in 0 until 5) {
                     rect.set(barLeft + i * (seg + 3 * dp), y + 1 * dp, barLeft + i * (seg + 3 * dp) + seg, y + 10 * dp)
                     paint.color = if (i < value) BAR_COLORS[i] else 0x26FFFFFF
-                    canvas.drawRoundRect(rect, 3 * dp, 3 * dp, paint)
+                    canvas.drawRect(rect, paint)
                 }
                 y += 16 * dp
             }
@@ -292,23 +310,20 @@ class WeaponPickerView @JvmOverloads constructor(
 
         // Equip button.
         val can = browseOnly || ammo != 0
-        paint.color = when {
-            !can -> 0xFF455A64.toInt()
-            browseOnly -> 0xFF1E88E5.toInt()
-            focus == equipped -> 0xFF2E7D32.toInt()
-            else -> 0xFFF57C00.toInt()
+        val accent = when {
+            !can -> 0xFF5A6478.toInt()
+            browseOnly -> Neon.CYAN
+            focus == equipped -> Neon.LIME
+            else -> Neon.MAGENTA
         }
-        canvas.drawRoundRect(equipButton, 14 * dp, 14 * dp, paint)
-        paint.color = 0x22FFFFFF
-        rect.set(equipButton.left, equipButton.top, equipButton.right, equipButton.centerY())
-        canvas.drawRoundRect(rect, 14 * dp, 14 * dp, paint)
+        Neon.panel(canvas, equipButton, accent, dp, path, paint, glass = TerrainArt.mix(Neon.GLASS, accent, 0.3f), glow = can)
         val label = when {
-            browseOnly -> "Got it"
-            ammo == 0 -> "No ammo"
-            focus == equipped -> "✓ Equipped"
-            else -> "Equip"
+            browseOnly -> "GOT IT"
+            ammo == 0 -> "NO AMMO"
+            focus == equipped -> "✓ EQUIPPED"
+            else -> "EQUIP"
         }
-        text.textSize = 17 * dp
+        text.textSize = 14 * dp
         text.color = 0xFFFFFFFF.toInt()
         canvas.drawText(label, equipButton.centerX() - text.measureText(label) / 2, equipButton.centerY() + 6 * dp, text)
     }
@@ -381,6 +396,7 @@ class WeaponPickerView @JvmOverloads constructor(
     override fun performClick(): Boolean = super.performClick()
 
     private companion object {
-        val BAR_COLORS = intArrayOf(0xFF66BB6A.toInt(), 0xFF9CCC65.toInt(), 0xFFFFEE58.toInt(), 0xFFFFA726.toInt(), 0xFFEF5350.toInt())
+        const val TITLE = "ARMORY"
+        val BAR_COLORS = intArrayOf(Neon.CYAN, 0xFF4FC3FF.toInt(), Neon.VIOLET, 0xFFC46CFF.toInt(), Neon.MAGENTA)
     }
 }
