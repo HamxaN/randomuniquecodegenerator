@@ -1,0 +1,93 @@
+name: Release Screw Puzzle to Google Play
+
+on:
+  push:
+    tags: ['screw-v*']
+  workflow_dispatch:
+    inputs:
+      track:
+        description: 'Play track: internal, alpha (closed), beta (open) or production'
+        default: internal
+        required: true
+      status:
+        description: 'Release status: draft (roll out by hand in Play Console) or completed'
+        default: draft
+        required: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # Each app has its own AdMob IDs and signing key, so its secrets are prefixed.
+      KEYSTORE_BASE64: ${{ secrets.SCREW_KEYSTORE_BASE64 }}
+      KEYSTORE_PASSWORD: ${{ secrets.SCREW_KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.SCREW_KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.SCREW_KEY_PASSWORD }}
+      ADMOB_APP_ID: ${{ secrets.SCREW_ADMOB_APP_ID }}
+      ADMOB_BANNER_ID: ${{ secrets.SCREW_ADMOB_BANNER_ID }}
+      ADMOB_INTERSTITIAL_ID: ${{ secrets.SCREW_ADMOB_INTERSTITIAL_ID }}
+      ADMOB_REWARDED_ID: ${{ secrets.SCREW_ADMOB_REWARDED_ID }}
+      PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Check required secrets
+        run: |
+          missing=0
+          for name in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD \
+                      ADMOB_APP_ID ADMOB_BANNER_ID ADMOB_INTERSTITIAL_ID ADMOB_REWARDED_ID \
+                      PLAY_SERVICE_ACCOUNT_JSON; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing secret for $name (see screw-puzzle/docs/PLAY_STORE_RELEASE.md)"
+              missing=1
+            fi
+          done
+          exit $missing
+
+      - name: Decode signing key
+        run: echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/screw-puzzle.jks"
+
+      - name: Work out version
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/screw-v* ]]; then
+            name="${GITHUB_REF_NAME#screw-v}"
+          else
+            name="1.0.${GITHUB_RUN_NUMBER}"
+          fi
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          # Play needs a higher version code for every upload.
+          echo "code=$((1000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_OUTPUT"
+
+      - name: Test and build signed bundle
+        env:
+          KEYSTORE_PATH: ${{ runner.temp }}/screw-puzzle.jks
+          VERSION_NAME: ${{ steps.version.outputs.name }}
+          VERSION_CODE: ${{ steps.version.outputs.code }}
+        run: ./gradlew -p screw-puzzle coreTest :app:lintRelease :app:bundleRelease --stacktrace
+
+      - name: Upload bundle as a build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: screw-puzzle-${{ steps.version.outputs.name }}
+          path: |
+            screw-puzzle/app/build/outputs/bundle/release/app-release.aab
+            screw-puzzle/app/build/outputs/mapping/release/mapping.txt
+
+      - name: Upload to Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.hamxanadeem.screwpuzzle
+          releaseFiles: screw-puzzle/app/build/outputs/bundle/release/app-release.aab
+          mappingFile: screw-puzzle/app/build/outputs/mapping/release/mapping.txt
+          track: ${{ inputs.track || 'internal' }}
+          status: ${{ inputs.status || 'draft' }}

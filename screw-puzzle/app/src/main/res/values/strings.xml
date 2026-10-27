@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">Screw Puzzle</string>
+    <string name="tagline">Unscrew · Sort · Drop</string>
+    <string name="play_level">PLAY · LEVEL %1$d</string>
+    <string name="level_format">Level %1$d</string>
+    <string name="coins_format">🪙 %1$d</string>
+    <string name="sound">Sound</string>
+    <string name="vibration">Vibration</string>
+    <string name="home">Home</string>
+    <string name="restart">Restart</string>
+    <string name="privacy_settings">Privacy settings</string>
+    <string name="won_title">Level complete!</string>
+    <string name="won_coins">+%1$d coins</string>
+    <string name="double_coins">▶  Double coins (watch ad)</string>
+    <string name="next_level">Next level</string>
+    <string name="stuck_title">Out of space!</string>
+    <string name="stuck_message">The tray is full. Get an extra slot or try again.</string>
+    <string name="extra_slot">▶  +1 tray slot (watch ad)</string>
+    <string name="retry">Try again</string>
+    <string name="extra_slot_used">Extra slot already used on this level</string>
+    <string name="no_ad">No ad available right now, try again in a moment</string>
+    <string name="puzzle_description">Puzzle board. Tap screws that are not covered by a plate to remove them.</string>
+</resources>

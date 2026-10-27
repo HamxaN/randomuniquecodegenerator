@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/wood"
+    android:fitsSystemWindows="true">
+
+    <com.hamxanadeem.screwpuzzle.ui.PuzzleView
+        android:id="@+id/puzzleView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/puzzle_description" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="12dp">
+
+        <ImageButton
+            android:id="@+id/homeButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_round_dark"
+            android:contentDescription="@string/home"
+            android:src="@drawable/ic_home" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/levelText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-black"
+                android:textColor="#FFFFFFFF"
+                android:textSize="22sp" />
+
+            <TextView
+                android:id="@+id/coinsText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-black"
+                android:textColor="@color/gold"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/restartButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_round_dark"
+            android:contentDescription="@string/restart"
+            android:src="@drawable/ic_refresh" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/wonOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/scrim"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_panel"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-black"
+                android:text="@string/won_title"
+                android:textColor="#FFFFFFFF"
+                android:textSize="28sp" />
+
+            <TextView
+                android:id="@+id/wonCoinsText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="16dp"
+                android:fontFamily="sans-serif-black"
+                android:textColor="@color/gold"
+                android:textSize="30sp" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/doubleButton"
+                style="@style/GameButton"
+                android:layout_width="match_parent"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/bg_button_revive"
+                android:text="@string/double_coins"
+                android:textSize="17sp" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/nextButton"
+                style="@style/GameButton"
+                android:layout_width="match_parent"
+                android:background="@drawable/bg_button_play"
+                android:text="@string/next_level" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/stuckOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/scrim"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_panel"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-black"
+                android:text="@string/stuck_title"
+                android:textColor="#FFFFFFFF"
+                android:textSize="28sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="14dp"
+                android:gravity="center"
+                android:text="@string/stuck_message"
+                android:textColor="@color/text_soft"
+                android:textSize="15sp" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/extraSlotButton"
+                style="@style/GameButton"
+                android:layout_width="match_parent"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/bg_button_revive"
+                android:text="@string/extra_slot"
+                android:textSize="17sp" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/retryButton"
+                style="@style/GameButton"
+                android:layout_width="match_parent"
+                android:background="@drawable/bg_button_play"
+                android:text="@string/retry" />
+        </LinearLayout>
+    </FrameLayout>
+</FrameLayout>
