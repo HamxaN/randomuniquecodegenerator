@@ -157,6 +157,46 @@
                     android:textColor="#FFFFFFFF"
                     android:textSize="17sp" />
 
+                <TextView
+                    android:id="@+id/rulesText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:gravity="center"
+                    android:textColor="@color/gold"
+                    android:textSize="14sp" />
+
+                <LinearLayout
+                    android:id="@+id/hostOptions"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:orientation="horizontal">
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/onlineArenaButton"
+                        style="@style/GameButton"
+                        android:layout_width="0dp"
+                        android:layout_height="46dp"
+                        android:layout_marginEnd="6dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_button_secondary"
+                        android:maxLines="1"
+                        android:text="@string/change_arena"
+                        android:textSize="13sp" />
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/onlineWeaponsButton"
+                        style="@style/GameButton"
+                        android:layout_width="0dp"
+                        android:layout_height="46dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_button_secondary"
+                        android:maxLines="1"
+                        android:text="@string/change_weapons"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
                 <LinearLayout
                     android:id="@+id/hostControls"
                     android:layout_width="match_parent"

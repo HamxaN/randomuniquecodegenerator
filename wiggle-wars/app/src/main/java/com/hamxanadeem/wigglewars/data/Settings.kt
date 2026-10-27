@@ -20,6 +20,15 @@ class Settings(context: Context) {
         get() = prefs.getInt("rounds_played", 0)
         set(value) = prefs.edit { putInt("rounds_played", value) }
 
+    /** Last arena picked in the setup screen; empty for random. */
+    var arena: String
+        get() = prefs.getString("arena", "") ?: ""
+        set(value) = prefs.edit { putString("arena", value) }
+
+    var weaponSet: String
+        get() = prefs.getString("weapon_set", "") ?: ""
+        set(value) = prefs.edit { putString("weapon_set", value) }
+
     var roundsSinceInterstitial: Int
         get() = prefs.getInt("rounds_since_interstitial", 0)
         set(value) = prefs.edit { putInt("rounds_since_interstitial", value) }

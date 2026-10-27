@@ -23,7 +23,11 @@ sealed interface GameEvent {
     data class BatSwing(val worm: Int, val hit: Boolean) : GameEvent
     data class CrateDropped(val crate: Crate) : GameEvent
     data class CrateCollected(val crate: Crate, val worm: Int) : GameEvent
+    /** New land was added (a girder), so the renderer must paint it. */
+    data class Built(val area: Area) : GameEvent
     data object TimeUp : GameEvent
+    /** Sudden death: the sea rose to [level]. [first] is true the first time. */
+    data class WaterRose(val level: Int, val first: Boolean) : GameEvent
     data class GameOver(val winner: Int?) : GameEvent
 }
 
@@ -48,6 +52,8 @@ data class MatchConfig(
     val difficulty: Difficulty = Difficulty.NORMAL,
     /** Extra Banana Bombs for human teams (a rewarded-ad bonus). */
     val bonusBananas: Int = 0,
+    val arena: Arena = Arena.HILLS,
+    val weaponSet: WeaponSet = WeaponSet.STANDARD,
 ) {
     init {
         require(teams.size in 2..4) { "2 to 4 teams" }
@@ -76,6 +82,14 @@ class Projectile(
     var age = 0.0
     var resting = false
     var gone = false
+    /** Walkers only: which way it's heading, whether it's standing, and failed hops in a row. */
+    var dir = if (vx < 0) -1 else 1
+    internal var grounded = false
+    internal var stuck = 0
+
+    /** Mines that have settled don't hold up the turn or the camera. */
+    val idle: Boolean get() = spec.mine && resting
+    val armed: Boolean get() = spec.mine && age >= Weapon.MINE_ARM_SECONDS
 }
 
 /**
@@ -85,7 +99,10 @@ class Projectile(
 class Match(val config: MatchConfig) {
 
     private val random = Random(config.seed)
-    val terrain: Terrain = Terrain.generate(config.seed)
+    val terrain: Terrain = Terrain.generate(config.seed, config.arena)
+    val arena: Arena get() = config.arena
+    private val gravity = GRAVITY * config.arena.gravity
+    private val fallSafe = FALL_SAFE / config.arena.gravity
     val teams: List<Team>
     val worms: List<Worm>
     val projectiles = ArrayList<Projectile>()
@@ -139,7 +156,8 @@ class Match(val config: MatchConfig) {
         ammo = Array(teams.size) { t ->
             IntArray(Weapon.entries.size) { w ->
                 val weapon = Weapon.entries[w]
-                if (weapon == Weapon.BANANA && !teams[t].cpu) config.bonusBananas else weapon.startAmmo
+                val base = config.weaponSet.ammo(weapon)
+                if (weapon == Weapon.BANANA && !teams[t].cpu && base >= 0) base + config.bonusBananas else base
             }
         }
         wormCursor = IntArray(teams.size) { -1 }
@@ -150,7 +168,10 @@ class Match(val config: MatchConfig) {
     private fun findSpawn(taken: List<Pair<Double, Double>>): Pair<Double, Double> {
         repeat(800) { attempt ->
             val x = terrain.width * (0.12 + random.nextDouble() * 0.76)
-            val ground = terrain.groundBelow(x.toInt()) ?: return@repeat
+            // Any level with room to stand: hilltops, cave floors, castle halls.
+            val levels = terrain.surfaces(x.toInt())
+            if (levels.isEmpty()) return@repeat
+            val ground = levels[random.nextInt(levels.size)]
             val y = ground - Worm.RADIUS - 1.0
             val minGap = if (attempt < 500) 90.0 else 30.0
             if (y > 30 && !collides(x, y) && taken.none { hypot(it.first - x, it.second - y) < minGap }) return x to y
@@ -224,8 +245,20 @@ class Match(val config: MatchConfig) {
                 val sy = w.y + w.aimY * (Worm.RADIUS + 6)
                 spawn(sx, sy, w.aimX * weapon.launchSpeed * p, w.aimY * weapon.launchSpeed * p, weapon.spec!!, w.id, weapon)
             }
-            FireMode.DROP -> spawn(w.x + w.facing * 6, w.y, w.facing * 20.0, -40.0, weapon.spec!!, w.id, weapon)
-            FireMode.INSTANT -> if (weapon == Weapon.SHOTGUN) shotgun(w) else bat(w)
+            FireMode.DROP -> when (weapon) {
+                Weapon.MINE -> spawn(w.x + w.facing * 8, w.y - 4, w.facing * 90.0, -110.0, weapon.spec!!, w.id, weapon)
+                Weapon.SHEEP -> spawn(w.x + w.facing * 10, w.y - 2, w.facing * Weapon.SHEEP_SPEED, 0.0, weapon.spec!!, w.id, weapon)
+                else -> spawn(w.x + w.facing * 6, w.y, w.facing * 20.0, -40.0, weapon.spec!!, w.id, weapon)
+            }
+            FireMode.INSTANT -> when (weapon) {
+                Weapon.SHOTGUN -> hitscan(w, w.aimX, w.aimY, Weapon.SHOTGUN_RANGE, Weapon.SHOTGUN_DAMAGE, 160.0, 12.0, 8)
+                Weapon.SNIPER -> hitscan(w, w.aimX, w.aimY, Weapon.SNIPER_RANGE, Weapon.SNIPER_DAMAGE, 130.0, 8.0, 6)
+                Weapon.UZI -> for (spread in UZI_SPREAD) {
+                    val a = w.aim + spread
+                    hitscan(w, cos(a) * w.facing, sin(a), Weapon.UZI_RANGE, Weapon.UZI_DAMAGE, 75.0, 6.0, 2)
+                }
+                else -> bat(w)
+            }
             FireMode.TARGET -> Unit
         }
         startRetreat()
@@ -261,6 +294,19 @@ class Match(val config: MatchConfig) {
                 }
                 startRetreat()
             }
+            Weapon.GIRDER -> {
+                val left = (x - Weapon.GIRDER_LENGTH / 2.0).toInt()
+                val top = (y - Weapon.GIRDER_THICKNESS / 2.0).toInt()
+                val right = left + Weapon.GIRDER_LENGTH - 1
+                val bottom = top + Weapon.GIRDER_THICKNESS - 1
+                if (left < 0 || right >= terrain.width || top < 10 || bottom > terrain.waterY - 4) return false
+                val pad = Worm.RADIUS + 1
+                if (worms.any { it.alive && it.x > left - pad && it.x < right + pad && it.y > top - pad && it.y < bottom + pad }) return false
+                useAmmo(weapon)
+                events += GameEvent.Fired(w.id, weapon)
+                terrain.fillRect(left, top, right, bottom)?.let { events += GameEvent.Built(it) }
+                // Building doesn't use up the turn.
+            }
             else -> return false
         }
         return true
@@ -273,8 +319,12 @@ class Match(val config: MatchConfig) {
     private fun useAmmo(weapon: Weapon) {
         val a = ammo[currentTeam]
         if (a[weapon.ordinal] > 0) a[weapon.ordinal]--
-        if (!hasAmmo(selected)) selected = Weapon.BAZOOKA
+        if (!hasAmmo(selected)) selected = fallbackWeapon()
     }
+
+    /** The weapon to hold when the chosen one runs out. Every weapon set has an unlimited one. */
+    fun fallbackWeapon(team: Int = currentTeam): Weapon =
+        FALLBACKS.firstOrNull { hasAmmo(it, team) } ?: Weapon.entries.firstOrNull { hasAmmo(it, team) } ?: Weapon.BAZOOKA
 
     private fun startRetreat() {
         phase = Phase.RETREAT
@@ -348,7 +398,7 @@ class Match(val config: MatchConfig) {
     }
 
     private fun settle() {
-        val calm = projectiles.isEmpty() && worms.all { !it.alive || it.onGround } && crates.all { it.gone || it.landed }
+        val calm = projectiles.all { it.idle } && worms.all { !it.alive || it.onGround } && crates.all { it.gone || it.landed }
         if (!calm) {
             settleTime = 0.0
             return
@@ -386,11 +436,18 @@ class Match(val config: MatchConfig) {
         wormCursor[currentTeam] = cursor
         activeWormId = team.worms[cursor].id
         turnNumber++
-        wind = (random.nextDouble() * 2 - 1).let { it * abs(it) } // more calm days than storms
+        // Sudden death: after enough rounds the sea creeps up every turn, so every match ends.
+        if (turnNumber > SUDDEN_DEATH_ROUNDS * teams.size) {
+            val first = terrain.waterY == terrain.height - Terrain.WATER_DEPTH
+            terrain.waterY = max(MIN_WATER_Y, terrain.waterY - WATER_RISE)
+            events += GameEvent.WaterRose(terrain.waterY, first)
+        }
+        wind = (random.nextDouble() * 2 - 1).let { it * abs(it) } * arena.windScale // more calm days than storms
+        wind = wind.coerceIn(-1.0, 1.0)
         turnTimeLeft = TURN_SECONDS
         phase = Phase.AIM
         walkDir = 0
-        if (!hasAmmo(selected)) selected = Weapon.BAZOOKA
+        if (!hasAmmo(selected)) selected = fallbackWeapon()
         events += GameEvent.TurnStarted(currentTeam, activeWormId, wind)
         if (!first && random.nextDouble() < CRATE_CHANCE) dropCrate()
     }
@@ -398,8 +455,16 @@ class Match(val config: MatchConfig) {
     private fun dropCrate() {
         val x = terrain.width * (0.15 + random.nextDouble() * 0.7)
         val kind = if (random.nextBoolean()) CrateKind.HEALTH else CrateKind.WEAPON
-        val weapon = if (kind == CrateKind.WEAPON) listOf(Weapon.CLUSTER, Weapon.DYNAMITE, Weapon.AIRSTRIKE, Weapon.BANANA, Weapon.BAT).random(random) else null
-        val crate = Crate(nextId++, kind, weapon, x, -30.0)
+        val weapon = if (kind == CrateKind.WEAPON) CRATE_WEAPONS.random(random) else null
+        // Under a roof, crates appear just below the rock instead of falling from the sky.
+        val y = if (arena.roof) {
+            val levels = terrain.surfaces(x.toInt(), clearance = 40)
+            if (levels.isEmpty()) return
+            levels[random.nextInt(levels.size)] - 40.0
+        } else {
+            -30.0
+        }
+        val crate = Crate(nextId++, kind, weapon, x, y)
         crates += crate
         events += GameEvent.CrateDropped(crate)
     }
@@ -473,7 +538,7 @@ class Match(val config: MatchConfig) {
                 return
             }
         }
-        w.vy = min(w.vy + GRAVITY * STEP, MAX_FALL)
+        w.vy = min(w.vy + gravity * STEP, MAX_FALL)
         val startX = w.x
         val startY = w.y
         val speed = hypot(w.vx, w.vy)
@@ -525,7 +590,7 @@ class Match(val config: MatchConfig) {
                 lift++
             }
             val fall = w.y - w.fallStartY
-            if (fall > FALL_SAFE) damage(w, min(FALL_MAX_DAMAGE, ((fall - FALL_SAFE) / 6).toInt() + 1))
+            if (fall > fallSafe) damage(w, min(FALL_MAX_DAMAGE, ((fall - fallSafe) / 6).toInt() + 1))
             return
         }
         if (normal == null) {
@@ -579,7 +644,12 @@ class Match(val config: MatchConfig) {
     private fun stepProjectiles() {
         if (projectiles.isEmpty()) return
         for (p in ArrayList(projectiles)) {
-            when (advance(p, STEP, wind)) {
+            val outcome = if (p.armed && worms.any { it.alive && hypot(it.x - p.x, it.y - p.y) < Weapon.MINE_TRIGGER + Worm.RADIUS }) {
+                Outcome.EXPLODE
+            } else {
+                advance(p, STEP, wind)
+            }
+            when (outcome) {
                 Outcome.EXPLODE -> {
                     p.gone = true
                     explode(p.x, p.y, p.spec.explosionRadius, p.spec.damage, ownerTeam = worms[p.owner].team)
@@ -614,9 +684,10 @@ class Match(val config: MatchConfig) {
             p.fuse = left
             if (left <= 0) return Outcome.EXPLODE
         }
+        if (p.spec.walker) return walk(p, dt)
         if (!p.resting) {
             p.vx += wind * WIND_ACCEL * p.spec.windFactor * dt
-            p.vy += GRAVITY * dt
+            p.vy += gravity * dt
         }
         var outcome = Outcome.NONE
         val speed = hypot(p.vx, p.vy)
@@ -648,7 +719,7 @@ class Match(val config: MatchConfig) {
                     p.vx = -p.vx * p.spec.bounce
                     p.vy = -p.vy * p.spec.bounce
                 }
-                if (hypot(p.vx, p.vy) < 18 && normal != null && normal.second < -0.3) {
+                if ((hypot(p.vx, p.vy) < 18 && normal != null && normal.second < -0.3) || (p.spec.mine && hypot(p.vx, p.vy) < 30)) {
                     p.vx = 0.0
                     p.vy = 0.0
                     p.resting = true
@@ -664,6 +735,45 @@ class Match(val config: MatchConfig) {
         if (p.y > terrain.waterY) return Outcome.SPLASH
         if (p.x < -400 || p.x > terrain.width + 400 || p.y > terrain.height) return Outcome.GONE
         return outcome
+    }
+
+    /** One step of a walking bomb: fall, waddle forward, hop over bumps, turn back at walls. */
+    private fun walk(p: Projectile, dt: Double): Outcome {
+        val r = p.spec.radius
+        if (worms.any { it.alive && (it.id != p.owner || p.age > 1.0) && hypot(it.x - p.x, it.y - p.y) < Worm.RADIUS + r + 2 }) return Outcome.EXPLODE
+        p.vy = min(p.vy + gravity * dt, MAX_FALL)
+        val dy = p.vy * dt
+        if (!projectileCollides(p.x, p.y + dy, r)) {
+            p.y += dy
+            p.grounded = false
+        } else {
+            if (p.vy > 0) p.grounded = true
+            p.vy = 0.0
+        }
+        val dx = p.dir * Weapon.SHEEP_SPEED * dt
+        var moved = false
+        for (up in 0..5) {
+            if (!projectileCollides(p.x + dx, p.y - up, r)) {
+                p.x += dx
+                p.y -= up
+                moved = true
+                break
+            }
+        }
+        if (moved) {
+            if (p.grounded) p.stuck = 0
+        } else if (p.grounded) {
+            p.vy = -SHEEP_HOP
+            p.grounded = false
+            if (++p.stuck > 2) {
+                p.dir = -p.dir
+                p.stuck = 0
+            }
+        }
+        p.vx = p.dir * Weapon.SHEEP_SPEED
+        if (p.y > terrain.waterY) return Outcome.SPLASH
+        if (p.x < -400 || p.x > terrain.width + 400) return Outcome.GONE
+        return Outcome.NONE
     }
 
     private fun projectileCollides(x: Double, y: Double, r: Double): Boolean =
@@ -692,32 +802,40 @@ class Match(val config: MatchConfig) {
             w.fallStartY = w.y
         }
         for (c in crates) if (!c.gone && hypot(c.x - x, c.y - y) < reach) c.gone = true
-        for (p in projectiles) if (p.resting) p.resting = false
+        for (p in projectiles) {
+            if (p.resting) p.resting = false
+            // Blasts set off mines nearby.
+            if (p.spec.mine && p.fuse == null && hypot(p.x - x, p.y - y) < reach) p.fuse = 0.15
+        }
     }
 
-    private fun shotgun(w: Worm) {
-        var x = w.x + w.aimX * (Worm.RADIUS + 2)
-        var y = w.y + w.aimY * (Worm.RADIUS + 2)
+    /**
+     * An instant bullet from [w] along ([ax], [ay]): hurts and pushes the first worm it
+     * meets, or digs a small hole where it hits the ground.
+     */
+    private fun hitscan(w: Worm, ax: Double, ay: Double, range: Double, damageAmount: Int, push: Double, hole: Double, holeDamage: Int) {
+        var x = w.x + ax * (Worm.RADIUS + 2)
+        var y = w.y + ay * (Worm.RADIUS + 2)
         val sx = x
         val sy = y
         var travelled = 0.0
-        while (travelled < Weapon.SHOTGUN_RANGE) {
-            x += w.aimX * 2
-            y += w.aimY * 2
+        while (travelled < range) {
+            x += ax * 2
+            y += ay * 2
             travelled += 2
             val target = worms.firstOrNull { it.alive && it.id != w.id && hypot(it.x - x, it.y - y) < Worm.RADIUS + 1 }
             if (target != null) {
                 events += GameEvent.ShotgunBlast(sx, sy, x, y)
-                damage(target, Weapon.SHOTGUN_DAMAGE)
-                target.vx = w.aimX * 160
-                target.vy = w.aimY * 160 - 60
+                damage(target, damageAmount)
+                target.vx = ax * push
+                target.vy = ay * push - 60
                 target.onGround = false
                 target.fallStartY = target.y
                 return
             }
             if (terrain.isSolid(x, y)) {
                 events += GameEvent.ShotgunBlast(sx, sy, x, y)
-                explode(x, y, 12.0, 8, w.team)
+                explode(x, y, hole, holeDamage, w.team)
                 return
             }
         }
@@ -753,6 +871,9 @@ class Match(val config: MatchConfig) {
                 }
             } else if (!projectileCollides(c.x, c.y + CRATE_HALF + 1, 2.0)) {
                 c.landed = false
+            } else if (c.y > terrain.waterY) {
+                c.gone = true
+                continue
             }
             val taker = worms.firstOrNull { it.alive && hypot(it.x - c.x, it.y - c.y) < Worm.RADIUS + CRATE_HALF + 2 }
             if (taker != null) {
@@ -795,10 +916,10 @@ class Match(val config: MatchConfig) {
         return null
     }
 
-    /** Clear line from [from] to [to], for the shotgun. */
-    fun lineOfSight(from: Worm, to: Worm): Boolean {
+    /** Clear line from [from] to [to] within [range], for guns. */
+    fun lineOfSight(from: Worm, to: Worm, range: Double = Weapon.SHOTGUN_RANGE): Boolean {
         val d = hypot(to.x - from.x, to.y - from.y)
-        if (d > Weapon.SHOTGUN_RANGE) return false
+        if (d > range) return false
         val steps = (d / 2).toInt()
         for (i in 2 until steps - 2) {
             val k = i.toDouble() / steps
@@ -844,6 +965,17 @@ class Match(val config: MatchConfig) {
         const val CRATE_HALF = 8.0
         const val CRATE_HEALTH = 25
         const val STUCK_STEPS = 24
+        const val SHEEP_HOP = 150.0
+        const val SUDDEN_DEATH_ROUNDS = 10
+        const val WATER_RISE = 16
+        const val MIN_WATER_Y = 40
+
+        private val UZI_SPREAD = doubleArrayOf(0.0, 0.03, -0.025, 0.05, -0.04, 0.015, -0.055, 0.035, -0.01, 0.06)
+        private val FALLBACKS = listOf(Weapon.BAZOOKA, Weapon.SHOTGUN, Weapon.GRENADE, Weapon.UZI)
+        private val CRATE_WEAPONS = listOf(
+            Weapon.CLUSTER, Weapon.DYNAMITE, Weapon.AIRSTRIKE, Weapon.BANANA, Weapon.BAT, Weapon.MEGA_GRENADE,
+            Weapon.MINE, Weapon.UZI, Weapon.SNIPER, Weapon.SHEEP, Weapon.GIRDER,
+        )
 
         private const val SAMPLES = 12
         private val COS = DoubleArray(SAMPLES) { cos(it * 2 * PI / SAMPLES) }

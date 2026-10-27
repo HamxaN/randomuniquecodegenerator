@@ -24,6 +24,14 @@ data class AiPlan(
  */
 object Ai {
 
+    /** Nothing lands well: lob something towards the nearest enemy, or shoot a path through the ground. */
+    private fun fallback(match: Match, me: Worm, enemy: Worm?): AiPlan {
+        val weapon = match.fallbackWeapon()
+        val facing = if (enemy == null) me.facing else if (enemy.x >= me.x) 1 else -1
+        val aim = if (weapon.mode == FireMode.POWER || enemy == null) -PI / 4 else atan2(enemy.y - me.y, abs(enemy.x - me.x))
+        return AiPlan(weapon, facing, aim.coerceIn(-PI / 2, PI / 2), 0.6, expectedMiss = 999.0)
+    }
+
     fun plan(match: Match, difficulty: Difficulty, random: Random = Random.Default): AiPlan {
         val me = match.activeWorm
         val enemies = match.worms.filter { it.alive && it.team != me.team }.sortedBy { hypot(it.x - me.x, it.y - me.y) }.take(3)
@@ -42,7 +50,7 @@ object Ai {
         }
 
         // Each trajectory is simulated once and scored against every enemy.
-        for (weapon in listOf(Weapon.BAZOOKA, Weapon.GRENADE, Weapon.CLUSTER, Weapon.BANANA)) {
+        for (weapon in listOf(Weapon.BAZOOKA, Weapon.GRENADE, Weapon.CLUSTER, Weapon.BANANA, Weapon.MEGA_GRENADE)) {
             if (!match.hasAmmo(weapon) || enemies.isEmpty()) continue
             val spec = weapon.spec!!
             fun evaluate(facing: Int, aim: Double, power: Double): AiPlan? {
@@ -76,17 +84,22 @@ object Ai {
                 da += 1.0
             }
             // Special weapons only when they clearly beat the free ones.
-            val penalty = if (weapon.startAmmo >= 0) 6.0 else 0.0
+            val penalty = if (match.ammo(weapon) >= 0) 6.0 else 0.0
             consider(refined.copy(expectedMiss = refined.expectedMiss + penalty))
         }
 
         for (target in enemies) {
-            // Shotgun when there's a clear line.
-            if (match.hasAmmo(Weapon.SHOTGUN) && match.lineOfSight(me, target)) {
-                val facing = if (target.x >= me.x) 1 else -1
-                val aim = atan2(target.y - me.y, abs(target.x - me.x))
-                if (abs(aim) <= PI / 2) consider(AiPlan(Weapon.SHOTGUN, facing, aim, 1.0, expectedMiss = 14.0))
+            // Guns when there's a clear line: shotgun close up, uzi for a push, sniper from afar.
+            val facingTo = if (target.x >= me.x) 1 else -1
+            val aimTo = atan2(target.y - me.y, abs(target.x - me.x))
+            fun gun(weapon: Weapon, range: Double, miss: Double) {
+                if (!match.hasAmmo(weapon) || !match.lineOfSight(me, target, range)) return
+                val penalty = if (match.ammo(weapon) >= 0) 6.0 else 0.0
+                consider(AiPlan(weapon, facingTo, aimTo, 1.0, expectedMiss = miss + penalty))
             }
+            gun(Weapon.SHOTGUN, Weapon.SHOTGUN_RANGE, 14.0)
+            gun(Weapon.UZI, Weapon.UZI_RANGE, 13.0)
+            gun(Weapon.SNIPER, Weapon.SNIPER_RANGE, 12.0)
             // Bat when right next to the enemy and they're near the edge or water.
             if (match.hasAmmo(Weapon.BAT) && hypot(target.x - me.x, target.y - me.y) < Weapon.BAT_RANGE + 8) {
                 val facing = if (target.x >= me.x) 1 else -1
@@ -100,14 +113,17 @@ object Ai {
             }
         }
 
-        val chosen = best ?: AiPlan(Weapon.BAZOOKA, me.facing, -PI / 4, 0.6, expectedMiss = 999.0)
+        val chosen = best ?: fallback(match, me, enemies.firstOrNull())
         // Human-like error.
         val (angleError, powerError) = when (difficulty) {
             Difficulty.EASY -> 0.14 to 0.14
             Difficulty.NORMAL -> 0.05 to 0.05
             Difficulty.HARD -> 0.012 to 0.015
         }
-        if (chosen.weapon.mode != FireMode.POWER) return chosen
+        if (chosen.weapon.mode != FireMode.POWER) {
+            if (chosen.weapon.mode != FireMode.INSTANT || difficulty == Difficulty.HARD) return chosen
+            return chosen.copy(aim = (chosen.aim + (random.nextDouble() * 2 - 1) * angleError * 0.5).coerceIn(-PI / 2, PI / 2))
+        }
         return chosen.copy(
             aim = (chosen.aim + (random.nextDouble() * 2 - 1) * angleError).coerceIn(-PI / 2, PI / 2),
             power = (chosen.power + (random.nextDouble() * 2 - 1) * powerError).coerceIn(Match.MIN_POWER, 1.0),

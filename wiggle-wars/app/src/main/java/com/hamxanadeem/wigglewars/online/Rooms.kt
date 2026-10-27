@@ -18,7 +18,7 @@ import kotlin.random.Random
 /**
  * Online rooms in a Firebase Realtime Database:
  *
- * rooms/{code}/meta     host, seed, worms, status ("lobby" or "playing"), order of players
+ * rooms/{code}/meta     host, seed, worms, arena, weapons, status ("lobby" or "playing"), order of players
  * rooms/{code}/players  {playerId: {name, joined}}
  * rooms/{code}/moves    every input, in the order each player sent them
  */
@@ -51,12 +51,14 @@ object Rooms {
 
     fun newPlayerId(): String = java.util.UUID.randomUUID().toString().take(12)
 
-    fun create(context: Context, code: String, playerId: String, name: String, worms: Int, onDone: (Boolean) -> Unit) {
+    fun create(context: Context, code: String, playerId: String, name: String, worms: Int, arena: String, weapons: String, onDone: (Boolean) -> Unit) {
         val ref = room(context, code)
         val meta = mapOf(
             "host" to playerId,
             "seed" to Random.nextLong(),
             "worms" to worms,
+            "arena" to arena,
+            "weapons" to weapons,
             "status" to "lobby",
             "created" to ServerValue.TIMESTAMP,
         )
@@ -88,10 +90,15 @@ object Rooms {
     }
 
     /** Host only: fixes the player order (teams) and starts the match for everyone. */
-    fun start(context: Context, code: String, orderedPlayerIds: List<String>, worms: Int) {
+    fun start(context: Context, code: String, orderedPlayerIds: List<String>, worms: Int, arena: String, weapons: String) {
         room(context, code).child("meta").updateChildren(
-            mapOf("order" to orderedPlayerIds, "worms" to worms, "status" to "playing"),
+            mapOf("order" to orderedPlayerIds, "worms" to worms, "arena" to arena, "weapons" to weapons, "status" to "playing"),
         )
+    }
+
+    /** Host only: shows the chosen arena ("" for random) and weapon set to everyone in the lobby. */
+    fun setRules(context: Context, code: String, arena: String, weapons: String) {
+        room(context, code).child("meta").updateChildren(mapOf("arena" to arena, "weapons" to weapons))
     }
 
     fun leave(context: Context, code: String, playerId: String) {

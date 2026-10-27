@@ -22,22 +22,44 @@ land, knocking each other into the sea, and using the wind to curve their shots.
 
 ## Features
 - **Destructible terrain:** every explosion carves the map pixel by pixel, with
-  scorched edges. There are four map themes (Grassland, Desert, Snowy Peaks, Candy
-  Land), with caves, floating ledges and canyons.
+  scorched edges.
+- **10 arenas**, each with its own land shape, look and rules. Pick one in the
+  setup screen (with a live preview), or leave it on Random:
+
+  | Arena | What's special |
+  |---|---|
+  | Green Hills | Rolling meadows, caves and floating ledges |
+  | Dune Canyon | Flat-topped mesas and a deep canyon into the sea |
+  | Tropical Islands | A chain of islands with open sea between them |
+  | Castle Clash | Two castles with halls and towers, a moat and a thin bridge |
+  | Crystal Caverns | A rock roof: no air strikes from the sky, crates appear inside the cave |
+  | Sky Islands | Floating islands high above the water |
+  | Frozen Peaks | Jagged mountains and stronger wind |
+  | Lava Peak | A huge volcano over a glowing lava lake |
+  | Moon Base | Half gravity, no wind, stars and the Earth in the sky |
+  | Candy Land | Bubbly sweets and floating lollipops |
 - **Physics:**
   - Worms walk, climb small slopes, jump and backflip.
   - They take fall damage, get knocked flying by blasts and drown in the sea.
   - Wind changes every turn; the drifting clouds show its direction.
-- **9 weapons:**
-  - **Bazooka:** affected by the wind.
-  - **Grenade:** 3-second fuse, bounces.
-  - **Cluster Bomb:** splits into bomblets.
-  - **Shotgun**
-  - **Baseball Bat**
-  - **Dynamite**
-  - **Air Strike:** tap the map to call it in.
-  - **Teleport**
-  - **Banana Bomb:** a super weapon, earned with a rewarded ad.
+- **15 weapons in 4 groups,** chosen in the Armory picker (picture tiles, ammo
+  badges, and a card with each weapon's description and power, blast and range
+  ratings):
+  - **Explosives:** Bazooka (affected by the wind), Grenade (3-second fuse,
+    bounces), Cluster Bomb, Banana Bomb (a super weapon, earned with a rewarded
+    ad), Mega Grenade (a huge blast), Dynamite, Land Mine (arms after a few
+    seconds and blows up the next worm to come close).
+  - **Guns:** Shotgun, Uzi (ten bullets, great for pushing worms off ledges),
+    Sniper Rifle (long range, hits hard).
+  - **Strikes:** Air Strike (tap the map), Wild Sheep (waddles along, hops over
+    bumps and explodes on contact).
+  - **Tools:** Baseball Bat, Teleport, Girder (build a steel beam; your turn
+    goes on).
+- **Weapon sets:** Standard, Heavy Artillery, Sharpshooter (guns and tools only)
+  or Mayhem (everything unlimited).
+- **Sudden death:** after 10 rounds the sea rises every turn, so every battle
+  ends.
+- **Mini map:** the whole battlefield in the corner. Tap it to look anywhere.
 - **Supply crates:** health and weapon crates parachute in during the match.
 - **Turns:** 45 seconds to act, then 3 seconds to run for cover.
 - **Computer opponents:** the AI plans each shot with the real physics, trying
@@ -53,7 +75,8 @@ land, knocking each other into the sea, and using the wind to curve their shots.
 - **Walk:** hold ◀ ▶. **Jump:** ⤴. **Backflip:** ↶.
 - **Fire:** hold FIRE to charge the power, then release. It fires automatically at
   full power.
-- **Weapon button:** opens the weapon picker. Air Strike and Teleport: tap the map.
+- **Weapon button:** opens the Armory picker. Tap a weapon to read about it, tap it
+  again (or Equip) to take it. Air Strike, Teleport and Girder: tap the map.
 - **Camera:** two fingers pan and zoom. It follows the action otherwise.
 
 ## How online play works

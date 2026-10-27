@@ -12,7 +12,10 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.hamxanadeem.wigglewars.R
 import com.hamxanadeem.wigglewars.ads.AdsManager
+import com.hamxanadeem.wigglewars.core.Arena
 import com.hamxanadeem.wigglewars.core.Difficulty
+import com.hamxanadeem.wigglewars.core.Weapon
+import com.hamxanadeem.wigglewars.core.WeaponSet
 import com.hamxanadeem.wigglewars.data.Settings
 import com.hamxanadeem.wigglewars.data.Stats
 import com.hamxanadeem.wigglewars.fx.GameSounds
@@ -34,6 +37,10 @@ class MainActivity : AppCompatActivity() {
     private var worms = 3
     private var difficulty = Difficulty.NORMAL
     private var bananas = 0
+    private var arena: Arena? = null
+    private var weaponSet = WeaponSet.STANDARD
+    private lateinit var arenaCard: ArenaCardView
+    private lateinit var armory: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,6 +79,49 @@ class MainActivity : AppCompatActivity() {
             renderSetup()
         }
         findViewById<Button>(R.id.bananaButton).setOnClickListener { earnBananas() }
+        arena = Arena.entries.firstOrNull { it.name == settings.arena }
+        weaponSet = WeaponSet.entries.firstOrNull { it.name == settings.weaponSet } ?: WeaponSet.STANDARD
+        arenaCard = findViewById(R.id.arenaCard)
+        arenaCard.arena = arena
+        arenaCard.onChange = {
+            Sounds.play(GameSounds.TAP)
+            arena = it
+            settings.arena = it?.name ?: ""
+        }
+        findViewById<Button>(R.id.weaponSetButton).setOnClickListener {
+            Sounds.play(GameSounds.TAP)
+            weaponSet = WeaponSet.entries[(weaponSet.ordinal + 1) % WeaponSet.entries.size]
+            settings.weaponSet = weaponSet.name
+            renderSetup()
+        }
+        armory = findViewById(R.id.armoryPanel)
+        val armoryPicker = findViewById<WeaponPickerView>(R.id.armoryPicker)
+        armoryPicker.browseOnly = true
+        armoryPicker.listener = object : WeaponPickerView.Listener {
+            override fun onEquip(weapon: Weapon) = Unit
+            override fun onClose() {
+                Sounds.play(GameSounds.TAP)
+                armory.visibility = View.GONE
+            }
+        }
+        findViewById<Button>(R.id.armoryButton).setOnClickListener {
+            Sounds.play(GameSounds.TAP)
+            armoryPicker.ammoOf = { weaponSet.ammo(it) }
+            armoryPicker.open(null)
+            armory.visibility = View.VISIBLE
+        }
+        onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                when {
+                    armory.visibility == View.VISIBLE -> armory.visibility = View.GONE
+                    setup.visibility == View.VISIBLE -> {
+                        setup.visibility = View.GONE
+                        menu.visibility = View.VISIBLE
+                    }
+                    else -> finish()
+                }
+            }
+        })
         findViewById<Button>(R.id.startButton).setOnClickListener { start() }
         soundButton.setOnClickListener {
             settings.soundOn = !settings.soundOn
@@ -111,6 +161,7 @@ class MainActivity : AppCompatActivity() {
         val diff = findViewById<Button>(R.id.difficultyButton)
         diff.visibility = if (mode == Mode.CPU) View.VISIBLE else View.GONE
         diff.text = getString(R.string.difficulty_format, getString(DIFFICULTY_NAMES[difficulty.ordinal]))
+        findViewById<Button>(R.id.weaponSetButton).text = getString(R.string.weapon_set_format, weaponSet.displayName, weaponSet.description)
         findViewById<Button>(R.id.bananaButton).text =
             if (bananas > 0) getString(R.string.bananas_ready, bananas) else getString(R.string.bananas_offer)
     }
@@ -140,7 +191,9 @@ class MainActivity : AppCompatActivity() {
                 .putExtra(GameActivity.EXTRA_CPU, cpu)
                 .putExtra(GameActivity.EXTRA_WORMS, worms)
                 .putExtra(GameActivity.EXTRA_DIFFICULTY, difficulty.ordinal)
-                .putExtra(GameActivity.EXTRA_BANANAS, bananas),
+                .putExtra(GameActivity.EXTRA_BANANAS, bananas)
+                .putExtra(GameActivity.EXTRA_ARENA, arena?.name)
+                .putExtra(GameActivity.EXTRA_WEAPONS, weaponSet.name),
         )
         // The bonus is for one match.
         bananas = 0
