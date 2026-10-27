@@ -136,7 +136,7 @@ tap $(( LONG - $(dp 177) )) $(( SHORT / 2 + $(dp 127) )); sleep 1.5; shot wiggle
 adb shell input keyevent KEYCODE_BACK; sleep 1
 # vs Computer, then flip through a few arenas on the arena card.
 tap $(( LONG - $(dp 177) )) $(( SHORT / 2 - $(dp 86) )); sleep 2; shot wigglewars-03-setup
-for n in 1 2 3 4; do tap $(( LONG - $(dp 50) )) $(dp 150); sleep 1.2; shot wigglewars-04-arena-$n; done
+for n in 1 2 3 4; do tap $(( LONG / 2 - $(dp 19) )) $(dp 157); sleep 1.2; shot wigglewars-04-arena-$n; done
 start $P $U.OnlineActivity; sleep 3; shot wigglewars-05-online
 
 FIRE_X=$(( LONG - $(dp 148) ))
