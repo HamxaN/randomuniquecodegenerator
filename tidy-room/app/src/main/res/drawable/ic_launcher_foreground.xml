@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A shelf with a book, a mug and a plant, and a teddy dropping into place. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FF8D6E63" android:pathData="M22,62 h64 v5 h-64 z" />
+    <path android:fillColor="#FF5C6BC0" android:pathData="M28,36 h9 v26 h-9 z" />
+    <path android:fillColor="#FFE57373" android:pathData="M42,48 h12 v14 h-12 z" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFE57373" android:strokeWidth="2.5" android:pathData="M54,51 a4,4 0 0 1 0,8" />
+    <path android:fillColor="#FFE07A4F" android:pathData="M64,52 h14 l-2,10 h-10 z" />
+    <path android:fillColor="#FF66BB6A" android:pathData="M71,52 c-8,-4 -8,-12 -4,-16 c2,6 4,10 4,16 z M71,52 c8,-4 8,-12 4,-16 c-2,6 -4,10 -4,16 z" />
+    <path android:fillColor="#FFB07A4F" android:pathData="M54,76 m-10,0 a10,10 0 1 0 20,0 a10,10 0 1 0 -20,0 M47,68 a4,4 0 1 0 0.1,0 M61,68 a4,4 0 1 0 0.1,0" />
+    <path android:fillColor="#FF3E2723" android:pathData="M51,74 a1.5,1.5 0 1 0 0.1,0 M57,74 a1.5,1.5 0 1 0 0.1,0" />
+    <path android:fillColor="#FFFFEB3B" android:pathData="M80,30 l2,5 l5,2 l-5,2 l-2,5 l-2,-5 l-5,-2 l5,-2 z" />
+</vector>
