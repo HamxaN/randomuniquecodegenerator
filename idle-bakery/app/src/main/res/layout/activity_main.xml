@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <com.hamxanadeem.idlebakery.ui.AwningView
+            android:layout_width="match_parent"
+            android:layout_height="34dp"
+            android:importantForAccessibility="no" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="12dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_money_panel"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="12dp">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_coin" />
+
+            <TextView
+                android:id="@+id/moneyText"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:fontFamily="sans-serif-black"
+                android:gravity="center_vertical"
+                android:maxLines="1"
+                android:textColor="#FFFFFFFF"
+                android:textSize="32sp" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/incomeText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-black"
+                    android:textColor="#FFA5D6A7"
+                    android:textSize="15sp" />
+
+                <TextView
+                    android:id="@+id/starsText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-black"
+                    android:textColor="#FFFFE082"
+                    android:textSize="13sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="12dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/boostButton"
+                style="@style/GameButton"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_button_revive" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/buyModeButton"
+                style="@style/GameButton"
+                android:layout_width="110dp"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/bg_button_secondary" />
+        </LinearLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="6dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:paddingHorizontal="12dp"
+            android:paddingBottom="8dp">
+
+            <LinearLayout
+                android:id="@+id/stationList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </ScrollView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp">
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/franchiseButton"
+                style="@style/GameButton"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_button_secondary" />
+
+            <Button
+                android:id="@+id/privacyButton"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/privacy_settings"
+                android:textColor="@color/cocoa"
+                android:visibility="gone" />
+
+            <ImageButton
+                android:id="@+id/vibrationButton"
+                android:layout_width="46dp"
+                android:layout_height="46dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_round_cocoa"
+                android:contentDescription="@string/vibration"
+                android:src="@drawable/ic_vibration" />
+
+            <ImageButton
+                android:id="@+id/soundButton"
+                android:layout_width="46dp"
+                android:layout_height="46dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_round_cocoa"
+                android:contentDescription="@string/sound"
+                android:src="@drawable/ic_volume_on" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/bannerContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="50dp" />
+    </LinearLayout>
+
+    <com.hamxanadeem.idlebakery.ui.CoinLayer
+        android:id="@+id/coinLayer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clickable="false"
+        android:focusable="false"
+        android:importantForAccessibility="no" />
+</FrameLayout>

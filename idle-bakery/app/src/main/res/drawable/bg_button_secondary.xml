@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A chunky game button: a darker base under a glossy face that sinks when pressed. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <layer-list>
+            <item android:top="5dp">
+                <shape>
+                    <corners android:radius="30dp" />
+                    <solid android:color="#311B92" />
+                </shape>
+            </item>
+            <item android:top="5dp" android:bottom="1dp">
+                <shape>
+                    <corners android:radius="30dp" />
+                    <gradient android:angle="270" android:startColor="#9575CD" android:endColor="#5E35B1" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    <item>
+        <layer-list>
+            <item android:top="5dp">
+                <shape>
+                    <corners android:radius="30dp" />
+                    <solid android:color="#311B92" />
+                </shape>
+            </item>
+            <item android:bottom="6dp">
+                <shape>
+                    <corners android:radius="30dp" />
+                    <gradient android:angle="270" android:startColor="#9575CD" android:endColor="#5E35B1" />
+                </shape>
+            </item>
+            <item android:bottom="6dp" android:left="14dp" android:right="14dp" android:top="4dp">
+                <shape>
+                    <corners android:radius="26dp" />
+                    <gradient android:angle="270" android:startColor="#55FFFFFF" android:centerColor="#00FFFFFF" android:endColor="#00FFFFFF" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+</selector>

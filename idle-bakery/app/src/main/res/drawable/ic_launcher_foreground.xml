@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A frosted cupcake with a cherry and a gold coin. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:fillColor="#FFF06292" android:pathData="M36,56 L72,56 L66,80 L42,80 Z" />
+    <path android:strokeColor="#FFC2185B" android:strokeWidth="2" android:pathData="M44,56 L46,80 M54,56 L54,80 M64,56 L62,80" />
+    <path android:fillColor="#FFFFF3E0" android:pathData="M54,56 m-21,0 a21,8 0,1 0,42 0 a21,8 0,1 0,-42 0" />
+    <path android:fillColor="#FFFFE0F0" android:pathData="M54,48 m-16,0 a16,7 0,1 0,32 0 a16,7 0,1 0,-32 0" />
+    <path android:fillColor="#FFFFF3E0" android:pathData="M54,41 m-10,0 a10,6 0,1 0,20 0 a10,6 0,1 0,-20 0" />
+    <path android:fillColor="#FFD32F2F" android:pathData="M54,33 m-4.5,0 a4.5,4.5 0,1 0,9 0 a4.5,4.5 0,1 0,-9 0" />
+    <path android:fillColor="#FFC88A12" android:pathData="M74,73 m-9,0 a9,9 0,1 0,18 0 a9,9 0,1 0,-18 0" />
+    <path android:fillColor="#FFFFC928" android:pathData="M74,72 m-9,0 a9,9 0,1 0,18 0 a9,9 0,1 0,-18 0" />
+    <path android:fillColor="#FFFFE57F" android:pathData="M74,72 m-5.5,0 a5.5,5.5 0,1 0,11 0 a5.5,5.5 0,1 0,-11 0" />
+</vector>

@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">Idle Bakery</string>
+    <string name="income_format">+%1$s / sec</string>
+    <string name="stars_format">⭐ %1$d (+%2$d%%)</string>
+    <string name="boost">▶  2× income · 30 min</string>
+    <string name="boost_active">2× ACTIVE %1$s  ▶ +30m</string>
+    <string name="buy_mode">Buy ×%1$d</string>
+    <string name="buy_max">Buy MAX</string>
+    <string name="buy_button">×%1$d\n💰 %2$s</string>
+    <string name="unlock_button">Unlock\n💰 %1$s</string>
+    <string name="hire_button">Hire baker 💰 %1$s</string>
+    <string name="unlock_first">Unlock this oven first</string>
+    <string name="unlocked">%1$s unlocked! Tap it to bake.</string>
+    <string name="milestone">%1$s profits doubled!</string>
+    <string name="hired">A baker now runs %1$s automatically</string>
+    <string name="no_ad">No ad available right now, try again in a moment</string>
+    <string name="welcome_back">Welcome back!</string>
+    <string name="welcome_back_message">Your bakers earned 💰 %1$s while you were away.</string>
+    <string name="collect">Collect</string>
+    <string name="collect_double">▶ Collect ×2</string>
+    <string name="franchise">⭐ Franchise</string>
+    <string name="franchise_ready">⭐ Franchise +%1$d</string>
+    <string name="franchise_locked">Earn 💰 %1$s more this run to open a franchise</string>
+    <string name="franchise_title">Open a new bakery?</string>
+    <string name="franchise_message">Move to a new city and start fresh. You will earn ⭐ %1$d stars, adding +%2$d%% income forever.</string>
+    <string name="franchise_confirm">Open franchise</string>
+    <string name="not_yet">Not yet</string>
+    <string name="sound">Sound</string>
+    <string name="vibration">Vibration</string>
+    <string name="privacy_settings">Privacy</string>
+    <string name="station_description">Bakery station. Tap to bake a batch.</string>
+</resources>
