@@ -4,9 +4,13 @@
     <string name="pass_and_play">Pass &amp; Play</string>
     <string name="play_online">Play Online with Friends</string>
     <string name="stats_format">🏆 Wins %1$d · Matches %2$d</string>
-    <string name="teams_cpu_format">You vs %2$d computer team(s)</string>
-    <string name="teams_format">%1$d players on this phone</string>
-    <string name="worms_format">%1$d worms per team</string>
+    <string name="teams_cpu_format">You vs %2$d CPU</string>
+    <string name="teams_format">%1$d players</string>
+    <string name="worms_format">%1$d worms each</string>
+    <string name="label_arena">Arena</string>
+    <string name="label_weapons">Weapons</string>
+    <string name="label_teams">Teams</string>
+    <string name="label_worms">Worms</string>
     <string name="difficulty_format">Computer: %1$s</string>
     <string name="easy">Easy</string>
     <string name="normal">Normal</string>

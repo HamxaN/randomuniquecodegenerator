@@ -9,10 +9,10 @@
         android:importantForAccessibility="no" />
 
     <ScrollView
+        android:id="@+id/onlineScroll"
         android:layout_width="440dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:fitsSystemWindows="true">
+        android:layout_gravity="center">
 
         <LinearLayout
             android:layout_width="match_parent"

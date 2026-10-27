@@ -53,8 +53,15 @@ class MainActivity : AppCompatActivity() {
         AdsManager.loadBanner(this, findViewById<FrameLayout>(R.id.bannerContainer))
 
         // Keep the logo clear of the menu panel on the right (330dp + margins).
-        findViewById<TitleView>(R.id.titleView).reservedRight = 354 * resources.displayMetrics.density
-        menu = findViewById(R.id.menuPanel)
+        Screen.immersive(this)
+        Screen.padForInsets(findViewById(R.id.content))
+        // Keep the logo clear of the menu panel on the right (320dp + margins).
+        findViewById<TitleView>(R.id.titleView).reservedRight = 344 * resources.displayMetrics.density
+        // The setup card is 660dp wide, or the whole screen on small phones.
+        val card = findViewById<View>(R.id.setupCard)
+        val maxWidth = resources.displayMetrics.widthPixels - (24 * resources.displayMetrics.density).toInt()
+        if (card.layoutParams.width > maxWidth) card.layoutParams.width = maxWidth
+        menu = findViewById(R.id.menuColumn)
         setup = findViewById(R.id.setupPanel)
         soundButton = findViewById(R.id.soundButton)
         vibrationButton = findViewById(R.id.vibrationButton)
@@ -135,6 +142,11 @@ class MainActivity : AppCompatActivity() {
             renderToggles()
         }
         findViewById<Button>(R.id.privacyButton).setOnClickListener { AdsManager.showPrivacyOptions(this) }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) Screen.immersive(this)
     }
 
     override fun onResume() {

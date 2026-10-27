@@ -1,8 +1,10 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <style name="Theme.WiggleWars" parent="Theme.Material3.Dark.NoActionBar">
         <item name="colorPrimary">@color/gold</item>
         <item name="android:windowBackground">@color/sky</item>
         <item name="android:windowLightStatusBar">false</item>
+        <!-- Draw behind the camera cutout too; screens pad their controls clear of it. -->
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="28">shortEdges</item>
     </style>
 
     <style name="GameButton">
@@ -38,6 +40,26 @@
         <item name="android:textSize">22sp</item>
         <item name="android:paddingBottom">6dp</item>
         <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <style name="SetupLabel">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginBottom">4dp</item>
+        <item name="android:fontFamily">sans-serif-black</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/gold</item>
+        <item name="android:textSize">11sp</item>
+    </style>
+
+    <style name="StepRow">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/bg_chip</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:padding">4dp</item>
     </style>
 
     <style name="StepLabel">

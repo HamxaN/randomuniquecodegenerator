@@ -62,6 +62,8 @@ class OnlineActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_online)
+        Screen.immersive(this)
+        Screen.padForInsets(findViewById(R.id.onlineScroll))
         nameField = findViewById(R.id.nameField)
         codeField = findViewById(R.id.codeField)
         entry = findViewById(R.id.entryPanel)
@@ -106,6 +108,11 @@ class OnlineActivity : AppCompatActivity() {
         }
         startButton.setOnClickListener { startMatch() }
         intent?.data?.getQueryParameter("room")?.let { codeField.setText(it) }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) Screen.immersive(this)
     }
 
     private fun name(): String? {

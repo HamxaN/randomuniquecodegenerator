@@ -40,20 +40,22 @@
                 android:layout_marginBottom="8dp"
                 android:orientation="horizontal">
 
-                <androidx.appcompat.widget.AppCompatButton
+                <ImageButton
                     android:id="@+id/backflipButton"
                     style="@style/ControlButton"
                     android:contentDescription="@string/backflip"
-                    android:text="↶"
-                    android:textSize="22sp" />
+                    android:padding="14dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_backflip" />
 
-                <androidx.appcompat.widget.AppCompatButton
+                <ImageButton
                     android:id="@+id/jumpButton"
                     style="@style/ControlButton"
                     android:layout_marginStart="12dp"
                     android:contentDescription="@string/jump"
-                    android:text="⤴"
-                    android:textSize="22sp" />
+                    android:padding="14dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_jump" />
             </LinearLayout>
 
             <LinearLayout
@@ -61,22 +63,26 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
-                <androidx.appcompat.widget.AppCompatButton
+                <ImageButton
                     android:id="@+id/leftButton"
                     style="@style/ControlButton"
                     android:layout_width="70dp"
                     android:layout_height="70dp"
                     android:contentDescription="@string/walk_left"
-                    android:text="◀" />
+                    android:padding="16dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_walk_left" />
 
-                <androidx.appcompat.widget.AppCompatButton
+                <ImageButton
                     android:id="@+id/rightButton"
                     style="@style/ControlButton"
                     android:layout_width="70dp"
                     android:layout_height="70dp"
                     android:layout_marginStart="12dp"
                     android:contentDescription="@string/walk_right"
-                    android:text="▶" />
+                    android:padding="16dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_walk_right" />
             </LinearLayout>
         </LinearLayout>
 
@@ -135,7 +141,7 @@
             android:id="@+id/weaponPanel"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#88000000"
+            android:background="#B3000000"
             android:clickable="true"
             android:focusable="true"
             android:visibility="gone">
