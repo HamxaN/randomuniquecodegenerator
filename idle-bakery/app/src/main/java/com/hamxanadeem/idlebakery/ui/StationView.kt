@@ -103,7 +103,7 @@ class StationView @JvmOverloads constructor(
 
         if (locked) {
             small.color = 0xFF8D6E63.toInt()
-            canvas.drawText("🔒 Locked — unlock to start baking", textLeft, 50 * dp, small)
+            canvas.drawText("🔒 Locked", textLeft, 50 * dp, small)
             return
         }
 
