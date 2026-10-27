@@ -11,6 +11,8 @@ sleep 3
 adb wait-for-device
 adb shell settings put global window_animation_scale 0.5
 adb shell settings put global transition_animation_scale 0.5
+# Skip Android's one-time "Viewing full screen" notice, which would swallow our taps.
+adb shell settings put secure immersive_mode_confirmations confirmed
 DENSITY=$(adb shell wm density | tr -dc '0-9\n' | tail -1)
 SIZE=$(adb shell wm size | grep -o '[0-9]*x[0-9]*' | tail -1)
 SHORT=${SIZE%x*}
