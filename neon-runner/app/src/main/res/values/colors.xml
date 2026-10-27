@@ -1,0 +1,10 @@
+<resources>
+    <color name="space">#FF05021A</color>
+    <color name="launcher_background">#FF120530</color>
+    <color name="neon_cyan">#FF00E5FF</color>
+    <color name="neon_magenta">#FFFF2BD6</color>
+    <color name="neon_violet">#FF8C7CFF</color>
+    <color name="neon_lime">#FF39FF88</color>
+    <color name="neon_amber">#FFFFC23D</color>
+    <color name="neon_red">#FFFF3B6B</color>
+</resources>
