@@ -97,6 +97,14 @@ class BattleView @JvmOverloads constructor(
     private val graves = ArrayList<Grave>()
     private val hurtAt = HashMap<Int, Long>()
     private var introAt = 0L
+    private var introTitle: String? = null
+    private var introSub: String? = null
+    /** Power used for the aiming preview while not charging: the last shot's. */
+    var previewPower = 0.65f
+    private var pathKey = ""
+    private var pathPoints = FloatArray(0)
+    /** When the last huge blast happened, for a white flash over everything. */
+    private var flashAt = 0L
     private val miniMap = RectF()
     private var banner: String? = null
     private var subBanner: String? = null
@@ -121,6 +129,9 @@ class BattleView @JvmOverloads constructor(
         art?.bitmap?.recycle()
         art = TerrainArt(newMatch.terrain, theme, newMatch.arena.backdrop)
         introAt = 0L
+        introTitle = null
+        introSub = null
+        pathKey = ""
         backdropPaint.color = TerrainArt.shade(theme.soilDark, 0.5f)
         fireballs.clear()
         texts.clear()
@@ -134,6 +145,13 @@ class BattleView @JvmOverloads constructor(
         camX = (w.x - width / scale / 2).toFloat()
         camY = (w.y - height / scale / 2).toFloat()
         postInvalidateOnAnimation()
+    }
+
+    /** Replaces the arena name shown at the start, for missions. */
+    fun setIntro(title: String, sub: String) {
+        introTitle = title
+        introSub = sub
+        introAt = 0L
     }
 
     fun showBanner(text: String, color: Int, sub: String? = null) {
@@ -175,6 +193,7 @@ class BattleView @JvmOverloads constructor(
                     repeat((r / 4).toInt() + 3) { spawn(x, y, r * 0.8f, 2, 0xFF757575.toInt(), 1.6f, 6f + random.nextFloat() * 6f) }
                     shake = max(shake, r * 0.5f * dp)
                     if (r >= 40) addText(BIG_WORDS[random.nextInt(BIG_WORDS.size)], 0xFFFFEB3B.toInt(), x, y - r, big = true)
+                    if (r >= 100) flashAt = now
                 }
                 is GameEvent.Damaged -> {
                     val w = m.worms[e.worm]
@@ -204,6 +223,11 @@ class BattleView @JvmOverloads constructor(
                     val w = m.worms[e.worm]
                     val label = if (e.crate.kind == CrateKind.HEALTH) "+${Match.CRATE_HEALTH} ❤" else "+1 ${e.crate.weapon!!.displayName}"
                     addText(label, 0xFF69F0AE.toInt(), w.x.toFloat(), w.y.toFloat() - 30, big = false)
+                }
+                is GameEvent.Carved -> art?.blast(e.area, e.x, e.y, Match.DRILL_HOLE)
+                is GameEvent.Split -> {
+                    repeat(24) { spawn(e.x.toFloat(), e.y.toFloat(), 120f, 1, if (random.nextBoolean()) 0xFFB39DDB.toInt() else 0xFFFFFFFF.toInt(), 0.5f, 1.6f) }
+                    addText("SPLIT!", 0xFFB39DDB.toInt(), e.x.toFloat(), e.y.toFloat() - 12, big = false)
                 }
                 is GameEvent.Built -> {
                     art?.build(e.area)
@@ -286,6 +310,13 @@ class BattleView @JvmOverloads constructor(
         canvas.restoreToCount(save)
 
         drawHud(canvas, m, now)
+        val flash = (now - flashAt) / 600f
+        if (flash < 1f) {
+            paint.color = 0xFFFFFFFF.toInt()
+            paint.alpha = (230 * (1 - flash)).toInt()
+            canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
+            paint.alpha = 255
+        }
         postInvalidateOnAnimation()
     }
 
@@ -484,10 +515,49 @@ class BattleView @JvmOverloads constructor(
         }
     }
 
+    /** Dotted path the shot would take, for the player's own power shots. */
+    private fun drawTrajectory(canvas: Canvas, m: Match, w: Worm) {
+        val power = (if (charge >= 0f) charge else previewPower).coerceIn(Match.MIN_POWER.toFloat(), 1f)
+        val key = "${m.turnNumber}:${m.selected}:${w.facing}:${(w.aim * 500).toInt()}:${(power * 100).toInt()}:${w.x.toInt()}:${w.y.toInt()}"
+        if (key != pathKey) {
+            pathKey = key
+            pathPoints = m.trajectory(m.selected, w.facing, w.aim, power.toDouble(), w, stride = 4)
+        }
+        val pts = pathPoints
+        val n = pts.size / 2
+        if (n < 2) return
+        val t = SystemClock.uptimeMillis() / 1000f
+        for (i in 1 until n - 1) {
+            val k = i.toFloat() / n
+            // Dots march along the path.
+            val pulse = 0.5f + 0.5f * sin(i * 0.7f - t * 8f)
+            paint.color = Neon.CYAN
+            paint.alpha = (60 + 160 * (1 - k * 0.6f) * (0.5f + 0.5f * pulse)).toInt()
+            canvas.drawCircle(pts[i * 2], pts[i * 2 + 1], 1.3f + 0.5f * pulse, paint)
+        }
+        paint.alpha = 255
+        // Landing marker.
+        val ex = pts[(n - 1) * 2]
+        val ey = pts[(n - 1) * 2 + 1]
+        val radius = (m.selected.spec?.explosionRadius ?: 20.0).toFloat()
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = 1.2f
+        paint.color = Neon.MAGENTA
+        paint.alpha = 200
+        paint.setShadowLayer(4f, 0f, 0f, Neon.MAGENTA)
+        canvas.drawCircle(ex, ey, radius * (0.9f + 0.1f * sin(t * 6f)), paint)
+        paint.clearShadowLayer()
+        paint.alpha = 255
+        paint.style = Paint.Style.FILL
+        paint.color = Neon.MAGENTA
+        canvas.drawCircle(ex, ey, 2f, paint)
+    }
+
     private fun drawAim(canvas: Canvas, m: Match) {
         if (m.phase != Phase.AIM) return
         val w = m.activeWorm
         if (!w.alive || m.selected.mode == FireMode.TARGET || m.selected.mode == FireMode.DROP) return
+        if (humanTurn && m.selected.mode == FireMode.POWER) drawTrajectory(canvas, m, w)
         val cx = (w.x + w.aimX * 42).toFloat()
         val cy = (w.y + w.aimY * 42).toFloat()
         // Neon reticle with a slowly turning outer ring.
@@ -530,6 +600,39 @@ class BattleView @JvmOverloads constructor(
                     paint.color = 0xFFD32F2F.toInt()
                     canvas.drawCircle(5f, 0f, 2f, paint)
                     spawn(x - cos(Math.toRadians(angle.toDouble())).toFloat() * 7, y - sin(Math.toRadians(angle.toDouble())).toFloat() * 7, 8f, 1, 0xFFFFA000.toInt(), 0.25f, 2f)
+                }
+                Weapon.HOMING, Weapon.DRILL, Weapon.MIRV, Weapon.NAPALM, Weapon.NUKE -> {
+                    val flame = p.weapon == Weapon.NAPALM && p.spec !== Weapon.NAPALM.spec
+                    if (flame) {
+                        // A burning blob of napalm.
+                        val flicker = 1f + 0.25f * sin(t * 30f + p.id)
+                        paint.color = 0xCCFF6D00.toInt()
+                        canvas.drawCircle(0f, 0f, 3.6f * flicker, paint)
+                        paint.color = 0xFFFFEB3B.toInt()
+                        canvas.drawCircle(0f, 0.5f, 1.8f * flicker, paint)
+                        if (random.nextFloat() < 0.5f) spawn(x, y - 2, 6f, 2, 0xFF5D4037.toInt(), 0.5f, 2.5f)
+                    } else {
+                        canvas.rotate(angle)
+                        val big = if (p.weapon == Weapon.NUKE) 1.7f else 1f
+                        canvas.scale(big, big)
+                        paint.color = when (p.weapon) {
+                            Weapon.HOMING -> 0xFF00B8D4.toInt()
+                            Weapon.DRILL -> 0xFFFF8F00.toInt()
+                            Weapon.MIRV -> if (p.spec.splitAtApex) 0xFF7E57C2.toInt() else 0xFFB39DDB.toInt()
+                            Weapon.NAPALM -> 0xFFD84315.toInt()
+                            else -> 0xFF424242.toInt()
+                        }
+                        canvas.drawRoundRect(-6f, -2.2f, 5f, 2.2f, 2f, 2f, paint)
+                        paint.color = if (p.weapon == Weapon.NUKE) 0xFFFFD600.toInt() else if (p.weapon == Weapon.DRILL) 0xFF90A4AE.toInt() else 0xFFFFFFFF.toInt()
+                        canvas.drawCircle(5f, 0f, 2.2f, paint)
+                        val rad = Math.toRadians(angle.toDouble())
+                        val trail = if (p.weapon == Weapon.HOMING) Neon.CYAN else 0xFFFFA000.toInt()
+                        if (p.drilling != null) {
+                            spawn(x, y, 60f, 0, debrisColor(), 0.6f, 1.6f)
+                        } else {
+                            spawn(x - cos(rad).toFloat() * 7 * big, y - sin(rad).toFloat() * 7 * big, 8f, 1, trail, 0.3f, 2f * big)
+                        }
+                    }
                 }
                 Weapon.GRENADE -> grenade(canvas, 0xFF2E7D32.toInt(), t)
                 Weapon.CLUSTER -> grenade(canvas, if (p.spec.childSpec != null) 0xFFC62828.toInt() else 0xFF424242.toInt(), t)
@@ -949,8 +1052,8 @@ class BattleView @JvmOverloads constructor(
         if (k >= 1f) return
         val alpha = (255 * min(1f, (1 - k) * 4) * min(1f, k * 8)).toInt()
         val y = topInset + 86 * dp
-        label(canvas, m.arena.displayName.uppercase(), width / 2f, y, 20 * dp, 0xFFFFD54F.toInt(), PANEL, alpha)
-        hudText(canvas, m.arena.tagline, width / 2f, y + 26 * dp, 12 * dp, 0xFFFFFFFF.toInt(), alpha)
+        label(canvas, introTitle ?: m.arena.displayName.uppercase(), width / 2f, y, 18 * dp, 0xFFFFD54F.toInt(), PANEL, alpha)
+        hudText(canvas, introSub ?: m.arena.tagline, width / 2f, y + 26 * dp, 12 * dp, 0xFFFFFFFF.toInt(), alpha)
     }
 
     /** A small map of the whole battlefield, top right. Tap it to look somewhere. */

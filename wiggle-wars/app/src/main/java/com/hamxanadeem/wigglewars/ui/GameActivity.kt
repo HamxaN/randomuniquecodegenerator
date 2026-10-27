@@ -20,6 +20,8 @@ import androidx.core.view.WindowInsetsCompat
 import com.hamxanadeem.wigglewars.R
 import com.hamxanadeem.wigglewars.ads.AdsManager
 import com.hamxanadeem.wigglewars.core.Arena
+import com.hamxanadeem.wigglewars.core.Campaign
+import com.hamxanadeem.wigglewars.core.Mission
 import com.hamxanadeem.wigglewars.core.Command
 import com.hamxanadeem.wigglewars.core.Difficulty
 import com.hamxanadeem.wigglewars.core.FireMode
@@ -31,6 +33,7 @@ import com.hamxanadeem.wigglewars.core.Phase
 import com.hamxanadeem.wigglewars.core.TeamSetup
 import com.hamxanadeem.wigglewars.core.Weapon
 import com.hamxanadeem.wigglewars.core.WeaponSet
+import com.hamxanadeem.wigglewars.data.Progress
 import com.hamxanadeem.wigglewars.data.Settings
 import com.hamxanadeem.wigglewars.data.Stats
 import com.hamxanadeem.wigglewars.fx.GameSounds
@@ -41,6 +44,15 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
 
     private lateinit var settings: Settings
     private lateinit var stats: Stats
+    private lateinit var progress: Progress
+    private lateinit var coach: TextView
+    private lateinit var ffButton: Button
+    /** The campaign mission being played, or null. */
+    private var mission: Mission? = null
+    private var missionNumber = 0
+    /** Tutorial step shown, or -1 when off. */
+    private var tip = -1
+    private var tipShownAt = 0L
     private lateinit var match: Match
     private lateinit var ai: AiDriver
     private lateinit var battle: BattleView
@@ -72,6 +84,10 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
         Screen.immersive(this)
         settings = Settings(this)
         stats = Stats(this)
+        progress = Progress(this)
+        coach = findViewById(R.id.coachText)
+        ffButton = findViewById(R.id.ffButton)
+        missionNumber = intent.getIntExtra(EXTRA_MISSION, 0)
         GameSounds.init(this)
         Sounds.enabled = settings.soundOn
 
@@ -109,12 +125,16 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
 
     private fun startMatch() {
         val room = intent.getStringExtra(EXTRA_ROOM)
-        val difficulty = Difficulty.entries[intent.getIntExtra(EXTRA_DIFFICULTY, 1)]
+        mission = if (missionNumber in 1..Campaign.missions.size) Campaign.mission(missionNumber) else null
+        val difficulty = mission?.difficulty ?: Difficulty.entries[intent.getIntExtra(EXTRA_DIFFICULTY, 1)]
         val weaponSet = intent.getStringExtra(EXTRA_WEAPONS)?.let { name -> WeaponSet.entries.firstOrNull { it.name == name } } ?: WeaponSet.STANDARD
         // Offline with no arena chosen ("random"): a different one each rematch. Online, the room decides.
         val arena = intent.getStringExtra(EXTRA_ARENA)?.let { name -> Arena.entries.firstOrNull { it.name == name } }
             ?: if (room != null) Arena.HILLS else Arena.entries.random()
-        val config = if (room != null) {
+        val m = mission
+        val config = if (m != null) {
+            m.config(seed = System.nanoTime(), bonusAmmo = progress.bonusAmmo())
+        } else if (room != null) {
             // Every phone builds the same match from the room's seed.
             val names = intent.getStringArrayExtra(EXTRA_NAMES) ?: arrayOf("Player 1", "Player 2")
             MatchConfig(
@@ -134,6 +154,7 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
                 bonusBananas = intent.getIntExtra(EXTRA_BANANAS, 0),
                 arena = arena,
                 weaponSet = weaponSet,
+                bonusAmmo = progress.bonusAmmo(),
             )
         }
         if (::ai.isInitialized) ai.shutdown()
@@ -150,6 +171,12 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
         lastHumanTeam = -1
         overOverlay.visibility = View.GONE
         battle.start(match)
+        if (m != null) battle.setIntro("MISSION ${m.number}: ${m.title.uppercase()}", m.brief)
+        // First battle on this phone: walk through the controls.
+        tip = if (!progress.tutorialDone && !online) 0 else -1
+        renderCoach()
+        ffButton.visibility = if (online) View.GONE else View.VISIBLE
+        renderFastForward()
         handle(match.drainEvents())
         refreshControls()
     }
@@ -194,8 +221,11 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
             tickSound()
             onlineStatus(steps)
         } else if (!paused) {
-            ai.update(match, dt)
-            if (!ai.isThinking) handle(match.update(dt))
+            // Fast forward everything except your own aiming and running.
+            val humanMoving = !match.isCpuTurn && (match.phase == Phase.AIM || match.phase == Phase.RETREAT)
+            val speed = if (progress.fastForward && !humanMoving) 3.0 else 1.0
+            ai.update(match, dt * speed)
+            if (!ai.isThinking) handle(match.update(dt * speed))
             updateCharge()
             battle.charge = if (match.isCpuTurn) ai.charge else currentCharge()
             battle.humanTurn = !match.isCpuTurn
@@ -244,6 +274,11 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
                     else -> Sounds.play(GameSounds.LAUNCH)
                 }
                 is GameEvent.WaterRose -> if (e.first) waterNotice = true
+                is GameEvent.Split -> Sounds.play(GameSounds.LAUNCH, rate = 1.4f)
+                is GameEvent.Carved -> if (now - lastBounceSound > 120) {
+                    lastBounceSound = now
+                    Sounds.play(GameSounds.BOUNCE, rate = 0.5f, volume = 0.4f)
+                }
                 is GameEvent.Damaged -> Sounds.play(GameSounds.OUCH, rate = 0.85f + (e.worm % 4) * 0.1f, volume = 0.8f)
                 is GameEvent.Jumped -> Sounds.play(GameSounds.JUMP, volume = 0.7f)
                 is GameEvent.Splash -> Sounds.play(GameSounds.SPLASH)
@@ -318,8 +353,8 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
                 true
             }
         }
-        hold(R.id.leftButton, { if (humanCanMove()) act(Command.Walk(-1)) }, { act(Command.Walk(0)) })
-        hold(R.id.rightButton, { if (humanCanMove()) act(Command.Walk(1)) }, { act(Command.Walk(0)) })
+        hold(R.id.leftButton, { if (humanCanMove()) { act(Command.Walk(-1)); tutorialStep(3) } }, { act(Command.Walk(0)) })
+        hold(R.id.rightButton, { if (humanCanMove()) { act(Command.Walk(1)); tutorialStep(3) } }, { act(Command.Walk(0)) })
         findViewById<View>(R.id.jumpButton).setOnClickListener { if (humanCanMove()) act(Command.Jump) }
         findViewById<View>(R.id.backflipButton).setOnClickListener { if (humanCanMove()) act(Command.Backflip) }
         findViewById<View>(R.id.skipButton).setOnClickListener {
@@ -336,6 +371,23 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
         hold(R.id.fireButton, { pressFire() }, { releaseFire() })
         findViewById<ImageButton>(R.id.pauseButton).setOnClickListener { setPaused(true) }
         findViewById<Button>(R.id.resumeButton).setOnClickListener { setPaused(false) }
+        findViewById<Button>(R.id.tipsButton).setOnClickListener {
+            setPaused(false)
+            tip = 0
+            renderCoach()
+        }
+        ffButton.setOnClickListener {
+            Sounds.play(GameSounds.TAP)
+            progress.fastForward = !progress.fastForward
+            renderFastForward()
+        }
+        coach.setOnClickListener { nextTip() }
+        findViewById<Button>(R.id.nextButton).setOnClickListener {
+            afterMatch {
+                missionNumber += 1
+                startMatch()
+            }
+        }
         findViewById<Button>(R.id.quitButton).setOnClickListener { finish() }
         findViewById<Button>(R.id.rematchButton).setOnClickListener { afterMatch { startMatch() } }
         findViewById<Button>(R.id.menuButton).setOnClickListener { afterMatch { finish() } }
@@ -353,7 +405,10 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
         weaponPanel.visibility = View.GONE
         when (match.selected.mode) {
             FireMode.POWER -> chargeStart = SystemClock.uptimeMillis()
-            FireMode.INSTANT, FireMode.DROP -> act(Command.Fire(1.0))
+            FireMode.INSTANT, FireMode.DROP -> {
+                act(Command.Fire(1.0))
+                tutorialStep(1)
+            }
             FireMode.TARGET -> battle.showBanner("Tap the map to choose a spot", 0xFFFFFFFF.toInt())
         }
     }
@@ -362,7 +417,11 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
         if (chargeStart < 0) return
         val power = currentCharge().toDouble()
         chargeStart = -1L
-        if (humanCanAct()) act(Command.Fire(power))
+        if (humanCanAct()) {
+            battle.previewPower = power.toFloat()
+            act(Command.Fire(power))
+            tutorialStep(1)
+        }
     }
 
     private fun currentCharge(): Float =
@@ -408,6 +467,7 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
         }
         picker.open(match.selected)
         weaponPanel.visibility = View.VISIBLE
+        tutorialStep(2)
     }
 
     // ---------------------------------------------------------------- BattleView.Listener
@@ -418,6 +478,7 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
         val w = match.activeWorm
         if (online && w.facing == facing && kotlin.math.abs(w.aim - aim) < 0.004) return
         act(Command.Aim(facing, aim))
+        tutorialStep(0)
     }
 
     override fun onTarget(x: Double, y: Double) {
@@ -460,7 +521,31 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
             else -> getString(R.string.team_wins, match.teams[winner].name)
         }
         title.setTextColor(if (winner != null) TeamColors.colors[winner] else 0xFFFFFFFF.toInt())
-        findViewById<TextView>(R.id.overStats).text = getString(R.string.over_stats, match.turnNumber, stats.wins)
+        val statsText = findViewById<TextView>(R.id.overStats)
+        statsText.text = getString(R.string.over_stats, match.turnNumber, stats.wins)
+        val next = findViewById<Button>(R.id.nextButton)
+        next.visibility = View.GONE
+        findViewById<Button>(R.id.rematchButton).setText(R.string.rematch)
+        val m = mission
+        if (m != null) {
+            // Stars and coins for the campaign.
+            val won = winner == 0
+            val lost = match.teams[0].worms.count { !it.alive }
+            val stars = Campaign.stars(m, won, lost, match.turnNumber)
+            val coins = Campaign.coins(stars, progress.stars(m.number))
+            progress.setStars(m.number, stars)
+            progress.coins += coins
+            title.text = getString(if (won) R.string.mission_complete else R.string.mission_failed)
+            title.setTextColor(if (won) Neon.LIME else Neon.RED)
+            val starText = "★".repeat(stars) + "☆".repeat(3 - stars)
+            statsText.text = getString(R.string.mission_result, starText, coins, match.turnNumber, m.parTurns)
+            findViewById<Button>(R.id.rematchButton).setText(R.string.retry)
+            if (won && m.number < Campaign.missions.size) next.visibility = View.VISIBLE
+        } else if (!online && humans.size == 1) {
+            val coins = if (humanWon) 40 else 10
+            progress.coins += coins
+            statsText.text = getString(R.string.battle_reward, coins, progress.coins)
+        }
         battle.postDelayed({
             if (isFinishing) return@postDelayed
             overOverlay.visibility = View.VISIBLE
@@ -481,7 +566,45 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
         }
     }
 
+    // ---------------------------------------------------------------- tutorial and speed
+
+    private fun renderFastForward() {
+        ffButton.text = if (progress.fastForward) "3×" else "1×"
+        ffButton.alpha = if (progress.fastForward) 1f else 0.7f
+    }
+
+    private fun renderCoach() {
+        val text = TIPS.getOrNull(tip)
+        if (text == null) {
+            coach.visibility = View.GONE
+            return
+        }
+        coach.text = getString(text)
+        coach.visibility = View.VISIBLE
+        coach.alpha = 0f
+        coach.animate().alpha(1f).setDuration(250).start()
+        tipShownAt = SystemClock.uptimeMillis()
+    }
+
+    private fun nextTip() {
+        if (tip < 0) return
+        Sounds.play(GameSounds.TAP)
+        tip++
+        if (tip >= TIPS.size) {
+            tip = -1
+            progress.tutorialDone = true
+        }
+        renderCoach()
+    }
+
+    /** Moves the tutorial on when the player does what the current tip asks. */
+    private fun tutorialStep(done: Int) {
+        if (tip == done && SystemClock.uptimeMillis() - tipShownAt > 600) nextTip()
+    }
+
     companion object {
+        private val TIPS = intArrayOf(R.string.tip_aim, R.string.tip_fire, R.string.tip_weapons, R.string.tip_move)
+        const val EXTRA_MISSION = "mission"
         const val EXTRA_CPU = "cpu"
         const val EXTRA_WORMS = "worms"
         const val EXTRA_DIFFICULTY = "difficulty"

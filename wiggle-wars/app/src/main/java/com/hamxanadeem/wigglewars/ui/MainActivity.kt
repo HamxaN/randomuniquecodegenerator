@@ -16,6 +16,7 @@ import com.hamxanadeem.wigglewars.core.Arena
 import com.hamxanadeem.wigglewars.core.Difficulty
 import com.hamxanadeem.wigglewars.core.Weapon
 import com.hamxanadeem.wigglewars.core.WeaponSet
+import com.hamxanadeem.wigglewars.data.Progress
 import com.hamxanadeem.wigglewars.data.Settings
 import com.hamxanadeem.wigglewars.data.Stats
 import com.hamxanadeem.wigglewars.fx.GameSounds
@@ -41,6 +42,9 @@ class MainActivity : AppCompatActivity() {
     private var weaponSet = WeaponSet.STANDARD
     private lateinit var arenaCard: ArenaCardView
     private lateinit var armory: View
+    private lateinit var campaign: View
+    private lateinit var campaignView: CampaignView
+    private lateinit var progress: Progress
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -101,6 +105,32 @@ class MainActivity : AppCompatActivity() {
             settings.weaponSet = weaponSet.name
             renderSetup()
         }
+        progress = Progress(this)
+        campaign = findViewById(R.id.campaignPanel)
+        campaignView = findViewById(R.id.campaignView)
+        campaignView.progress = progress
+        campaignView.listener = object : CampaignView.Listener {
+            override fun onPlay(mission: Int) {
+                Sounds.play(GameSounds.TAP)
+                campaign.visibility = View.GONE
+                startActivity(Intent(this@MainActivity, GameActivity::class.java).putExtra(GameActivity.EXTRA_MISSION, mission))
+            }
+
+            override fun onClose() {
+                Sounds.play(GameSounds.TAP)
+                campaign.visibility = View.GONE
+            }
+
+            override fun onBought(ok: Boolean) {
+                if (ok) {
+                    Sounds.play(GameSounds.CRATE)
+                } else {
+                    Sounds.play(GameSounds.TAP)
+                    Toast.makeText(this@MainActivity, R.string.not_enough_coins, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+        findViewById<Button>(R.id.missionsButton).setOnClickListener { openCampaign() }
         armory = findViewById(R.id.armoryPanel)
         val armoryPicker = findViewById<WeaponPickerView>(R.id.armoryPicker)
         armoryPicker.browseOnly = true
@@ -120,6 +150,7 @@ class MainActivity : AppCompatActivity() {
         onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 when {
+                    campaign.visibility == View.VISIBLE -> campaign.visibility = View.GONE
                     armory.visibility == View.VISIBLE -> armory.visibility = View.GONE
                     setup.visibility == View.VISIBLE -> {
                         setup.visibility = View.GONE
@@ -151,11 +182,17 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        findViewById<TextView>(R.id.statsText).text = getString(R.string.stats_format, stats.wins, stats.matches)
+        findViewById<TextView>(R.id.statsText).text = getString(R.string.stats_format, stats.wins, progress.totalStars, progress.coins)
         findViewById<Button>(R.id.privacyButton).visibility =
             if (AdsManager.isPrivacyOptionsRequired(this)) View.VISIBLE else View.GONE
         renderToggles()
         renderSetup()
+    }
+
+    private fun openCampaign() {
+        Sounds.play(GameSounds.TAP)
+        campaignView.open()
+        campaign.visibility = View.VISIBLE
     }
 
     private fun openSetup(newMode: Mode) {

@@ -74,18 +74,32 @@
                 android:textSize="14sp" />
 
             <com.hamxanadeem.wigglewars.ui.NeonButton
+                android:id="@+id/missionsButton"
+                style="@style/GameButton"
+                android:layout_width="match_parent"
+                android:layout_height="62dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/missions"
+                android:textSize="19sp"
+                app:neonColor="@color/neon_magenta" />
+
+            <com.hamxanadeem.wigglewars.ui.NeonButton
                 android:id="@+id/cpuButton"
                 style="@style/GameButton"
                 android:layout_width="match_parent"
-                android:layout_marginBottom="10dp"
-                android:text="@string/vs_cpu"
+                android:layout_height="50dp"
+                android:layout_marginBottom="6dp"
+                android:text="@string/quick_battle"
+                android:textSize="15sp"
                 app:neonColor="@color/neon_cyan" />
 
             <com.hamxanadeem.wigglewars.ui.NeonButton
                 android:id="@+id/localButton"
                 style="@style/GameButton"
                 android:layout_width="match_parent"
-                android:layout_marginBottom="10dp"
+                android:layout_height="50dp"
+                android:layout_marginBottom="6dp"
+                android:textSize="15sp"
                 android:text="@string/pass_and_play"
                 app:neonColor="@color/neon_violet" />
 
@@ -93,6 +107,7 @@
                 android:id="@+id/onlineButton"
                 style="@style/GameButton"
                 android:layout_width="match_parent"
+                android:layout_height="50dp"
                 android:text="@string/play_online"
                 android:textSize="17sp"
                 app:neonColor="@color/neon_lime" />
@@ -101,8 +116,8 @@
                 android:id="@+id/armoryButton"
                 style="@style/GameButton"
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginTop="10dp"
+                android:layout_height="50dp"
+                android:layout_marginTop="6dp"
                 android:text="@string/armory"
                 android:textSize="16sp"
                 app:neonColor="@color/neon_violet" />
@@ -295,6 +310,23 @@
                 </LinearLayout>
             </FrameLayout>
         </ScrollView>
+    </FrameLayout>
+
+    <!-- Campaign: missions and upgrades. -->
+    <FrameLayout
+        android:id="@+id/campaignPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#B3000000"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone">
+
+        <com.hamxanadeem.wigglewars.ui.CampaignView
+            android:id="@+id/campaignView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/missions" />
     </FrameLayout>
 
     <!-- Armory: browse every weapon. -->

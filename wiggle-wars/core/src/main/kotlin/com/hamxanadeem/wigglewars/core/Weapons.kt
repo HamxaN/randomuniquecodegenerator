@@ -14,9 +14,10 @@ enum class FireMode {
 
 /** Tabs in the weapon picker. */
 enum class WeaponCategory(val displayName: String) {
-    EXPLOSIVES("Explosives"),
-    GUNS("Guns"),
+    MISSILES("Missiles"),
+    BOMBS("Bombs"),
     STRIKES("Strikes"),
+    GUNS("Guns"),
     TOOLS("Tools"),
 }
 
@@ -35,6 +36,12 @@ data class ProjectileSpec(
     val mine: Boolean = false,
     /** Walks along the ground and hops over bumps until its fuse runs out or it touches a worm. */
     val walker: Boolean = false,
+    /** Steers itself towards the nearest enemy shortly after launch. */
+    val homing: Boolean = false,
+    /** Seconds it keeps boring through land after hitting it, before exploding. */
+    val drill: Double = 0.0,
+    /** Splits into its children at the top of its flight instead of on impact. */
+    val splitAtApex: Boolean = false,
 )
 
 enum class Weapon(
@@ -52,17 +59,48 @@ enum class Weapon(
     val range: Int,
 ) {
     BAZOOKA(
-        "Bazooka", WeaponCategory.EXPLOSIVES, FireMode.POWER, -1,
+        "Bazooka", WeaponCategory.MISSILES, FireMode.POWER, -1,
         ProjectileSpec(windFactor = 1.0, explosionRadius = 34.0, damage = 48), 520.0,
         "Rocket that explodes on impact. The wind pushes it.", 3, 3, 4,
     ),
+    HOMING(
+        "Homing Missile", WeaponCategory.MISSILES, FireMode.POWER, 2,
+        ProjectileSpec(radius = 3.0, explosionRadius = 36.0, damage = 50, homing = true), 420.0,
+        "Launch it anywhere: after a moment it locks on and chases the nearest enemy.", 3, 3, 5,
+    ),
+    DRILL(
+        "Drill Missile", WeaponCategory.MISSILES, FireMode.POWER, 2,
+        ProjectileSpec(radius = 3.0, windFactor = 0.5, explosionRadius = 40.0, damage = 52, drill = 0.55), 500.0,
+        "Bores straight through the ground, then blows up. Finds worms hiding in caves.", 3, 3, 4,
+    ),
+    MIRV(
+        "Cluster Missile", WeaponCategory.MISSILES, FireMode.POWER, 1,
+        ProjectileSpec(
+            radius = 3.5, windFactor = 0.8, explosionRadius = 20.0, damage = 15, splitAtApex = true, children = 4,
+            childSpec = ProjectileSpec(radius = 3.0, explosionRadius = 32.0, damage = 34),
+        ),
+        480.0, "Splits into four missiles at the top of its flight. Rains destruction on an area.", 4, 4, 4,
+    ),
+    NAPALM(
+        "Napalm Missile", WeaponCategory.MISSILES, FireMode.POWER, 1,
+        ProjectileSpec(
+            radius = 3.5, windFactor = 0.8, explosionRadius = 26.0, damage = 25, children = 8,
+            childSpec = ProjectileSpec(radius = 2.5, windFactor = 0.4, bounce = 0.2, fuse = 1.8, explosionRadius = 14.0, damage = 9),
+        ),
+        480.0, "Explodes into burning blobs of fire that spread across the ground.", 4, 4, 4,
+    ),
+    NUKE(
+        "Nuke", WeaponCategory.MISSILES, FireMode.POWER, 1,
+        ProjectileSpec(radius = 5.0, windFactor = 0.6, explosionRadius = 115.0, damage = 80), 460.0,
+        "The biggest blast in the game. One per match. Don't stand too close!", 5, 5, 4,
+    ),
     GRENADE(
-        "Grenade", WeaponCategory.EXPLOSIVES, FireMode.POWER, -1,
+        "Grenade", WeaponCategory.BOMBS, FireMode.POWER, -1,
         ProjectileSpec(bounce = 0.45, fuse = 3.0, explosionRadius = 34.0, damage = 45), 440.0,
         "Bounces around and goes off after 3 seconds. Ignores wind.", 3, 3, 3,
     ),
     CLUSTER(
-        "Cluster Bomb", WeaponCategory.EXPLOSIVES, FireMode.POWER, 3,
+        "Cluster Bomb", WeaponCategory.BOMBS, FireMode.POWER, 2,
         ProjectileSpec(
             bounce = 0.4, fuse = 3.0, explosionRadius = 24.0, damage = 25, children = 5,
             childSpec = ProjectileSpec(radius = 2.0, explosionRadius = 18.0, damage = 18),
@@ -70,7 +108,7 @@ enum class Weapon(
         440.0, "Bursts into five bomblets that rain down on the area.", 4, 4, 3,
     ),
     BANANA(
-        "Banana Bomb", WeaponCategory.EXPLOSIVES, FireMode.POWER, 0,
+        "Banana Bomb", WeaponCategory.BOMBS, FireMode.POWER, 1,
         ProjectileSpec(
             radius = 4.0, bounce = 0.6, fuse = 3.0, explosionRadius = 44.0, damage = 55, children = 5,
             childSpec = ProjectileSpec(radius = 3.0, bounce = 0.5, fuse = 1.6, explosionRadius = 36.0, damage = 38),
@@ -78,17 +116,17 @@ enum class Weapon(
         440.0, "Splits into five bouncing bananas. Total devastation.", 5, 5, 3,
     ),
     MEGA_GRENADE(
-        "Mega Grenade", WeaponCategory.EXPLOSIVES, FireMode.POWER, 1,
+        "Mega Grenade", WeaponCategory.BOMBS, FireMode.POWER, 1,
         ProjectileSpec(radius = 4.0, bounce = 0.3, fuse = 3.0, explosionRadius = 76.0, damage = 85), 400.0,
         "A golden grenade with an enormous blast. Throw it far!", 5, 5, 2,
     ),
     DYNAMITE(
-        "Dynamite", WeaponCategory.EXPLOSIVES, FireMode.DROP, 2,
+        "Dynamite", WeaponCategory.BOMBS, FireMode.DROP, 1,
         ProjectileSpec(bounce = 0.1, fuse = 4.0, explosionRadius = 58.0, damage = 72), 0.0,
         "Drop it, then run! Huge blast after 4 seconds.", 5, 4, 0,
     ),
     MINE(
-        "Land Mine", WeaponCategory.EXPLOSIVES, FireMode.DROP, 2,
+        "Land Mine", WeaponCategory.BOMBS, FireMode.DROP, 2,
         ProjectileSpec(radius = 3.0, bounce = 0.15, explosionRadius = 30.0, damage = 40, mine = true), 0.0,
         "Tossed a short way. Arms after a few seconds, then blows up the next worm to wander close.", 3, 3, 1,
     ),
@@ -97,11 +135,11 @@ enum class Weapon(
         "Instant shot in a straight line. Knocks worms back.", 2, 1, 3,
     ),
     UZI(
-        "Uzi", WeaponCategory.GUNS, FireMode.INSTANT, 3, null, 0.0,
+        "Uzi", WeaponCategory.GUNS, FireMode.INSTANT, 2, null, 0.0,
         "Sprays ten bullets. Great for pushing worms off ledges.", 3, 1, 3,
     ),
     SNIPER(
-        "Sniper Rifle", WeaponCategory.GUNS, FireMode.INSTANT, 2, null, 0.0,
+        "Sniper Rifle", WeaponCategory.GUNS, FireMode.INSTANT, 1, null, 0.0,
         "One precise, long-range shot that hits hard.", 4, 0, 5,
     ),
     AIRSTRIKE(
@@ -148,6 +186,9 @@ enum class Weapon(
         const val SHEEP_SPEED = 70.0
         const val GIRDER_LENGTH = 70
         const val GIRDER_THICKNESS = 7
+        const val HOMING_DELAY = 0.45
+        const val HOMING_SPEED = 330.0
+        const val HOMING_TURN = 4.5
     }
 }
 
@@ -156,8 +197,8 @@ enum class Weapon(
  * so a team can always fire something.
  */
 enum class WeaponSet(val displayName: String, val description: String) {
-    STANDARD("Standard", "The classic mix"),
-    ARTILLERY("Heavy Artillery", "Big explosives, lots of them"),
+    STANDARD("Standard", "Every weapon, big ones limited"),
+    ARTILLERY("Heavy Artillery", "Lots of missiles and big bombs"),
     SHARPSHOOTER("Sharpshooter", "Guns and tools only"),
     MAYHEM("Mayhem", "Everything, unlimited!"),
     ;
@@ -165,9 +206,10 @@ enum class WeaponSet(val displayName: String, val description: String) {
     fun ammo(weapon: Weapon): Int = when (this) {
         STANDARD -> weapon.startAmmo
         ARTILLERY -> when (weapon) {
-            Weapon.BAZOOKA, Weapon.GRENADE, Weapon.CLUSTER -> -1
-            Weapon.BANANA, Weapon.MEGA_GRENADE, Weapon.AIRSTRIKE, Weapon.SHEEP -> 2
+            Weapon.BAZOOKA, Weapon.GRENADE, Weapon.CLUSTER, Weapon.HOMING, Weapon.DRILL -> -1
+            Weapon.BANANA, Weapon.MEGA_GRENADE, Weapon.AIRSTRIKE, Weapon.SHEEP, Weapon.MIRV, Weapon.NAPALM -> 3
             Weapon.DYNAMITE, Weapon.MINE -> 4
+            Weapon.NUKE -> 2
             Weapon.SHOTGUN, Weapon.UZI, Weapon.SNIPER -> 0
             else -> weapon.startAmmo
         }

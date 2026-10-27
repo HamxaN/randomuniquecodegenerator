@@ -26,6 +26,40 @@
             android:contentDescription="@string/pause"
             android:src="@drawable/ic_pause" />
 
+        <!-- Fast forward, under the pause button. -->
+        <com.hamxanadeem.wigglewars.ui.NeonButton
+            android:id="@+id/ffButton"
+            style="@style/GameButton"
+            android:layout_width="56dp"
+            android:layout_height="48dp"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="60dp"
+            android:layout_marginEnd="4dp"
+            android:contentDescription="@string/fast_forward"
+            android:text="1×"
+            android:textSize="14sp"
+            app:neonColor="@color/neon_amber" />
+
+        <!-- Tutorial tips. -->
+        <TextView
+            android:id="@+id/coachText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|center_horizontal"
+            android:layout_marginTop="112dp"
+            android:background="@drawable/bg_panel"
+            android:fontFamily="@font/orbitron_bold"
+            android:gravity="center"
+            android:lineSpacingExtra="4dp"
+            android:maxWidth="440dp"
+            android:paddingHorizontal="22dp"
+            android:paddingVertical="14dp"
+            android:shadowColor="#FF00E5FF"
+            android:shadowRadius="8"
+            android:textColor="#FFFFFFFF"
+            android:textSize="14sp"
+            android:visibility="gone" />
+
         <!-- Movement on the left. -->
         <LinearLayout
             android:id="@+id/controls"
@@ -191,6 +225,16 @@
                     app:neonColor="@color/neon_cyan" />
 
                 <com.hamxanadeem.wigglewars.ui.NeonButton
+                    android:id="@+id/tipsButton"
+                    style="@style/GameButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginBottom="10dp"
+                    android:text="@string/tips"
+                    android:textSize="15sp"
+                    app:neonColor="@color/neon_lime" />
+
+                <com.hamxanadeem.wigglewars.ui.NeonButton
                     android:id="@+id/quitButton"
                     style="@style/GameButton"
                     android:layout_width="match_parent"
@@ -211,7 +255,7 @@
 
             <LinearLayout
                 android:id="@+id/overCard"
-                android:layout_width="340dp"
+                android:layout_width="440dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:background="@drawable/bg_panel"
@@ -259,6 +303,16 @@
                         android:layout_weight="1"
                         android:text="@string/menu"
                         app:neonColor="@color/neon_violet" />
+
+                    <com.hamxanadeem.wigglewars.ui.NeonButton
+                        android:id="@+id/nextButton"
+                        style="@style/GameButton"
+                        android:layout_width="0dp"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:text="@string/next_mission"
+                        android:visibility="gone"
+                        app:neonColor="@color/neon_lime" />
                 </LinearLayout>
             </LinearLayout>
         </FrameLayout>
