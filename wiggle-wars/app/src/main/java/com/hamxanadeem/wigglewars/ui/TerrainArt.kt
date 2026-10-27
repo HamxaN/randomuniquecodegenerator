@@ -58,15 +58,31 @@ class TerrainArt(private val terrain: Terrain, private val theme: MapTheme, with
         backdrop.close()
     }
 
-    /** Top of the first solid run at least [MIN_GROUND] pixels deep in column [x]. */
+    /**
+     * Top of the first solid run at least [MIN_GROUND] pixels deep in column [x],
+     * skipping things that float above open sky (like lollipops on sticks).
+     */
     private fun groundTop(x: Int): Int {
         var run = 0
-        for (y in 0 until terrain.waterY) {
+        var y = 0
+        while (y < terrain.waterY) {
             if (terrain.isSolid(x, y)) {
-                if (++run >= MIN_GROUND) return y - run + 1
+                if (++run >= MIN_GROUND) {
+                    val top = y - run + 1
+                    var end = y
+                    while (end < terrain.height && terrain.isSolid(x, end)) end++
+                    var gap = 0
+                    while (end + gap < terrain.waterY && !terrain.isSolid(x, end + gap)) gap++
+                    // Land that reaches the sea floor, or with only a cave under it, is ground.
+                    if (end >= terrain.waterY || (gap < MAX_CAVE && end + gap < terrain.waterY)) return top
+                    y = end + gap
+                    run = 0
+                    continue
+                }
             } else {
                 run = 0
             }
+            y++
         }
         return terrain.height
     }
@@ -151,6 +167,8 @@ class TerrainArt(private val terrain: Terrain, private val theme: MapTheme, with
             return createBitmap(width, height).apply { setPixels(pixels, 0, width, 0, 0, width, height) }
         }
         private const val MIN_GROUND = 60
+        /** Taller gaps than this under some land mean it's floating, not a cave. */
+        private const val MAX_CAVE = 170
 
         fun hash(x: Int, y: Int): Int {
             var h = x * 374761393 + y * 668265263
