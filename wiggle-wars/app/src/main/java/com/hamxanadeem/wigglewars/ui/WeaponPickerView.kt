@@ -83,7 +83,7 @@ class WeaponPickerView @JvmOverloads constructor(
         val pw = min(width - 24 * dp, 700 * dp)
         val ph = min(height - 20 * dp, 350 * dp)
         panel.set((width - pw) / 2, (height - ph) / 2, (width + pw) / 2, (height + ph) / 2)
-        panelShader = LinearGradient(0f, panel.top, 0f, panel.bottom, 0xF0243B5E.toInt(), 0xF0142338.toInt(), Shader.TileMode.CLAMP)
+        panelShader = LinearGradient(0f, panel.top, 0f, panel.bottom, 0xFC243B5E.toInt(), 0xFC142338.toInt(), Shader.TileMode.CLAMP)
         val pad = 12 * dp
 
         // Tabs along the top, after the title.

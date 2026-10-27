@@ -69,6 +69,7 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game)
+        Screen.immersive(this)
         settings = Settings(this)
         stats = Stats(this)
         GameSounds.init(this)
@@ -88,6 +89,9 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.root)) { _, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
             battle.topInset = bars.top
+            battle.leftInset = bars.left
+            battle.rightInset = bars.right
+            battle.bottomInset = bars.bottom
             overlay.setPadding(bars.left, bars.top, bars.right, bars.bottom)
             insets
         }
@@ -151,6 +155,11 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
     }
 
     // ---------------------------------------------------------------- loop
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) Screen.immersive(this)
+    }
 
     override fun onResume() {
         super.onResume()

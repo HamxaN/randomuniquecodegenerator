@@ -166,9 +166,9 @@ class TerrainArt(private val terrain: Terrain, private val theme: MapTheme, with
             }
             return createBitmap(width, height).apply { setPixels(pixels, 0, width, 0, 0, width, height) }
         }
-        private const val MIN_GROUND = 60
+        private const val MIN_GROUND = 70
         /** Taller gaps than this under some land mean it's floating, not a cave. */
-        private const val MAX_CAVE = 170
+        private const val MAX_CAVE = 120
 
         fun hash(x: Int, y: Int): Int {
             var h = x * 374761393 + y * 668265263

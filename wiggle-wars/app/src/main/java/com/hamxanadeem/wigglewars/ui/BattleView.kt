@@ -2,6 +2,7 @@ package com.hamxanadeem.wigglewars.ui
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Path
@@ -49,6 +50,10 @@ class BattleView @JvmOverloads constructor(
     var charge = -1f
     /** Space at the top taken by the status bar. */
     var topInset = 0
+    /** Space taken by the camera cutout or bars on the other edges. */
+    var leftInset = 0
+    var rightInset = 0
+    var bottomInset = 0
 
     private var match: Match? = null
     private var art: TerrainArt? = null
@@ -141,8 +146,8 @@ class BattleView @JvmOverloads constructor(
 
     private fun updateScale() {
         if (width == 0) return
-        // About 760 world units across at normal zoom.
-        scale = width / 760f * zoom
+        // About 620 world units across at normal zoom.
+        scale = width / 620f * zoom
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -450,11 +455,16 @@ class BattleView @JvmOverloads constructor(
             // Health label.
             val label = w.health.toString()
             textFill.textSize = 9f
-            val tw = textFill.measureText(label) + 6
+            val tw = textFill.measureText(label) + 8
             val ly = w.y.toFloat() - 20
-            rect.set(w.x.toFloat() - tw / 2, ly - 9, w.x.toFloat() + tw / 2, ly + 2)
+            rect.set(w.x.toFloat() - tw / 2, ly - 9, w.x.toFloat() + tw / 2, ly + 2.5f)
             paint.color = TeamColors.colors[w.team]
-            canvas.drawRoundRect(rect, 3f, 3f, paint)
+            canvas.drawRoundRect(rect, 5.5f, 5.5f, paint)
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = 0.9f
+            paint.color = 0xCCFFFFFF.toInt()
+            canvas.drawRoundRect(rect, 5.5f, 5.5f, paint)
+            paint.style = Paint.Style.FILL
             textFill.color = if (w.team == 3) 0xFF333333.toInt() else 0xFFFFFFFF.toInt()
             canvas.drawText(label, w.x.toFloat(), ly, textFill)
             if (active) {
@@ -725,86 +735,206 @@ class BattleView @JvmOverloads constructor(
     // ---------------------------------------------------------------- HUD (screen pixels)
 
     private fun drawHud(canvas: Canvas, m: Match, now: Long) {
-        val top = topInset + 10 * dp
-
-        // Turn timer.
-        val seconds = when (m.phase) {
-            Phase.AIM -> kotlin.math.ceil(m.turnTimeLeft).toInt()
-            Phase.RETREAT -> kotlin.math.ceil(m.retreatLeft).toInt()
-            else -> null
-        }
-        val teamColor = TeamColors.colors[m.currentTeam]
-        paint.color = 0x99000000.toInt()
-        canvas.drawCircle(34 * dp, top + 24 * dp, 24 * dp, paint)
-        paint.color = teamColor
-        paint.style = Paint.Style.STROKE
-        paint.strokeWidth = 4 * dp
-        canvas.drawCircle(34 * dp, top + 24 * dp, 22 * dp, paint)
-        paint.style = Paint.Style.FILL
-        hudText(canvas, seconds?.toString() ?: "…", 34 * dp, top + 31 * dp, 20 * dp,
-            if (m.phase == Phase.RETREAT || (seconds ?: 99) <= 5) 0xFFFFEB3B.toInt() else 0xFFFFFFFF.toInt())
-
-        // Wind meter.
-        val wx = width / 2f
-        val wy = top + 14 * dp
-        val half = 80 * dp
-        rect.set(wx - half, wy, wx + half, wy + 12 * dp)
-        paint.color = 0x99000000.toInt()
-        canvas.drawRoundRect(rect, 6 * dp, 6 * dp, paint)
-        val windPx = (m.wind * half).toFloat()
-        paint.color = if (m.wind > 0) 0xFF4FC3F7.toInt() else 0xFFFF8A65.toInt()
-        rect.set(min(wx, wx + windPx), wy + 2 * dp, max(wx, wx + windPx), wy + 10 * dp)
-        canvas.drawRoundRect(rect, 4 * dp, 4 * dp, paint)
-        hudText(canvas, if (abs(m.wind) < 0.05) "WIND ·" else if (m.wind > 0) "WIND ▶" else "◀ WIND", wx, wy + 28 * dp, 11 * dp, 0xFFFFFFFF.toInt())
-
-        // Team health bars along the bottom.
-        val barW = min(width * 0.28f, 220 * dp)
-        val barH = 10 * dp
-        val maxHealth = m.teams.maxOf { it.worms.size * Worm.START_HEALTH }.toFloat()
-        var by = height - 14 * dp - m.teams.size * (barH + 5 * dp)
-        for (team in m.teams) {
-            val left = (width - barW) / 2f
-            rect.set(left, by, left + barW, by + barH)
-            paint.color = 0x77000000
-            canvas.drawRoundRect(rect, barH / 2, barH / 2, paint)
-            val fill = (team.totalHealth / maxHealth).coerceIn(0f, 1f)
-            if (fill > 0f) {
-                rect.set(left, by, left + barW * fill, by + barH)
-                paint.color = TeamColors.colors[team.id]
-                canvas.drawRoundRect(rect, barH / 2, barH / 2, paint)
-            }
-            textFill.textAlign = Paint.Align.RIGHT
-            textStroke.textAlign = Paint.Align.RIGHT
-            hudText(canvas, team.name, left - 6 * dp, by + barH - 1 * dp, 10 * dp, TeamColors.colors[team.id])
-            textFill.textAlign = Paint.Align.CENTER
-            textStroke.textAlign = Paint.Align.CENTER
-            by += barH + 5 * dp
-        }
-
+        drawTurnCard(canvas, m)
+        drawWind(canvas, m)
+        drawTeams(canvas, m)
         drawMiniMap(canvas, m)
         drawIntro(canvas, m, now)
-
-        // Big banner at the start of each turn.
-        val b = banner
-        if (b != null) {
-            val k = (now - bannerAt) / (if (subBanner != null) 3000f else 1800f)
-            if (k < 1f) {
-                val alpha = (255 * min(1f, (1 - k) * 3)).toInt()
-                hudText(canvas, b, width / 2f, height * 0.3f, 26 * dp, bannerColor, alpha)
-                subBanner?.let { hudText(canvas, it, width / 2f, height * 0.3f + 26 * dp, 16 * dp, 0xFF81D4FA.toInt(), alpha) }
-            } else {
-                banner = null
-            }
-        }
+        drawBanner(canvas, now)
         if (humanTurn && m.phase == Phase.AIM && m.selected.mode == FireMode.TARGET) {
             val verb = when (m.selected) {
                 Weapon.TELEPORT -> "teleport"
                 Weapon.GIRDER -> "build a girder"
                 else -> "strike"
             }
-            hudText(canvas, "Tap where to $verb", width / 2f, height * 0.42f, 16 * dp, 0xFFFFFFFF.toInt())
+            label(canvas, "👆 Tap where to $verb", width / 2f, height * 0.42f, 15 * dp, 0xFFFFFFFF.toInt(), PANEL)
         }
     }
+
+    /** Top left: whose turn it is and a ring that runs down with the clock. */
+    private fun drawTurnCard(canvas: Canvas, m: Match) {
+        val left = leftInset + 10 * dp
+        val top = topInset + 10 * dp
+        val team = m.teams[m.currentTeam]
+        val worm = m.activeWorm
+        val teamColor = TeamColors.colors[m.currentTeam]
+        textFill.textSize = 14 * dp
+        val nameW = max(textFill.measureText(worm.name), 70 * dp)
+        val h = 50 * dp
+        rect.set(left, top, left + h + nameW + 22 * dp, top + h)
+        paint.color = PANEL
+        canvas.drawRoundRect(rect, h / 2, h / 2, paint)
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = 2 * dp
+        paint.color = teamColor
+        canvas.drawRoundRect(rect, h / 2, h / 2, paint)
+
+        // Countdown ring.
+        val cx = left + h / 2
+        val cy = top + h / 2
+        val r = h / 2 - 7 * dp
+        val (left01, warn) = when (m.phase) {
+            Phase.AIM -> (m.turnTimeLeft / Match.TURN_SECONDS).toFloat() to (m.turnTimeLeft <= 5)
+            Phase.RETREAT -> (m.retreatLeft / Match.RETREAT_SECONDS).toFloat() to true
+            else -> 0f to false
+        }
+        paint.strokeWidth = 4.5f * dp
+        paint.strokeCap = Paint.Cap.ROUND
+        paint.color = 0x33FFFFFF
+        canvas.drawCircle(cx, cy, r, paint)
+        paint.color = if (warn) 0xFFFFC107.toInt() else teamColor
+        rect.set(cx - r, cy - r, cx + r, cy + r)
+        if (left01 > 0f) canvas.drawArc(rect, -90f, 360f * left01.coerceIn(0f, 1f), false, paint)
+        paint.strokeCap = Paint.Cap.BUTT
+        paint.style = Paint.Style.FILL
+        val seconds = when (m.phase) {
+            Phase.AIM -> kotlin.math.ceil(m.turnTimeLeft).toInt().toString()
+            Phase.RETREAT -> kotlin.math.ceil(m.retreatLeft).toInt().toString()
+            else -> "…"
+        }
+        hudText(canvas, seconds, cx, cy + 6 * dp, 17 * dp, if (warn) 0xFFFFE082.toInt() else 0xFFFFFFFF.toInt())
+
+        // Worm and team names.
+        textFill.textAlign = Paint.Align.LEFT
+        textStroke.textAlign = Paint.Align.LEFT
+        val tx = left + h + 4 * dp
+        hudText(canvas, worm.name, tx, top + 23 * dp, 14 * dp, 0xFFFFFFFF.toInt())
+        val sub = if (m.phase == Phase.RETREAT) "RUN FOR COVER!" else team.name
+        hudText(canvas, sub, tx, top + 39 * dp, 10 * dp, if (m.phase == Phase.RETREAT) 0xFFFFE082.toInt() else lighten(teamColor))
+        textFill.textAlign = Paint.Align.CENTER
+        textStroke.textAlign = Paint.Align.CENTER
+    }
+
+    /** Top centre: wind strength as a bar with arrows pointing where it blows. */
+    private fun drawWind(canvas: Canvas, m: Match) {
+        val cx = width / 2f
+        val top = topInset + 12 * dp
+        val half = 92 * dp
+        val h = 22 * dp
+        rect.set(cx - half, top, cx + half, top + h)
+        paint.color = PANEL
+        canvas.drawRoundRect(rect, h / 2, h / 2, paint)
+        val wind = m.wind.toFloat()
+        val color = if (wind > 0) 0xFF4FC3F7.toInt() else 0xFFFF8A65.toInt()
+        val reach = wind * (half - 6 * dp)
+        if (abs(reach) > 1f) {
+            rect.set(min(cx, cx + reach), top + 5 * dp, max(cx, cx + reach), top + h - 5 * dp)
+            paint.color = color
+            paint.alpha = 110
+            canvas.drawRoundRect(rect, 6 * dp, 6 * dp, paint)
+            paint.alpha = 255
+            // Chevrons: one for each quarter of full strength.
+            val dir = if (wind > 0) 1f else -1f
+            val n = kotlin.math.ceil(abs(wind) * 4f).toInt().coerceIn(1, 4)
+            paint.color = color
+            for (i in 0 until n) {
+                val x = cx + dir * (12 * dp + i * 18 * dp)
+                path.reset()
+                path.moveTo(x - dir * 5 * dp, top + 5 * dp)
+                path.lineTo(x + dir * 3 * dp, top + h / 2)
+                path.lineTo(x - dir * 5 * dp, top + h - 5 * dp)
+                path.lineTo(x - dir * 1 * dp, top + h / 2)
+                path.close()
+                canvas.drawPath(path, paint)
+            }
+        }
+        paint.color = 0x88FFFFFF.toInt()
+        canvas.drawRect(cx - 1 * dp, top + 4 * dp, cx + 1 * dp, top + h - 4 * dp, paint)
+        hudText(canvas, if (abs(wind) < 0.05f) "NO WIND" else "WIND", cx, top + h + 13 * dp, 9.5f * dp, 0xFFFFFFFF.toInt())
+    }
+
+    /** Bottom centre: every team's total health. */
+    private fun drawTeams(canvas: Canvas, m: Match) {
+        val panelW = min(width * 0.34f, 280 * dp)
+        val row = 17 * dp
+        val pad = 7 * dp
+        val panelH = pad * 2 + row * m.teams.size
+        val left = (width - panelW) / 2f
+        val top = height - bottomInset - 8 * dp - panelH
+        rect.set(left, top, left + panelW, top + panelH)
+        paint.color = PANEL
+        canvas.drawRoundRect(rect, 12 * dp, 12 * dp, paint)
+        val maxHealth = m.teams.maxOf { it.worms.size * Worm.START_HEALTH }.toFloat()
+        val nameW = min(96 * dp, panelW * 0.36f)
+        val numW = 30 * dp
+        for ((i, team) in m.teams.withIndex()) {
+            val y = top + pad + i * row
+            val color = TeamColors.colors[team.id]
+            val current = team.id == m.currentTeam && m.phase != Phase.GAME_OVER
+            textFill.textAlign = Paint.Align.LEFT
+            textFill.textSize = 10 * dp
+            textFill.color = if (team.alive) lighten(color) else 0x66FFFFFF
+            val name = if (current) "▶ ${team.name}" else team.name
+            canvas.drawText(ellipsize(name, nameW - 4 * dp), left + pad, y + row * 0.68f, textFill)
+            val barL = left + pad + nameW
+            val barR = left + panelW - pad - numW
+            val barT = y + row * 0.25f
+            val barB = y + row * 0.78f
+            rect.set(barL, barT, barR, barB)
+            paint.color = 0x40FFFFFF
+            canvas.drawRoundRect(rect, row, row, paint)
+            val fill = (team.totalHealth / maxHealth).coerceIn(0f, 1f)
+            if (fill > 0f) {
+                rect.set(barL, barT, barL + (barR - barL) * fill, barB)
+                paint.color = color
+                canvas.drawRoundRect(rect, row, row, paint)
+                rect.set(barL + 2 * dp, barT + 1 * dp, barL + (barR - barL) * fill - 2 * dp, (barT + barB) / 2)
+                if (rect.width() > 0) {
+                    paint.color = 0x40FFFFFF
+                    canvas.drawRoundRect(rect, row, row, paint)
+                }
+            }
+            textFill.textAlign = Paint.Align.RIGHT
+            textFill.color = 0xFFFFFFFF.toInt()
+            canvas.drawText(team.totalHealth.toString(), left + panelW - pad, y + row * 0.68f, textFill)
+            textFill.textAlign = Paint.Align.CENTER
+        }
+    }
+
+    /** The turn banner: a ribbon in the team's colour that drops in, then fades. */
+    private fun drawBanner(canvas: Canvas, now: Long) {
+        val b = banner ?: return
+        val k = (now - bannerAt) / (if (subBanner != null) 3000f else 1800f)
+        if (k >= 1f) {
+            banner = null
+            return
+        }
+        val alpha = (255 * min(1f, (1 - k) * 4)).toInt()
+        val drop = min(1f, (now - bannerAt) / 220f)
+        val ease = 1 - (1 - drop) * (1 - drop)
+        val y = height * 0.28f - (1 - ease) * 24 * dp
+        label(canvas, b, width / 2f, y, 20 * dp, 0xFFFFFFFF.toInt(), (bannerColor and 0x00FFFFFF) or (0xE6 shl 24), alpha)
+        subBanner?.let { label(canvas, it, width / 2f, y + 34 * dp, 13 * dp, 0xFFB3E5FC.toInt(), PANEL, alpha) }
+    }
+
+    /** Text on a rounded pill, centred on ([x], [baseline]). */
+    private fun label(canvas: Canvas, text: String, x: Float, baseline: Float, size: Float, color: Int, background: Int, alpha: Int = 255) {
+        textFill.textSize = size
+        val w = textFill.measureText(text) + size * 1.4f
+        val h = size * 1.7f
+        rect.set(x - w / 2, baseline - size * 1.15f, x + w / 2, baseline - size * 1.15f + h)
+        paint.color = background
+        paint.alpha = (Color.alpha(background) * alpha / 255)
+        canvas.drawRoundRect(rect, h / 2, h / 2, paint)
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = 1.5f * dp
+        paint.color = 0x66FFFFFF
+        paint.alpha = 0x66 * alpha / 255
+        canvas.drawRoundRect(rect, h / 2, h / 2, paint)
+        paint.style = Paint.Style.FILL
+        paint.alpha = 255
+        hudText(canvas, text, x, baseline, size, color, alpha)
+    }
+
+    private fun ellipsize(text: String, maxWidth: Float): String {
+        if (textFill.measureText(text) <= maxWidth) return text
+        var end = text.length
+        while (end > 1 && textFill.measureText(text, 0, end) + textFill.measureText("…") > maxWidth) end--
+        return text.substring(0, end) + "…"
+    }
+
+    /** Team colours are dark for text on the dark panels; lift them a bit. */
+    private fun lighten(color: Int) = TerrainArt.mix(color, 0xFFFFFFFF.toInt(), 0.3f)
 
     /** The arena's name for the first few seconds of a match. */
     private fun drawIntro(canvas: Canvas, m: Match, now: Long) {
@@ -813,9 +943,9 @@ class BattleView @JvmOverloads constructor(
         val k = (now - introAt) / 4500f
         if (k >= 1f) return
         val alpha = (255 * min(1f, (1 - k) * 4) * min(1f, k * 8)).toInt()
-        val y = topInset + 74 * dp
-        hudText(canvas, m.arena.displayName.uppercase(), width / 2f, y, 22 * dp, 0xFFFFD54F.toInt(), alpha)
-        hudText(canvas, m.arena.tagline, width / 2f, y + 20 * dp, 12 * dp, 0xFFFFFFFF.toInt(), alpha)
+        val y = topInset + 86 * dp
+        label(canvas, m.arena.displayName.uppercase(), width / 2f, y, 20 * dp, 0xFFFFD54F.toInt(), PANEL, alpha)
+        hudText(canvas, m.arena.tagline, width / 2f, y + 26 * dp, 12 * dp, 0xFFFFFFFF.toInt(), alpha)
     }
 
     /** A small map of the whole battlefield, top right. Tap it to look somewhere. */
@@ -823,7 +953,7 @@ class BattleView @JvmOverloads constructor(
         val art = art ?: return
         val mw = 150 * dp
         val mh = mw * m.terrain.height / m.terrain.width
-        val right = width - 64 * dp
+        val right = width - rightInset - 64 * dp
         miniMap.set(right - mw, topInset + 10 * dp, right, topInset + 10 * dp + mh)
         paint.color = 0x99000000.toInt()
         rect.set(miniMap.left - 3 * dp, miniMap.top - 3 * dp, miniMap.right + 3 * dp, miniMap.bottom + 3 * dp)
@@ -988,6 +1118,8 @@ class BattleView @JvmOverloads constructor(
     }
 
     private companion object {
+        /** Dark glass behind HUD pieces. */
+        const val PANEL = 0xC8101828.toInt()
         const val MAX_PARTICLES = 900
         val BIG_WORDS = listOf("BOOM!", "KABOOM!", "POW!", "BLAM!", "WHAMMO!")
     }
