@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.hamxanadeem.wigglewars.ui.TitleView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no" />
+
+    <ScrollView
+        android:layout_width="440dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:fitsSystemWindows="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            android:background="@drawable/bg_panel"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-black"
+                android:text="@string/play_online"
+                android:textColor="#FFFFFFFF"
+                android:textSize="22sp" />
+
+            <TextView
+                android:id="@+id/notConfiguredText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:text="@string/not_configured"
+                android:textColor="@color/text_soft"
+                android:textSize="15sp"
+                android:visibility="gone" />
+
+            <!-- Name, create, or join by code. -->
+            <LinearLayout
+                android:id="@+id/entryPanel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <EditText
+                    android:id="@+id/nameField"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_field"
+                    android:hint="@string/your_name"
+                    android:importantForAutofill="no"
+                    android:inputType="textPersonName|textCapWords"
+                    android:maxLength="14"
+                    android:paddingHorizontal="14dp"
+                    android:textColor="#FFFFFFFF"
+                    android:textColorHint="#99FFFFFF" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/createButton"
+                    style="@style/GameButton"
+                    android:layout_width="match_parent"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_button_play"
+                    android:text="@string/create_room" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/or_join"
+                    android:textColor="@color/text_soft" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+
+                    <EditText
+                        android:id="@+id/codeField"
+                        android:layout_width="0dp"
+                        android:layout_height="56dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_field"
+                        android:fontFamily="sans-serif-black"
+                        android:hint="@string/room_code"
+                        android:importantForAutofill="no"
+                        android:inputType="textCapCharacters|textNoSuggestions"
+                        android:maxLength="5"
+                        android:paddingHorizontal="14dp"
+                        android:textColor="#FFFFFFFF"
+                        android:textColorHint="#99FFFFFF"
+                        android:textSize="22sp" />
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/joinButton"
+                        style="@style/GameButton"
+                        android:layout_width="110dp"
+                        android:layout_marginStart="10dp"
+                        android:background="@drawable/bg_button_revive"
+                        android:text="@string/join_room" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Lobby. -->
+            <LinearLayout
+                android:id="@+id/lobbyPanel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/roomCodeText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:fontFamily="sans-serif-black"
+                    android:letterSpacing="0.2"
+                    android:textColor="@color/gold"
+                    android:textIsSelectable="true"
+                    android:textSize="40sp" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/shareButton"
+                    style="@style/GameButton"
+                    android:layout_width="220dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_button_revive"
+                    android:text="@string/share"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/waiting_players"
+                    android:textColor="@color/text_soft" />
+
+                <TextView
+                    android:id="@+id/playersText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginVertical="8dp"
+                    android:fontFamily="sans-serif-black"
+                    android:lineSpacingExtra="4dp"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="17sp" />
+
+                <LinearLayout
+                    android:id="@+id/hostControls"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/onlineWormsMinus"
+                        style="@style/StepButton"
+                        android:text="@string/minus" />
+
+                    <TextView
+                        android:id="@+id/onlineWormsText"
+                        style="@style/StepLabel" />
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/onlineWormsPlus"
+                        style="@style/StepButton"
+                        android:text="@string/plus" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/leaveButton"
+                        style="@style/GameButton"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_button_secondary"
+                        android:text="@string/leave" />
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/startOnlineButton"
+                        style="@style/GameButton"
+                        android:layout_width="0dp"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1.4"
+                        android:background="@drawable/bg_button_play"
+                        android:text="@string/start_online" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Friends: your code, add by code, list with online status and invites. -->
+            <LinearLayout
+                android:id="@+id/friendsPanel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginBottom="10dp"
+                    android:background="#44FFFFFF" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-black"
+                    android:text="@string/friends"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="20sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/myFriendCodeText"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:fontFamily="sans-serif-black"
+                        android:text="@string/friend_code_pending"
+                        android:textColor="@color/gold"
+                        android:textIsSelectable="true"
+                        android:textSize="16sp" />
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/shareFriendCodeButton"
+                        style="@style/GameButton"
+                        android:layout_width="96dp"
+                        android:layout_height="42dp"
+                        android:background="@drawable/bg_button_secondary"
+                        android:text="@string/share_short"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
+
+                    <EditText
+                        android:id="@+id/friendCodeField"
+                        android:layout_width="0dp"
+                        android:layout_height="50dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_field"
+                        android:hint="@string/friend_code_hint"
+                        android:importantForAutofill="no"
+                        android:inputType="textCapCharacters|textNoSuggestions"
+                        android:maxLength="7"
+                        android:paddingHorizontal="14dp"
+                        android:textColor="#FFFFFFFF"
+                        android:textColorHint="#99FFFFFF" />
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/addFriendButton"
+                        style="@style/GameButton"
+                        android:layout_width="110dp"
+                        android:layout_height="50dp"
+                        android:layout_marginStart="10dp"
+                        android:background="@drawable/bg_button_revive"
+                        android:text="@string/add_friend"
+                        android:textSize="15sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/noFriendsText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/no_friends"
+                    android:textColor="@color/text_soft"
+                    android:textSize="13sp" />
+
+                <LinearLayout
+                    android:id="@+id/friendList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/closeButton"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/back"
+                android:textColor="@color/text_soft" />
+        </LinearLayout>
+    </ScrollView>
+</FrameLayout>

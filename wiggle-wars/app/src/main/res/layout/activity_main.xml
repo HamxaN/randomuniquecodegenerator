@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.hamxanadeem.wigglewars.ui.TitleView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|start"
+            android:orientation="horizontal"
+            android:padding="12dp">
+
+            <ImageButton
+                android:id="@+id/soundButton"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/bg_round_button"
+                android:contentDescription="@string/sound"
+                android:src="@drawable/ic_volume_on" />
+
+            <ImageButton
+                android:id="@+id/vibrationButton"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_round_button"
+                android:contentDescription="@string/vibration"
+                android:src="@drawable/ic_vibration" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/bannerContainer"
+            android:layout_width="320dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|start"
+            android:layout_margin="8dp"
+            android:minHeight="50dp" />
+
+        <FrameLayout
+            android:layout_width="330dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:layout_margin="12dp"
+            android:background="@drawable/bg_panel"
+            android:padding="16dp">
+
+            <!-- Main menu. -->
+            <LinearLayout
+                android:id="@+id/menuPanel"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/statsText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:fontFamily="sans-serif-black"
+                    android:textColor="@color/gold"
+                    android:textSize="15sp" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/cpuButton"
+                    style="@style/GameButton"
+                    android:layout_width="match_parent"
+                    android:layout_marginBottom="10dp"
+                    android:background="@drawable/bg_button_play"
+                    android:text="@string/vs_cpu" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/localButton"
+                    style="@style/GameButton"
+                    android:layout_width="match_parent"
+                    android:layout_marginBottom="10dp"
+                    android:background="@drawable/bg_button_secondary"
+                    android:text="@string/pass_and_play" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/onlineButton"
+                    style="@style/GameButton"
+                    android:layout_width="match_parent"
+                    android:background="@drawable/bg_button_revive"
+                    android:text="@string/play_online"
+                    android:textSize="17sp" />
+
+                <Button
+                    android:id="@+id/privacyButton"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/privacy_settings"
+                    android:textColor="@color/text_soft"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!-- Match setup. -->
+            <ScrollView
+                android:id="@+id/setupPanel"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/setupTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:fontFamily="sans-serif-black"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="22sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/teamsMinus"
+                            style="@style/StepButton"
+                            android:text="@string/minus" />
+
+                        <TextView
+                            android:id="@+id/teamsText"
+                            style="@style/StepLabel" />
+
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/teamsPlus"
+                            style="@style/StepButton"
+                            android:text="@string/plus" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/wormsMinus"
+                            style="@style/StepButton"
+                            android:text="@string/minus" />
+
+                        <TextView
+                            android:id="@+id/wormsText"
+                            style="@style/StepLabel" />
+
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/wormsPlus"
+                            style="@style/StepButton"
+                            android:text="@string/plus" />
+                    </LinearLayout>
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/difficultyButton"
+                        style="@style/GameButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_button_secondary"
+                        android:textSize="16sp" />
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/bananaButton"
+                        style="@style/GameButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_button_revive"
+                        android:textSize="15sp" />
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/startButton"
+                        style="@style/GameButton"
+                        android:layout_width="match_parent"
+                        android:layout_marginTop="10dp"
+                        android:background="@drawable/bg_button_play"
+                        android:text="@string/start" />
+
+                    <Button
+                        android:id="@+id/backButton"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/back"
+                        android:textColor="@color/text_soft" />
+                </LinearLayout>
+            </ScrollView>
+        </FrameLayout>
+    </FrameLayout>
+</FrameLayout>
