@@ -1,0 +1,80 @@
+name: Screenshots
+
+# Builds every game, runs them on an Android emulator, and saves screenshots
+# to the "screenshots-output" branch (and as a build artifact).
+on:
+  push:
+    branches: [screenshots]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: screenshots
+  cancel-in-progress: true
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build every game
+        run: |
+          ./gradlew :app:assembleDebug --stacktrace
+          for game in block-puzzle penguin-slide screw-puzzle idle-bakery wiggle-wars; do
+            ./gradlew -p "$game" :app:assembleDebug --stacktrace
+          done
+          ls -la app/build/outputs/apk/debug/ */app/build/outputs/apk/debug/
+
+      - name: Enable KVM for the emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run the games and take screenshots
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: false
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: bash tools/screenshots.sh
+
+      - name: Shrink to JPEG
+        run: |
+          sudo apt-get install -y -qq imagemagick >/dev/null
+          mkdir -p shots-small
+          for f in shots/*.png; do
+            convert "$f" -resize 50% -quality 82 "shots-small/$(basename "${f%.png}").jpg"
+          done
+          ls -la shots-small
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: shots-small/
+
+      - name: Publish to the screenshots-output branch
+        run: |
+          dir=$(mktemp -d)
+          cp shots-small/*.jpg "$dir/"
+          cd "$dir"
+          git init -q -b screenshots-output
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add .
+          git commit -q -m "Screenshots from ${GITHUB_SHA::7} [skip ci]"
+          git push -f -q "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" screenshots-output
