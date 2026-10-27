@@ -1,0 +1,54 @@
+name: Car Parking Jam CI
+
+on:
+  push:
+    branches: ['**']
+    paths: ['parking-jam/**', 'gradle/wrapper/**', '.github/workflows/parking-jam-ci.yml']
+  pull_request:
+    paths: ['parking-jam/**', 'gradle/wrapper/**', '.github/workflows/parking-jam-ci.yml']
+
+concurrency:
+  group: parking-jam-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Test, lint and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Unit tests (game rules)
+        run: ./gradlew -p parking-jam coreTest --stacktrace
+
+      - name: Android lint
+        run: ./gradlew -p parking-jam :app:lintDebug --stacktrace
+
+      - name: Build debug APK and release bundle
+        # Uses Google's test ad IDs and is unsigned; real releases use parking-jam-release.yml.
+        run: ./gradlew -p parking-jam :app:assembleDebug :app:bundleRelease --stacktrace
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: parking-jam-debug-apk
+          path: parking-jam/app/build/outputs/apk/debug/*.apk
+          retention-days: 14
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parking-jam-reports
+          path: |
+            parking-jam/core/build/reports/
+            parking-jam/app/build/reports/
+          retention-days: 7
