@@ -98,12 +98,18 @@ U=com.hamxanadeem.screwpuzzle.ui
 start $P $U.MainActivity; sleep 3; shot screwpuzzle-1-menu
 sleep 3; shot screwpuzzle-2-demo
 start $P $U.GameActivity; sleep 3; shot screwpuzzle-3-level
-for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
-  tap $(( SHORT * (15 + (i * 37) % 70) / 100 )) $(( LONG * (45 + (i * 23) % 45) / 100 ))
-  sleep 0.25
+# Level 1's screws in solution order, computed from the level generator for a
+# 1080x2400 @420dpi screen (see PuzzleView.layoutAreas).
+n=0
+for xy in "548 1527" "612 1686" "486 1197" "264 1787" "591 1235" "301 1322"; do
+  tap $xy
+  n=$((n + 1))
+  if [ $n -eq 2 ]; then sleep 0.35; shot screwpuzzle-4-unscrewing; fi
+  if [ $n -eq 3 ]; then sleep 0.8; shot screwpuzzle-5-box-filled; fi
+  sleep 0.9
 done
-sleep 0.3; shot screwpuzzle-4-unscrewing
-sleep 1.5; shot screwpuzzle-5-after
+sleep 0.6; shot screwpuzzle-6-confetti
+sleep 1.2; shot screwpuzzle-7-complete
 stop $P
 
 # ---------------------------------------------------------------- Idle Bakery (portrait)
@@ -129,19 +135,23 @@ start $P $U.MainActivity; sleep 5; shot wigglewars-1-menu
 tap $(( LONG - $(dp 177) )) $(( SHORT / 2 - $(dp 40) )); sleep 2; shot wigglewars-2-setup
 start $P $U.OnlineActivity; sleep 3; shot wigglewars-3-online
 start $P $U.GameActivity --ei worms 4; sleep 4; shot wigglewars-4-battle
-FIRE_X=$(( LONG - $(dp 97) - $(dp 48) ))
+FIRE_X=$(( LONG - $(dp 100) - $(dp 48) ))
 FIRE_Y=$(( SHORT - $(dp 47) - $(dp 24) ))
-WEAPON_X=$(( LONG - $(dp 120) - $(dp 48) ))
-WEAPON_Y=$(( SHORT - $(dp 140) - $(dp 24) ))
-# Aim up-forward by dragging on the map, then hold FIRE.
-drag $(( LONG / 2 + $(dp 120) )) $(( SHORT / 2 - $(dp 90) )) $(( LONG / 2 + $(dp 130) )) $(( SHORT / 2 - $(dp 100) )) 200
-hold $FIRE_X $FIRE_Y 1000 &
-sleep 0.8; shot wigglewars-5-charging
-wait
-for n in 1 2 3 4 5 6 7 8; do sleep 0.5; shot wigglewars-6-action-$n; done
+WEAPON_X=$(( LONG - $(dp 122) ))
+WEAPON_Y=$(( SHORT - $(dp 136) ))
+# Whoever's turn it is, keep trying to fire: our shots land on our turns, and
+# the computer's turns in between give more action.
+for attempt in 1 2 3 4 5; do
+  drag $(( LONG / 2 + $(dp 120) )) $(( SHORT / 2 - $(dp 90) )) $(( LONG / 2 + $(dp 130) )) $(( SHORT / 2 - $(dp 100) )) 200
+  hold $FIRE_X $FIRE_Y 900 &
+  sleep 0.7; shot wigglewars-5-charging-$attempt
+  wait
+  for k in 1 2 3; do sleep 0.6; shot wigglewars-6-action-$attempt-$k; done
+  sleep 2.5
+done
 tap $WEAPON_X $WEAPON_Y; sleep 1; shot wigglewars-7-weapons
-adb shell input keyevent KEYCODE_BACK
-for n in 1 2 3 4 5 6 7 8 9 10; do sleep 1.5; shot wigglewars-8-cpu-$n; done
+tap $(dp 40) $(( SHORT / 2 ))
+for n in 1 2 3 4 5 6 7 8; do sleep 1.5; shot wigglewars-8-later-$n; done
 stop $P
 
 echo "done: $(ls $OUT | wc -l) screenshots"
