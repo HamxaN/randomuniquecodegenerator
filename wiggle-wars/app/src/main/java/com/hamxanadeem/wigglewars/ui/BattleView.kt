@@ -66,6 +66,7 @@ class BattleView @JvmOverloads constructor(
     private var shake = 0f
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val backdropPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val bitmapPaint = Paint(Paint.FILTER_BITMAP_FLAG)
     private val rect = RectF()
     private val path = Path()
@@ -112,6 +113,7 @@ class BattleView @JvmOverloads constructor(
         theme = MapTheme.forSeed(newMatch.config.seed)
         art?.bitmap?.recycle()
         art = TerrainArt(newMatch.terrain, theme)
+        backdropPaint.color = TerrainArt.shade(theme.soilDark, 0.5f)
         fireballs.clear()
         texts.clear()
         tracers.clear()
@@ -249,6 +251,7 @@ class BattleView @JvmOverloads constructor(
         canvas.translate(-camX, -camY)
 
         drawMountains(canvas, m)
+        canvas.drawPath(art.backdrop, backdropPaint)
         canvas.drawBitmap(art.bitmap, 0f, 0f, bitmapPaint)
         for (g in graves) wormPainter.grave(canvas, g.x, g.y)
         drawCrates(canvas, m, t)

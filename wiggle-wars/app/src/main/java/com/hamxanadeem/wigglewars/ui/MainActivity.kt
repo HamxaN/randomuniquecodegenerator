@@ -45,6 +45,8 @@ class MainActivity : AppCompatActivity() {
         AdsManager.initialize(this)
         AdsManager.loadBanner(this, findViewById<FrameLayout>(R.id.bannerContainer))
 
+        // Keep the logo clear of the menu panel on the right (330dp + margins).
+        findViewById<TitleView>(R.id.titleView).reservedRight = 354 * resources.displayMetrics.density
         menu = findViewById(R.id.menuPanel)
         setup = findViewById(R.id.setupPanel)
         soundButton = findViewById(R.id.soundButton)
