@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">Neon Runner</string>
+    <string name="title">NEON\nRUNNER</string>
+    <string name="play">Run</string>
+    <string name="skins">Skins</string>
+    <string name="stats_format">Best %1$d   ◆ %2$d</string>
+    <string name="sound">Sound</string>
+    <string name="vibration">Vibration</string>
+    <string name="privacy_settings">Privacy settings</string>
+    <string name="pause">Pause</string>
+    <string name="paused">Paused</string>
+    <string name="resume">Resume</string>
+    <string name="menu">Menu</string>
+    <string name="back">Back</string>
+    <string name="crashed">Crashed!</string>
+    <string name="new_best">New best!</string>
+    <string name="over_stats">%1$d m  ·  ◆ %2$d orbs\nBest %3$d</string>
+    <string name="revive">▶ Watch ad to keep running</string>
+    <string name="play_again">Run again</string>
+    <string name="no_ad">No ad available right now, try again in a moment</string>
+    <string name="hint">SWIPE ← → TO CHANGE LANES\nSWIPE ↑ OR TAP TO JUMP\nSWIPE ↓ TO SLIDE</string>
+    <string name="owned">Equip</string>
+    <string name="equipped">✓ On</string>
+    <string name="price_format">◆ %1$d</string>
+    <string name="orbs_format">You have ◆ %1$d orbs</string>
+    <string name="not_enough">Collect more orbs while running to unlock this!</string>
+    <string name="runner_description">Neon track. Swipe left or right to change lanes, up to jump, down to slide.</string>
+</resources>
