@@ -8,7 +8,6 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Shader
-import android.graphics.Typeface
 import android.os.SystemClock
 import android.util.AttributeSet
 import android.view.MotionEvent
@@ -76,7 +75,7 @@ class BattleView @JvmOverloads constructor(
     private val rect = RectF()
     private val path = Path()
     private var skyShader: Shader? = null
-    private val black = Typeface.create("sans-serif-black", Typeface.NORMAL)
+    private val black = Neon.bold(context)
     private val textFill = Paint(Paint.ANTI_ALIAS_FLAG).apply { typeface = black; textAlign = Paint.Align.CENTER }
     private val textStroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         typeface = black
@@ -491,15 +490,19 @@ class BattleView @JvmOverloads constructor(
         if (!w.alive || m.selected.mode == FireMode.TARGET || m.selected.mode == FireMode.DROP) return
         val cx = (w.x + w.aimX * 42).toFloat()
         val cy = (w.y + w.aimY * 42).toFloat()
+        // Neon reticle with a slowly turning outer ring.
         paint.style = Paint.Style.STROKE
-        paint.strokeWidth = 1.5f
-        paint.color = 0xFFFF1744.toInt()
-        canvas.drawCircle(cx, cy, 5f, paint)
-        canvas.drawLine(cx - 8, cy, cx - 3, cy, paint)
-        canvas.drawLine(cx + 3, cy, cx + 8, cy, paint)
-        canvas.drawLine(cx, cy - 8, cx, cy - 3, paint)
-        canvas.drawLine(cx, cy + 3, cx, cy + 8, paint)
+        paint.strokeWidth = 1.2f
+        paint.color = Neon.CYAN
+        paint.setShadowLayer(3f, 0f, 0f, Neon.CYAN)
+        canvas.drawCircle(cx, cy, 4f, paint)
+        val spin = (SystemClock.uptimeMillis() % 4000) / 4000f * 360f
+        rect.set(cx - 8, cy - 8, cx + 8, cy + 8)
+        for (q in 0 until 4) canvas.drawArc(rect, spin + q * 90f, 45f, false, paint)
+        paint.clearShadowLayer()
         paint.style = Paint.Style.FILL
+        paint.color = Neon.MAGENTA
+        canvas.drawCircle(cx, cy, 1.2f, paint)
         // Power arc grows from the worm toward the crosshair while charging.
         if (charge >= 0f && m.selected.mode == FireMode.POWER) {
             val steps = 14
@@ -762,12 +765,8 @@ class BattleView @JvmOverloads constructor(
         val nameW = max(textFill.measureText(worm.name), 70 * dp)
         val h = 50 * dp
         rect.set(left, top, left + h + nameW + 22 * dp, top + h)
-        paint.color = PANEL
-        canvas.drawRoundRect(rect, h / 2, h / 2, paint)
+        Neon.panel(canvas, rect, teamColor, dp, path, paint)
         paint.style = Paint.Style.STROKE
-        paint.strokeWidth = 2 * dp
-        paint.color = teamColor
-        canvas.drawRoundRect(rect, h / 2, h / 2, paint)
 
         // Countdown ring.
         val cx = left + h / 2
@@ -780,11 +779,22 @@ class BattleView @JvmOverloads constructor(
         }
         paint.strokeWidth = 4.5f * dp
         paint.strokeCap = Paint.Cap.ROUND
-        paint.color = 0x33FFFFFF
+        paint.color = 0x2600E5FF
         canvas.drawCircle(cx, cy, r, paint)
-        paint.color = if (warn) 0xFFFFC107.toInt() else teamColor
+        // Tick marks around the dial.
+        paint.strokeWidth = 1 * dp
+        paint.color = 0x6600E5FF
+        for (i in 0 until 12) {
+            val a = i * 0.5236f
+            canvas.drawLine(cx + kotlin.math.cos(a) * (r + 4 * dp), cy + sin(a) * (r + 4 * dp), cx + kotlin.math.cos(a) * (r + 6 * dp), cy + sin(a) * (r + 6 * dp), paint)
+        }
+        paint.strokeWidth = 4.5f * dp
+        val ring = if (warn) Neon.AMBER else teamColor
+        paint.color = ring
+        paint.setShadowLayer(6 * dp, 0f, 0f, ring)
         rect.set(cx - r, cy - r, cx + r, cy + r)
         if (left01 > 0f) canvas.drawArc(rect, -90f, 360f * left01.coerceIn(0f, 1f), false, paint)
+        paint.clearShadowLayer()
         paint.strokeCap = Paint.Cap.BUTT
         paint.style = Paint.Style.FILL
         val seconds = when (m.phase) {
@@ -812,10 +822,9 @@ class BattleView @JvmOverloads constructor(
         val half = 92 * dp
         val h = 22 * dp
         rect.set(cx - half, top, cx + half, top + h)
-        paint.color = PANEL
-        canvas.drawRoundRect(rect, h / 2, h / 2, paint)
+        Neon.panel(canvas, rect, Neon.CYAN, dp, path, paint, glow = false)
         val wind = m.wind.toFloat()
-        val color = if (wind > 0) 0xFF4FC3F7.toInt() else 0xFFFF8A65.toInt()
+        val color = if (wind > 0) Neon.CYAN else Neon.MAGENTA
         val reach = wind * (half - 6 * dp)
         if (abs(reach) > 1f) {
             rect.set(min(cx, cx + reach), top + 5 * dp, max(cx, cx + reach), top + h - 5 * dp)
@@ -827,6 +836,7 @@ class BattleView @JvmOverloads constructor(
             val dir = if (wind > 0) 1f else -1f
             val n = kotlin.math.ceil(abs(wind) * 4f).toInt().coerceIn(1, 4)
             paint.color = color
+            paint.setShadowLayer(5 * dp, 0f, 0f, color)
             for (i in 0 until n) {
                 val x = cx + dir * (12 * dp + i * 18 * dp)
                 path.reset()
@@ -837,6 +847,7 @@ class BattleView @JvmOverloads constructor(
                 path.close()
                 canvas.drawPath(path, paint)
             }
+            paint.clearShadowLayer()
         }
         paint.color = 0x88FFFFFF.toInt()
         canvas.drawRect(cx - 1 * dp, top + 4 * dp, cx + 1 * dp, top + h - 4 * dp, paint)
@@ -852,8 +863,7 @@ class BattleView @JvmOverloads constructor(
         val left = (width - panelW) / 2f
         val top = height - bottomInset - 8 * dp - panelH
         rect.set(left, top, left + panelW, top + panelH)
-        paint.color = PANEL
-        canvas.drawRoundRect(rect, 12 * dp, 12 * dp, paint)
+        Neon.panel(canvas, rect, Neon.CYAN, dp, path, paint, glow = false)
         val maxHealth = m.teams.maxOf { it.worms.size * Worm.START_HEALTH }.toFloat()
         val nameW = min(96 * dp, panelW * 0.36f)
         val numW = 30 * dp
@@ -870,19 +880,17 @@ class BattleView @JvmOverloads constructor(
             val barR = left + panelW - pad - numW
             val barT = y + row * 0.25f
             val barB = y + row * 0.78f
-            rect.set(barL, barT, barR, barB)
-            paint.color = 0x40FFFFFF
-            canvas.drawRoundRect(rect, row, row, paint)
+            // Segmented energy bar.
             val fill = (team.totalHealth / maxHealth).coerceIn(0f, 1f)
-            if (fill > 0f) {
-                rect.set(barL, barT, barL + (barR - barL) * fill, barB)
-                paint.color = color
-                canvas.drawRoundRect(rect, row, row, paint)
-                rect.set(barL + 2 * dp, barT + 1 * dp, barL + (barR - barL) * fill - 2 * dp, (barT + barB) / 2)
-                if (rect.width() > 0) {
-                    paint.color = 0x40FFFFFF
-                    canvas.drawRoundRect(rect, row, row, paint)
-                }
+            val segments = 16
+            val gap = 1.5f * dp
+            val segW = ((barR - barL) - gap * (segments - 1)) / segments
+            val lit = kotlin.math.ceil(fill * segments).toInt()
+            for (k in 0 until segments) {
+                val sx = barL + k * (segW + gap)
+                rect.set(sx, barT, sx + segW, barB)
+                paint.color = if (k < lit) color else 0x2600E5FF
+                canvas.drawRect(rect, paint)
             }
             textFill.textAlign = Paint.Align.RIGHT
             textFill.color = 0xFFFFFFFF.toInt()
@@ -903,26 +911,23 @@ class BattleView @JvmOverloads constructor(
         val drop = min(1f, (now - bannerAt) / 220f)
         val ease = 1 - (1 - drop) * (1 - drop)
         val y = height * 0.28f - (1 - ease) * 24 * dp
-        label(canvas, b, width / 2f, y, 20 * dp, 0xFFFFFFFF.toInt(), (bannerColor and 0x00FFFFFF) or (0xE6 shl 24), alpha)
+        label(canvas, b, width / 2f, y, 20 * dp, 0xFFFFFFFF.toInt(), TerrainArt.mix(Neon.GLASS, bannerColor, 0.3f), alpha, accent = bannerColor)
         subBanner?.let { label(canvas, it, width / 2f, y + 34 * dp, 13 * dp, 0xFFB3E5FC.toInt(), PANEL, alpha) }
     }
 
-    /** Text on a rounded pill, centred on ([x], [baseline]). */
-    private fun label(canvas: Canvas, text: String, x: Float, baseline: Float, size: Float, color: Int, background: Int, alpha: Int = 255) {
+    /** Text on a neon glass plate, centred on ([x], [baseline]). */
+    private fun label(canvas: Canvas, text: String, x: Float, baseline: Float, size: Float, color: Int, background: Int, alpha: Int = 255, accent: Int = Neon.CYAN) {
         textFill.textSize = size
-        val w = textFill.measureText(text) + size * 1.4f
-        val h = size * 1.7f
-        rect.set(x - w / 2, baseline - size * 1.15f, x + w / 2, baseline - size * 1.15f + h)
-        paint.color = background
-        paint.alpha = (Color.alpha(background) * alpha / 255)
-        canvas.drawRoundRect(rect, h / 2, h / 2, paint)
-        paint.style = Paint.Style.STROKE
-        paint.strokeWidth = 1.5f * dp
-        paint.color = 0x66FFFFFF
-        paint.alpha = 0x66 * alpha / 255
-        canvas.drawRoundRect(rect, h / 2, h / 2, paint)
-        paint.style = Paint.Style.FILL
-        paint.alpha = 255
+        val w = textFill.measureText(text) + size * 2f
+        val h = size * 1.9f
+        rect.set(x - w / 2, baseline - size * 1.25f, x + w / 2, baseline - size * 1.25f + h)
+        if (alpha >= 250) {
+            Neon.panel(canvas, rect, accent, dp, path, paint, glass = background)
+        } else {
+            val layer = canvas.saveLayerAlpha(rect.left - 12 * dp, rect.top - 12 * dp, rect.right + 12 * dp, rect.bottom + 12 * dp, alpha)
+            Neon.panel(canvas, rect, accent, dp, path, paint, glass = background)
+            canvas.restoreToCount(layer)
+        }
         hudText(canvas, text, x, baseline, size, color, alpha)
     }
 
@@ -955,9 +960,8 @@ class BattleView @JvmOverloads constructor(
         val mh = mw * m.terrain.height / m.terrain.width
         val right = width - rightInset - 64 * dp
         miniMap.set(right - mw, topInset + 10 * dp, right, topInset + 10 * dp + mh)
-        paint.color = 0x99000000.toInt()
-        rect.set(miniMap.left - 3 * dp, miniMap.top - 3 * dp, miniMap.right + 3 * dp, miniMap.bottom + 3 * dp)
-        canvas.drawRoundRect(rect, 8 * dp, 8 * dp, paint)
+        rect.set(miniMap.left - 4 * dp, miniMap.top - 4 * dp, miniMap.right + 4 * dp, miniMap.bottom + 4 * dp)
+        Neon.panel(canvas, rect, Neon.CYAN, dp, path, paint, glow = false)
         paint.color = TerrainArt.mix(theme.skyTop, theme.skyBottom, 0.5f)
         paint.alpha = 160
         canvas.drawRect(miniMap, paint)
@@ -986,7 +990,7 @@ class BattleView @JvmOverloads constructor(
         // What the screen is showing.
         paint.style = Paint.Style.STROKE
         paint.strokeWidth = 1.2f * dp
-        paint.color = 0xCCFFFFFF.toInt()
+        paint.color = Neon.CYAN
         rect.set(miniMap.left + camX * sx, miniMap.top + camY * sy, miniMap.left + (camX + width / scale) * sx, miniMap.top + (camY + height / scale) * sy)
         rect.intersect(miniMap)
         canvas.drawRect(rect, paint)
@@ -1119,7 +1123,7 @@ class BattleView @JvmOverloads constructor(
 
     private companion object {
         /** Dark glass behind HUD pieces. */
-        const val PANEL = 0xC8101828.toInt()
+        const val PANEL = Neon.GLASS
         const val MAX_PARTICLES = 900
         val BIG_WORDS = listOf("BOOM!", "KABOOM!", "POW!", "BLAM!", "WHAMMO!")
     }

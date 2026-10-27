@@ -8,7 +8,6 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Shader
-import android.graphics.Typeface
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
@@ -39,7 +38,7 @@ class ArenaCardView @JvmOverloads constructor(
 
     private val dp = resources.displayMetrics.density
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
-    private val black = Typeface.create("sans-serif-black", Typeface.NORMAL)
+    private val black = Neon.bold(context)
     private val text = Paint(Paint.ANTI_ALIAS_FLAG).apply { typeface = black }
     private val rect = RectF()
     private val clip = Path()
@@ -68,7 +67,7 @@ class ArenaCardView @JvmOverloads constructor(
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         clip.reset()
         rect.set(0f, 0f, w.toFloat(), h.toFloat())
-        clip.addRoundRect(rect, 16 * dp, 16 * dp, Path.Direction.CW)
+        Neon.chamfer(clip, rect, 14 * dp)
         shade = LinearGradient(0f, h * 0.45f, 0f, h.toFloat(), 0x00000000, 0xCC000000.toInt(), Shader.TileMode.CLAMP)
     }
 
@@ -100,7 +99,7 @@ class ArenaCardView @JvmOverloads constructor(
         if (current == null) {
             text.textAlign = Paint.Align.CENTER
             text.textSize = 44 * dp
-            text.color = 0xFFFFD54F.toInt()
+            text.color = Neon.CYAN
             canvas.drawText("?", w / 2, h * 0.52f, text)
             postInvalidateDelayed(120)
         }
@@ -110,7 +109,7 @@ class ArenaCardView @JvmOverloads constructor(
         text.color = 0xFFFFFFFF.toInt()
         canvas.drawText(current?.displayName ?: "Random Arena", w / 2, h - 26 * dp, text)
         text.textSize = 10.5f * dp
-        text.color = 0xFFFFE082.toInt()
+        text.color = 0xFFFF9CF0.toInt()
         val tagline = current?.tagline ?: "A surprise every battle"
         canvas.drawText(fit(tagline, w - 70 * dp), w / 2, h - 10 * dp, text)
 
@@ -118,8 +117,13 @@ class ArenaCardView @JvmOverloads constructor(
         for (side in intArrayOf(-1, 1)) {
             val cx = if (side < 0) 20 * dp else w - 20 * dp
             val cy = h / 2
-            paint.color = 0x88000000.toInt()
+            paint.color = 0xB30A1024.toInt()
             canvas.drawCircle(cx, cy, 15 * dp, paint)
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = 1.5f * dp
+            paint.color = Neon.CYAN
+            canvas.drawCircle(cx, cy, 15 * dp, paint)
+            paint.style = Paint.Style.FILL
             paint.color = 0xFFFFFFFF.toInt()
             val a = 5 * dp
             arrow.reset()
@@ -133,9 +137,10 @@ class ArenaCardView @JvmOverloads constructor(
 
         paint.style = Paint.Style.STROKE
         paint.strokeWidth = 2 * dp
-        paint.color = 0x88FFFFFF.toInt()
-        rect.set(dp, dp, w - dp, h - dp)
-        canvas.drawRoundRect(rect, 15 * dp, 15 * dp, paint)
+        paint.color = Neon.CYAN
+        paint.setShadowLayer(6 * dp, 0f, 0f, Neon.CYAN)
+        canvas.drawPath(clip, paint)
+        paint.clearShadowLayer()
         paint.style = Paint.Style.FILL
     }
 

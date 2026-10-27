@@ -9,7 +9,6 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.AppCompatButton
 import androidx.core.content.edit
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.database.DataSnapshot
@@ -156,7 +155,7 @@ class OnlineActivity : AppCompatActivity() {
                 setTextColor(if (friend.online) 0xFF69F0AE.toInt() else 0x99FFFFFF.toInt())
             }
             row.findViewById<View>(R.id.friendDot).setBackgroundResource(if (friend.online) R.drawable.dot_online else R.drawable.dot_offline)
-            row.findViewById<AppCompatButton>(R.id.inviteButton).setOnClickListener { inviteFriend(friend) }
+            row.findViewById<NeonButton>(R.id.inviteButton).setOnClickListener { inviteFriend(friend) }
             row.setOnLongClickListener {
                 MaterialAlertDialogBuilder(this)
                     .setMessage(getString(R.string.remove_friend_question, friend.name))

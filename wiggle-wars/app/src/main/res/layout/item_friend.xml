@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="6dp"
@@ -28,7 +29,7 @@
             android:id="@+id/friendName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-black"
+            android:fontFamily="@font/orbitron_black"
             android:textColor="#FFFFFFFF"
             android:textSize="16sp" />
 
@@ -39,12 +40,12 @@
             android:textSize="12sp" />
     </LinearLayout>
 
-    <androidx.appcompat.widget.AppCompatButton
+    <com.hamxanadeem.wigglewars.ui.NeonButton
         android:id="@+id/inviteButton"
         style="@style/GameButton"
         android:layout_width="100dp"
         android:layout_height="44dp"
-        android:background="@drawable/bg_button_play"
         android:text="@string/invite"
-        android:textSize="14sp" />
+        android:textSize="14sp"
+        app:neonColor="@color/neon_cyan" />
 </LinearLayout>
