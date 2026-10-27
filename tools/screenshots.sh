@@ -130,28 +130,44 @@ stop $P
 # ---------------------------------------------------------------- Wiggle Wars (landscape)
 P=com.hamxanadeem.wigglewars.debug
 U=com.hamxanadeem.wigglewars.ui
-start $P $U.MainActivity; sleep 5; shot wigglewars-1-menu
-# Open the vs Computer setup screen.
-tap $(( LONG - $(dp 177) )) $(( SHORT / 2 - $(dp 40) )); sleep 2; shot wigglewars-2-setup
-start $P $U.OnlineActivity; sleep 3; shot wigglewars-3-online
-start $P $U.GameActivity --ei worms 4; sleep 4; shot wigglewars-4-battle
-FIRE_X=$(( LONG - $(dp 100) - $(dp 48) ))
-FIRE_Y=$(( SHORT - $(dp 47) - $(dp 24) ))
-WEAPON_X=$(( LONG - $(dp 122) ))
+start $P $U.MainActivity; sleep 5; shot wigglewars-01-menu
+# Armory from the main menu (the button under Play Online).
+tap $(( LONG - $(dp 177) )) $(( SHORT / 2 + $(dp 127) )); sleep 1.5; shot wigglewars-02-armory
+adb shell input keyevent KEYCODE_BACK; sleep 1
+# vs Computer, then flip through a few arenas on the arena card.
+tap $(( LONG - $(dp 177) )) $(( SHORT / 2 - $(dp 86) )); sleep 2; shot wigglewars-03-setup
+for n in 1 2 3 4; do tap $(( LONG - $(dp 50) )) $(dp 150); sleep 1.2; shot wigglewars-04-arena-$n; done
+start $P $U.OnlineActivity; sleep 3; shot wigglewars-05-online
+
+FIRE_X=$(( LONG - $(dp 148) ))
+FIRE_Y=$(( SHORT - $(dp 71) ))
+WEAPON_X=$(( LONG - $(dp 132) ))
 WEAPON_Y=$(( SHORT - $(dp 136) ))
-# Whoever's turn it is, keep trying to fire: our shots land on our turns, and
-# the computer's turns in between give more action.
-for attempt in 1 2 3 4 5; do
+# Every arena: the intro banner, then a shot fired if it's our turn.
+for arena in HILLS DUNES ISLANDS FORTRESS CAVERN SKY SNOW VOLCANO MOON CANDY; do
+  stop $P
+  start $P $U.GameActivity --ei worms 3 --es arena $arena; sleep 3; shot wigglewars-10-$arena-intro
   drag $(( LONG / 2 + $(dp 120) )) $(( SHORT / 2 - $(dp 90) )) $(( LONG / 2 + $(dp 130) )) $(( SHORT / 2 - $(dp 100) )) 200
-  hold $FIRE_X $FIRE_Y 900 &
-  sleep 0.7; shot wigglewars-5-charging-$attempt
+  hold $FIRE_X $FIRE_Y 800 &
+  sleep 1.6; shot wigglewars-11-$arena-action
   wait
-  for k in 1 2 3; do sleep 0.6; shot wigglewars-6-action-$attempt-$k; done
-  sleep 2.5
+  sleep 1; shot wigglewars-12-$arena-later
 done
-tap $WEAPON_X $WEAPON_Y; sleep 1; shot wigglewars-7-weapons
-tap $(dp 40) $(( SHORT / 2 ))
-for n in 1 2 3 4 5 6 7 8; do sleep 1.5; shot wigglewars-8-later-$n; done
+
+# The weapon picker in battle: open it, read about the sheep, equip it and let it go.
+# Tried twice, because the computer may have the first turn.
+stop $P
+start $P $U.GameActivity --ei worms 3 --es arena HILLS; sleep 4
+for attempt in 1 2; do
+  tap $WEAPON_X $WEAPON_Y; sleep 1.2; shot wigglewars-20-picker-$attempt
+  tap $(dp 403) $(dp 70); sleep 0.8; shot wigglewars-21-guns-tab-$attempt
+  tap $(dp 250) $(dp 70); sleep 0.6
+  tap $(dp 266) $(dp 311); sleep 0.8; shot wigglewars-22-sheep-info-$attempt
+  tap $(dp 266) $(dp 311); sleep 0.8
+  tap $FIRE_X $FIRE_Y
+  for k in 1 2 3 4; do sleep 1; shot wigglewars-23-sheep-$attempt-$k; done
+  sleep 12
+done
 stop $P
 
 echo "done: $(ls $OUT | wc -l) screenshots"
