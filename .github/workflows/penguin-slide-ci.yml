@@ -1,0 +1,54 @@
+name: Penguin Slide CI
+
+on:
+  push:
+    branches: ['**']
+    paths: ['penguin-slide/**', 'gradle/wrapper/**', '.github/workflows/penguin-slide-ci.yml']
+  pull_request:
+    paths: ['penguin-slide/**', 'gradle/wrapper/**', '.github/workflows/penguin-slide-ci.yml']
+
+concurrency:
+  group: penguin-slide-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Test, lint and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Unit tests (game rules)
+        run: ./gradlew -p penguin-slide coreTest --stacktrace
+
+      - name: Android lint
+        run: ./gradlew -p penguin-slide :app:lintDebug --stacktrace
+
+      - name: Build debug APK and release bundle
+        # Uses Google's test ad IDs and is unsigned; real releases use penguin-slide-release.yml.
+        run: ./gradlew -p penguin-slide :app:assembleDebug :app:bundleRelease --stacktrace
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: penguin-slide-debug-apk
+          path: penguin-slide/app/build/outputs/apk/debug/*.apk
+          retention-days: 14
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: penguin-slide-reports
+          path: |
+            penguin-slide/core/build/reports/
+            penguin-slide/app/build/reports/
+          retention-days: 7

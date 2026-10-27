@@ -1,0 +1,8 @@
+<resources>
+    <color name="sky">#FF4FC3F7</color>
+    <color name="launcher_background">#FF4FC3F7</color>
+    <color name="ink">#FF1F2A44</color>
+    <color name="gold">#FFFFD54F</color>
+    <color name="text_soft">#CCFFFFFF</color>
+    <color name="scrim">#B30B1630</color>
+</resources>

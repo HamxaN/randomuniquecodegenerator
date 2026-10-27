@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">Penguin Slide</string>
+    <string name="play">PLAY</string>
+    <string name="skins">Outfits</string>
+    <string name="best_format">🏆 Best %1$d m · %2$d pts</string>
+    <string name="fish_format">🐟 %1$d</string>
+    <string name="sound">Sound</string>
+    <string name="vibration">Vibration</string>
+    <string name="pause">Pause</string>
+    <string name="paused">Paused</string>
+    <string name="resume">Resume</string>
+    <string name="quit">Quit to menu</string>
+    <string name="home">Home</string>
+    <string name="back">Back</string>
+    <string name="privacy_settings">Privacy settings</string>
+    <string name="times_up">The sun has set!</string>
+    <string name="distance_format">%1$d m</string>
+    <string name="new_best">★ NEW BEST! ★</string>
+    <string name="stats_format">Score %1$d · Flips %2$d · Perfect %3$d · Fish %4$d</string>
+    <string name="revive">▶  +15 seconds (watch ad)</string>
+    <string name="double_fish">▶  Get %1$d fish (watch ad)</string>
+    <string name="play_again">Slide again</string>
+    <string name="free_fish">▶  Watch ad: +%1$d fish</string>
+    <string name="wear">Wear</string>
+    <string name="wearing">Wearing</string>
+    <string name="price_format">🐟 %1$d</string>
+    <string name="need_more_fish">Not enough fish yet. Keep sliding!</string>
+    <string name="slide_description">Snowy hills. Hold the screen to dive and to flip, let go to fly.</string>
+</resources>
