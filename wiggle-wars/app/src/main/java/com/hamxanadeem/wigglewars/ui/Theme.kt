@@ -3,7 +3,7 @@ package com.hamxanadeem.wigglewars.ui
 import com.hamxanadeem.wigglewars.core.Arena
 
 /** What's drawn behind the land. */
-enum class Scenery { MOUNTAINS, DUNES, CASTLES, STALACTITES, NONE }
+enum class Scenery { MOUNTAINS, DUNES, STALACTITES, NONE }
 
 /** A map's look: sky, land layers and water. Each arena has its own. */
 class MapTheme(
@@ -27,7 +27,7 @@ class MapTheme(
         val grassland = MapTheme("Grassland", 0xFF5EC4FF.toInt(), 0xFFD8F1FF.toInt(), 0xFF8BD653.toInt(), 0xFF4E9A2E.toInt(), 0xFF96612F.toInt(), 0xFF5E3A1A.toInt(), 0xFF9E9E9E.toInt(), 0xFF9CC3E0.toInt(), 0xFF2E7BD6.toInt())
         val desert = MapTheme("Desert", 0xFFFF9E57.toInt(), 0xFFFFE3B3.toInt(), 0xFFF2CF7A.toInt(), 0xFFD9A647.toInt(), 0xFFD48C45.toInt(), 0xFF8C4F22.toInt(), 0xFFB08968.toInt(), 0xFFE8B98A.toInt(), 0xFF2A9D8F.toInt(), scenery = Scenery.DUNES)
         val tropical = MapTheme("Tropical", 0xFF29B6F6.toInt(), 0xFFB3F0FF.toInt(), 0xFFFFE082.toInt(), 0xFF7CB342.toInt(), 0xFF8D6E63.toInt(), 0xFF5D4037.toInt(), 0xFFBCAAA4.toInt(), 0xFF80DEEA.toInt(), 0xFF00ACC1.toInt(), scenery = Scenery.NONE)
-        val castle = MapTheme("Castle", 0xFF3F51B5.toInt(), 0xFFFFCC80.toInt(), 0xFF7CB342.toInt(), 0xFF33691E.toInt(), 0xFF8D8D8D.toInt(), 0xFF5A5A5A.toInt(), 0xFFBDBDBD.toInt(), 0xFF7986CB.toInt(), 0xFF1565C0.toInt(), scenery = Scenery.CASTLES)
+        val castle = MapTheme("Castle", 0xFF3F51B5.toInt(), 0xFFFFCC80.toInt(), 0xFF7CB342.toInt(), 0xFF33691E.toInt(), 0xFF8D8D8D.toInt(), 0xFF5A5A5A.toInt(), 0xFFBDBDBD.toInt(), 0xFF7986CB.toInt(), 0xFF1565C0.toInt(), scenery = Scenery.DUNES)
         val cavern = MapTheme("Cavern", 0xFF1A1033.toInt(), 0xFF3B2466.toInt(), 0xFF9575CD.toInt(), 0xFF5E35B1.toInt(), 0xFF4A3B5C.toInt(), 0xFF2B2038.toInt(), 0xFF80DEEA.toInt(), 0xFF2E1F4D.toInt(), 0xFF26C6DA.toInt(), scenery = Scenery.STALACTITES, clouds = false)
         val sky = MapTheme("Sky", 0xFF4FC3F7.toInt(), 0xFFFFF3E0.toInt(), 0xFF9CCC65.toInt(), 0xFF558B2F.toInt(), 0xFFA1887F.toInt(), 0xFF6D4C41.toInt(), 0xFFBCAAA4.toInt(), 0xFFFFFFFF.toInt(), 0xFF0288D1.toInt(), scenery = Scenery.NONE)
         val snowy = MapTheme("Snowy Peaks", 0xFF7FA8D9.toInt(), 0xFFE6F0FA.toInt(), 0xFFFFFFFF.toInt(), 0xFFCFE3F2.toInt(), 0xFF7D8FA3.toInt(), 0xFF46566B.toInt(), 0xFFB0BEC5.toInt(), 0xFFC5D5E8.toInt(), 0xFF3A6EA5.toInt())

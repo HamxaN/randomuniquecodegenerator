@@ -116,7 +116,7 @@ class BattleView @JvmOverloads constructor(
         theme = MapTheme.forArena(newMatch.arena)
         art?.bitmap?.recycle()
         art = TerrainArt(newMatch.terrain, theme, newMatch.arena.backdrop)
-        introAt = SystemClock.uptimeMillis()
+        introAt = 0L
         backdropPaint.color = TerrainArt.shade(theme.soilDark, 0.5f)
         fireballs.clear()
         texts.clear()
@@ -341,7 +341,7 @@ class BattleView @JvmOverloads constructor(
         }
         paint.alpha = 255
         // The Earth hangs in the sky.
-        val ex = width * 0.78f - camX * scale * 0.03f
+        val ex = width * 0.62f - camX * scale * 0.03f
         val ey = height * 0.2f
         val er = 26 * dp
         paint.color = 0xFF1E88E5.toInt()
@@ -357,7 +357,6 @@ class BattleView @JvmOverloads constructor(
         when (theme.scenery) {
             Scenery.MOUNTAINS -> Unit
             Scenery.DUNES -> return drawDunes(canvas, m)
-            Scenery.CASTLES -> return drawCastles(canvas, m)
             Scenery.STALACTITES -> return drawCaveWall(canvas, m)
             Scenery.NONE -> return
         }
@@ -399,25 +398,6 @@ class BattleView @JvmOverloads constructor(
         path.lineTo(x + offset, m.terrain.height.toFloat())
         path.close()
         canvas.drawPath(path, paint)
-    }
-
-    private fun drawCastles(canvas: Canvas, m: Match) {
-        // Far-off hills with little castles on them.
-        drawDunes(canvas, m)
-        paint.color = TerrainArt.shade(theme.mountains, 0.8f)
-        val offset = camX * 0.35f
-        val baseY = m.terrain.height * 0.6f
-        var x = 100f
-        while (x < m.terrain.width) {
-            val cx = x + offset
-            val top = baseY - 150f
-            canvas.drawRect(cx - 40f, top, cx + 40f, baseY, paint)
-            canvas.drawRect(cx - 55f, top - 50f, cx - 30f, baseY, paint)
-            canvas.drawRect(cx + 30f, top - 50f, cx + 55f, baseY, paint)
-            for (k in 0 until 3) canvas.drawRect(cx - 55f + k * 10f, top - 60f, cx - 50f + k * 10f, top - 50f, paint)
-            for (k in 0 until 3) canvas.drawRect(cx + 30f + k * 10f, top - 60f, cx + 35f + k * 10f, top - 50f, paint)
-            x += 700f
-        }
     }
 
     private fun drawCaveWall(canvas: Canvas, m: Match) {
@@ -828,7 +808,9 @@ class BattleView @JvmOverloads constructor(
 
     /** The arena's name for the first few seconds of a match. */
     private fun drawIntro(canvas: Canvas, m: Match, now: Long) {
-        val k = (now - introAt) / 3500f
+        // Counted from the first frame, since building the map can take a moment.
+        if (introAt == 0L) introAt = now
+        val k = (now - introAt) / 4500f
         if (k >= 1f) return
         val alpha = (255 * min(1f, (1 - k) * 4) * min(1f, k * 8)).toInt()
         val y = topInset + 74 * dp
