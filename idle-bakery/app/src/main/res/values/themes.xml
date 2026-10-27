@@ -1,0 +1,20 @@
+<resources>
+    <style name="Theme.IdleBakery" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/cocoa</item>
+        <item name="android:windowBackground">@drawable/bg_bakery</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <style name="GameButton">
+        <item name="android:layout_height">56dp</item>
+        <item name="android:fontFamily">sans-serif-black</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textColor">#FFFFFFFF</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:paddingBottom">6dp</item>
+        <item name="android:shadowColor">#66000000</item>
+        <item name="android:shadowDy">2</item>
+        <item name="android:shadowRadius">3</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+</resources>
