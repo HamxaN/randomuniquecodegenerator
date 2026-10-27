@@ -1,0 +1,54 @@
+name: Wiggle Wars CI
+
+on:
+  push:
+    branches: ['**']
+    paths: ['wiggle-wars/**', 'gradle/wrapper/**', '.github/workflows/wiggle-wars-ci.yml']
+  pull_request:
+    paths: ['wiggle-wars/**', 'gradle/wrapper/**', '.github/workflows/wiggle-wars-ci.yml']
+
+concurrency:
+  group: wiggle-wars-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Test, lint and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Unit tests (game rules)
+        run: ./gradlew -p wiggle-wars coreTest --stacktrace
+
+      - name: Android lint
+        run: ./gradlew -p wiggle-wars :app:lintDebug --stacktrace
+
+      - name: Build debug APK and release bundle
+        # Uses Google's test ad IDs and is unsigned; real releases use wiggle-wars-release.yml.
+        run: ./gradlew -p wiggle-wars :app:assembleDebug :app:bundleRelease --stacktrace
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: wiggle-wars-debug-apk
+          path: wiggle-wars/app/build/outputs/apk/debug/*.apk
+          retention-days: 14
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wiggle-wars-reports
+          path: |
+            wiggle-wars/core/build/reports/
+            wiggle-wars/app/build/reports/
+          retention-days: 7
