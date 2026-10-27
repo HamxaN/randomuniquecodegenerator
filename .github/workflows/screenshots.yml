@@ -55,11 +55,20 @@ jobs:
 
       - name: Shrink to JPEG
         run: |
-          sudo apt-get install -y -qq imagemagick >/dev/null
           mkdir -p shots-small
-          for f in shots/*.png; do
-            convert "$f" -resize 50% -quality 82 "shots-small/$(basename "${f%.png}").jpg"
-          done
+          if python3 -c "import PIL" 2>/dev/null || python3 -m pip install --quiet --user --break-system-packages pillow; then
+            python3 - <<'PY'
+          import glob, os
+          from PIL import Image
+          for path in sorted(glob.glob("shots/*.png")):
+              img = Image.open(path).convert("RGB")
+              img = img.resize((img.width // 2, img.height // 2), Image.LANCZOS)
+              img.save(os.path.join("shots-small", os.path.basename(path)[:-4] + ".jpg"), quality=82)
+          PY
+          else
+            # Keep the full-size PNGs if Pillow can't be installed.
+            cp shots/*.png shots-small/
+          fi
           ls -la shots-small
 
       - uses: actions/upload-artifact@v4
@@ -70,7 +79,7 @@ jobs:
       - name: Publish to the screenshots-output branch
         run: |
           dir=$(mktemp -d)
-          cp shots-small/*.jpg "$dir/"
+          cp shots-small/* "$dir/"
           cd "$dir"
           git init -q -b screenshots-output
           git config user.name "github-actions"
