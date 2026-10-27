@@ -31,7 +31,7 @@ jobs:
       - name: Build every game
         run: |
           ./gradlew :app:assembleDebug --stacktrace
-          for game in block-puzzle penguin-slide screw-puzzle idle-bakery wiggle-wars; do
+          for game in block-puzzle penguin-slide screw-puzzle idle-bakery wiggle-wars neon-runner parking-jam tidy-room; do
             ./gradlew -p "$game" :app:assembleDebug --stacktrace
           done
           ls -la app/build/outputs/apk/debug/ */app/build/outputs/apk/debug/
