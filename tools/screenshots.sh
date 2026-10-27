@@ -133,11 +133,17 @@ stop $P
 P=com.hamxanadeem.wigglewars.debug
 U=com.hamxanadeem.wigglewars.ui
 start $P $U.MainActivity; sleep 5; shot wigglewars-01-menu
-# Armory from the main menu (the button under Play Online).
-tap $(( LONG - $(dp 177) )) $(( SHORT / 2 + $(dp 127) )); sleep 1.5; shot wigglewars-02-armory
+# Armory from the main menu (the bottom button).
+tap $(( LONG - $(dp 172) )) $(( SHORT / 2 + $(dp 140) )); sleep 1.5; shot wigglewars-02-armory
 adb shell input keyevent KEYCODE_BACK; sleep 1
-# vs Computer, then flip through a few arenas on the arena card.
-tap $(( LONG - $(dp 177) )) $(( SHORT / 2 - $(dp 86) )); sleep 2; shot wigglewars-03-setup
+# The campaign, then mission 1 with its intro and the first tutorial tip.
+tap $(( LONG - $(dp 172) )) $(( SHORT / 2 - $(dp 92) )); sleep 1.5; shot wigglewars-06-missions
+tap $(( LONG / 2 + $(dp 305) )) $(( SHORT / 2 + $(dp 136) )); sleep 4; shot wigglewars-07-mission-start
+drag $(( LONG / 2 + $(dp 120) )) $(( SHORT / 2 - $(dp 60) )) $(( LONG / 2 + $(dp 140) )) $(( SHORT / 2 - $(dp 90) )) 300; sleep 1; shot wigglewars-08-aim-preview
+stop $P
+start $P $U.MainActivity; sleep 3
+# Quick Battle, then flip through a few arenas on the arena card.
+tap $(( LONG - $(dp 172) )) $(( SHORT / 2 - $(dp 28) )); sleep 2; shot wigglewars-03-setup
 for n in 1 2 3 4; do tap $(( LONG / 2 - $(dp 19) )) $(dp 157); sleep 1.2; shot wigglewars-04-arena-$n; done
 start $P $U.OnlineActivity; sleep 3; shot wigglewars-05-online
 
