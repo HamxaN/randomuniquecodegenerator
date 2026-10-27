@@ -1,7 +1,9 @@
 package com.hamxanadeem.wigglewars.ui
 
 import android.app.Activity
+import android.os.Build
 import android.view.View
+import android.view.WindowManager
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -13,6 +15,12 @@ object Screen {
     /** Hides the status and navigation bars; a swipe from the edge shows them for a moment. */
     fun immersive(activity: Activity) {
         WindowCompat.setDecorFitsSystemWindows(activity.window, false)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            // Use the space beside the camera cutout too.
+            activity.window.attributes = activity.window.attributes.apply {
+                layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            }
+        }
         WindowInsetsControllerCompat(activity.window, activity.window.decorView).apply {
             systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             hide(WindowInsetsCompat.Type.systemBars())
