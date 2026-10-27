@@ -23,6 +23,10 @@ sealed interface GameEvent {
     data class BatSwing(val worm: Int, val hit: Boolean) : GameEvent
     data class CrateDropped(val crate: Crate) : GameEvent
     data class CrateCollected(val crate: Crate, val worm: Int) : GameEvent
+    /** A drill missile bored through land here. */
+    data class Carved(val x: Double, val y: Double, val area: Area) : GameEvent
+    /** A cluster missile split in mid-air. */
+    data class Split(val x: Double, val y: Double) : GameEvent
     /** New land was added (a girder), so the renderer must paint it. */
     data class Built(val area: Area) : GameEvent
     data object TimeUp : GameEvent
@@ -54,11 +58,20 @@ data class MatchConfig(
     val bonusBananas: Int = 0,
     val arena: Arena = Arena.HILLS,
     val weaponSet: WeaponSet = WeaponSet.STANDARD,
+    /** Extra starting ammo for human teams, such as upgrades bought with coins. */
+    val bonusAmmo: Map<Weapon, Int> = emptyMap(),
+    /** Worms in each team, if they differ (missions); otherwise [wormsPerTeam] for all. */
+    val wormsByTeam: List<Int>? = null,
+    /** Starting health of computer worms (missions make them tougher). */
+    val cpuHealth: Int = Worm.START_HEALTH,
 ) {
     init {
         require(teams.size in 2..4) { "2 to 4 teams" }
         require(wormsPerTeam in 1..5) { "1 to 5 worms per team" }
+        require(wormsByTeam == null || (wormsByTeam.size == teams.size && wormsByTeam.all { it in 1..5 })) { "1 to 5 worms in each team" }
     }
+
+    fun wormsIn(team: Int): Int = wormsByTeam?.get(team) ?: wormsPerTeam
 }
 
 enum class CrateKind { HEALTH, WEAPON }
@@ -86,6 +99,9 @@ class Projectile(
     var dir = if (vx < 0) -1 else 1
     internal var grounded = false
     internal var stuck = 0
+    /** Drill missiles: seconds of boring left once they've hit land, or null before that. */
+    var drilling: Double? = null
+        internal set
 
     /** Mines that have settled don't hold up the turn or the camera. */
     val idle: Boolean get() = spec.mine && resting
@@ -145,10 +161,14 @@ class Match(val config: MatchConfig) {
         val names = WORM_NAMES.shuffled(random)
         val placed = ArrayList<Pair<Double, Double>>()
         teams = config.teams.mapIndexed { t, setup ->
-            val list = List(config.wormsPerTeam) {
+            val list = List(config.wormsIn(t)) {
                 val (x, y) = findSpawn(placed)
                 placed += x to y
-                Worm(id, t, names[id % names.size], x, y).also { w -> w.facing = if (x < terrain.width / 2) 1 else -1; id++ }
+                Worm(id, t, names[id % names.size], x, y).also { w ->
+                    w.facing = if (x < terrain.width / 2) 1 else -1
+                    if (setup.cpu) w.health = config.cpuHealth
+                    id++
+                }
             }
             Team(t, setup.name, setup.cpu, list)
         }
@@ -157,7 +177,10 @@ class Match(val config: MatchConfig) {
             IntArray(Weapon.entries.size) { w ->
                 val weapon = Weapon.entries[w]
                 val base = config.weaponSet.ammo(weapon)
-                if (weapon == Weapon.BANANA && !teams[t].cpu && base >= 0) base + config.bonusBananas else base
+                when {
+                    base < 0 || teams[t].cpu -> base
+                    else -> base + (config.bonusAmmo[weapon] ?: 0) + (if (weapon == Weapon.BANANA) config.bonusBananas else 0)
+                }
             }
         }
         wormCursor = IntArray(teams.size) { -1 }
@@ -662,6 +685,16 @@ class Match(val config: MatchConfig) {
                         }
                     }
                 }
+                Outcome.SPLIT -> {
+                    p.gone = true
+                    events += GameEvent.Split(p.x, p.y)
+                    p.spec.childSpec?.let { child ->
+                        val n = p.spec.children
+                        for (i in 0 until n) {
+                            spawn(p.x, p.y, p.vx + (i - (n - 1) / 2.0) * 45, p.vy + 30, child, p.owner, p.weapon)
+                        }
+                    }
+                }
                 Outcome.SPLASH -> {
                     p.gone = true
                     events += GameEvent.Splash(p.x)
@@ -674,10 +707,13 @@ class Match(val config: MatchConfig) {
         projectiles.removeAll { it.gone }
     }
 
-    private enum class Outcome { NONE, BOUNCE, EXPLODE, SPLASH, GONE }
+    private enum class Outcome { NONE, BOUNCE, EXPLODE, SPLIT, SPLASH, GONE }
 
-    /** Moves a projectile one step. Shared by the real game and the AI's predictions. */
-    private fun advance(p: Projectile, dt: Double, wind: Double): Outcome {
+    /**
+     * Moves a projectile one step. Shared by the real game and the AI's predictions;
+     * when [simulate] is true nothing outside the projectile is changed.
+     */
+    private fun advance(p: Projectile, dt: Double, wind: Double, simulate: Boolean = false): Outcome {
         p.age += dt
         p.fuse?.let {
             val left = it - dt
@@ -685,10 +721,14 @@ class Match(val config: MatchConfig) {
             if (left <= 0) return Outcome.EXPLODE
         }
         if (p.spec.walker) return walk(p, dt)
-        if (!p.resting) {
+        if (p.drilling != null) return bore(p, dt, simulate)
+        if (p.spec.homing && p.age > Weapon.HOMING_DELAY && steer(p, dt)) {
+            // Locked on: flies straight at its target, ignoring wind and gravity.
+        } else if (!p.resting) {
             p.vx += wind * WIND_ACCEL * p.spec.windFactor * dt
             p.vy += gravity * dt
         }
+        if (p.spec.splitAtApex && p.age > 0.3 && p.vy >= 0) return Outcome.SPLIT
         var outcome = Outcome.NONE
         val speed = hypot(p.vx, p.vy)
         val parts = max(1, ceil(speed * dt / 2.0).toInt())
@@ -702,6 +742,13 @@ class Match(val config: MatchConfig) {
                 return Outcome.EXPLODE
             }
             if (projectileCollides(nx, ny, p.spec.radius)) {
+                if (impact && p.spec.drill > 0) {
+                    // Start boring through the land.
+                    p.x = nx
+                    p.y = ny
+                    p.drilling = p.spec.drill
+                    return Outcome.NONE
+                }
                 if (impact) {
                     p.x = nx
                     p.y = ny
@@ -735,6 +782,52 @@ class Match(val config: MatchConfig) {
         if (p.y > terrain.waterY) return Outcome.SPLASH
         if (p.x < -400 || p.x > terrain.width + 400 || p.y > terrain.height) return Outcome.GONE
         return outcome
+    }
+
+    /** Turns a homing missile towards the nearest enemy. Returns false if there's none. */
+    private fun steer(p: Projectile, dt: Double): Boolean {
+        val team = worms[p.owner].team
+        var target: Worm? = null
+        var best = Double.MAX_VALUE
+        for (w in worms) {
+            if (!w.alive || w.team == team) continue
+            val d = hypot(w.x - p.x, w.y - p.y)
+            if (d < best) {
+                best = d
+                target = w
+            }
+        }
+        val t = target ?: return false
+        val want = atan2(t.y - p.y, t.x - p.x)
+        val now = atan2(p.vy, p.vx)
+        var diff = want - now
+        while (diff > PI) diff -= 2 * PI
+        while (diff < -PI) diff += 2 * PI
+        val maxTurn = Weapon.HOMING_TURN * dt
+        val a = now + diff.coerceIn(-maxTurn, maxTurn)
+        p.vx = cos(a) * Weapon.HOMING_SPEED
+        p.vy = sin(a) * Weapon.HOMING_SPEED
+        return true
+    }
+
+    /** One step of a drill missile boring through land in a straight line. */
+    private fun bore(p: Projectile, dt: Double, simulate: Boolean): Outcome {
+        val left = p.drilling!! - dt
+        p.drilling = left
+        if (left <= 0) return Outcome.EXPLODE
+        val speed = hypot(p.vx, p.vy).coerceAtLeast(1.0)
+        p.vx = p.vx / speed * DRILL_SPEED
+        p.vy = p.vy / speed * DRILL_SPEED
+        val parts = max(1, ceil(DRILL_SPEED * dt / 2.0).toInt())
+        for (k in 0 until parts) {
+            p.x += p.vx * dt / parts
+            p.y += p.vy * dt / parts
+            if (hitsWorm(p, p.x, p.y)) return Outcome.EXPLODE
+        }
+        if (!simulate) terrain.carve(p.x, p.y, DRILL_HOLE)?.let { events += GameEvent.Carved(p.x, p.y, it) }
+        if (p.y > terrain.waterY) return Outcome.SPLASH
+        if (p.x < -400 || p.x > terrain.width + 400 || p.y > terrain.height) return Outcome.GONE
+        return Outcome.NONE
     }
 
     /** One step of a walking bomb: fall, waddle forward, hop over bumps, turn back at walls. */
@@ -906,14 +999,38 @@ class Match(val config: MatchConfig) {
             ax * weapon.launchSpeed * power, ay * weapon.launchSpeed * power, spec, from.id, weapon)
         var t = 0.0
         while (t < 8.0) {
-            when (advance(p, STEP, wind)) {
-                Outcome.EXPLODE -> return p.x to p.y
+            when (advance(p, STEP, wind, simulate = true)) {
+                Outcome.EXPLODE, Outcome.SPLIT -> return p.x to p.y
                 Outcome.SPLASH, Outcome.GONE -> return null
                 else -> Unit
             }
             t += STEP
         }
         return null
+    }
+
+    /**
+     * The path a shot would take, as x, y pairs every few steps, for the aiming
+     * preview. Ends where it would explode, split, splash or leave the map.
+     */
+    fun trajectory(weapon: Weapon, facing: Int, aim: Double, power: Double, from: Worm = activeWorm, stride: Int = 3): FloatArray {
+        val spec = weapon.spec ?: return FloatArray(0)
+        val ax = cos(aim) * facing
+        val ay = sin(aim)
+        val p = Projectile(-1, from.x + ax * (Worm.RADIUS + 6), from.y + ay * (Worm.RADIUS + 6),
+            ax * weapon.launchSpeed * power, ay * weapon.launchSpeed * power, spec, from.id, weapon)
+        val out = ArrayList<Float>()
+        var steps = 0
+        while (steps < 8 * 120) {
+            val outcome = advance(p, STEP, wind, simulate = true)
+            if (steps % stride == 0 || outcome != Outcome.NONE && outcome != Outcome.BOUNCE) {
+                out += p.x.toFloat()
+                out += p.y.toFloat()
+            }
+            if (outcome == Outcome.EXPLODE || outcome == Outcome.SPLIT || outcome == Outcome.SPLASH || outcome == Outcome.GONE) break
+            steps++
+        }
+        return out.toFloatArray()
     }
 
     /** Clear line from [from] to [to] within [range], for guns. */
@@ -954,9 +1071,9 @@ class Match(val config: MatchConfig) {
         const val KNOCKBACK = 6.0
         const val FALL_SAFE = 110.0
         const val FALL_MAX_DAMAGE = 30
-        const val TURN_SECONDS = 45.0
-        const val RETREAT_SECONDS = 3.0
-        const val SETTLE_SECONDS = 0.5
+        const val TURN_SECONDS = 30.0
+        const val RETREAT_SECONDS = 2.5
+        const val SETTLE_SECONDS = 0.35
         const val MIN_POWER = 0.15
         const val DEATH_RADIUS = 22.0
         const val DEATH_DAMAGE = 12
@@ -966,6 +1083,8 @@ class Match(val config: MatchConfig) {
         const val CRATE_HEALTH = 25
         const val STUCK_STEPS = 24
         const val SHEEP_HOP = 150.0
+        const val DRILL_SPEED = 240.0
+        const val DRILL_HOLE = 7.0
         const val SUDDEN_DEATH_ROUNDS = 10
         const val WATER_RISE = 16
         const val MIN_WATER_Y = 40
@@ -973,8 +1092,8 @@ class Match(val config: MatchConfig) {
         private val UZI_SPREAD = doubleArrayOf(0.0, 0.03, -0.025, 0.05, -0.04, 0.015, -0.055, 0.035, -0.01, 0.06)
         private val FALLBACKS = listOf(Weapon.BAZOOKA, Weapon.SHOTGUN, Weapon.GRENADE, Weapon.UZI)
         private val CRATE_WEAPONS = listOf(
-            Weapon.CLUSTER, Weapon.DYNAMITE, Weapon.AIRSTRIKE, Weapon.BANANA, Weapon.BAT, Weapon.MEGA_GRENADE,
-            Weapon.MINE, Weapon.UZI, Weapon.SNIPER, Weapon.SHEEP, Weapon.GIRDER,
+            Weapon.CLUSTER, Weapon.DYNAMITE, Weapon.AIRSTRIKE, Weapon.BANANA, Weapon.MEGA_GRENADE, Weapon.MINE,
+            Weapon.SHEEP, Weapon.HOMING, Weapon.DRILL, Weapon.MIRV, Weapon.NAPALM, Weapon.NUKE,
         )
 
         private const val SAMPLES = 12

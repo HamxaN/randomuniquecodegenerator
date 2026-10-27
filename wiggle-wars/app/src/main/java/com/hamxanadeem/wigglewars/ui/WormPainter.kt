@@ -129,6 +129,19 @@ class WormPainter {
                 canvas.drawCircle(7f, 0f, 2.5f, paint)
             }
             Weapon.MEGA_GRENADE -> ball(canvas, 0xFFFFC107.toInt())
+            Weapon.HOMING, Weapon.DRILL, Weapon.MIRV, Weapon.NAPALM, Weapon.NUKE -> {
+                // A launcher tube, coloured by what's loaded.
+                paint.color = when (weapon) {
+                    Weapon.HOMING -> 0xFF00838F.toInt()
+                    Weapon.DRILL -> 0xFFE65100.toInt()
+                    Weapon.MIRV -> 0xFF5E35B1.toInt()
+                    Weapon.NAPALM -> 0xFFBF360C.toInt()
+                    else -> 0xFF37474F.toInt()
+                }
+                canvas.drawRoundRect(-4f, -2.6f, 14f, 2.6f, 1.5f, 1.5f, paint)
+                paint.color = if (weapon == Weapon.NUKE) 0xFFFFD600.toInt() else 0xFF263238.toInt()
+                canvas.drawRect(12f, -3f, 15f, 3f, paint)
+            }
             Weapon.MINE -> {
                 paint.color = 0xFF546E7A.toInt()
                 oval.set(3f, -3f, 11f, 5f)

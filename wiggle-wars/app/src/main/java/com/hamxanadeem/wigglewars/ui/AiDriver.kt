@@ -51,7 +51,7 @@ class AiDriver(private val difficulty: Difficulty) {
             executor.execute {
                 val result = runCatching { Ai.plan(match, difficulty, random) }.getOrNull()
                 // Think for at least a moment so the turn is readable.
-                val wait = (900 - (System.currentTimeMillis() - started)).coerceAtLeast(0)
+                val wait = (450 - (System.currentTimeMillis() - started)).coerceAtLeast(0)
                 main.postDelayed({
                     plan = result
                     stage = Stage.AIMING
@@ -109,7 +109,7 @@ class AiDriver(private val difficulty: Difficulty) {
     fun shutdown() = executor.shutdownNow()
 
     companion object {
-        const val AIM_SECONDS = 0.9
-        const val CHARGE_SECONDS = 1.4
+        const val AIM_SECONDS = 0.6
+        const val CHARGE_SECONDS = 1.1
     }
 }

@@ -50,7 +50,7 @@ object Ai {
         }
 
         // Each trajectory is simulated once and scored against every enemy.
-        for (weapon in listOf(Weapon.BAZOOKA, Weapon.GRENADE, Weapon.CLUSTER, Weapon.BANANA, Weapon.MEGA_GRENADE)) {
+        for (weapon in listOf(Weapon.BAZOOKA, Weapon.GRENADE, Weapon.HOMING, Weapon.DRILL, Weapon.CLUSTER, Weapon.BANANA, Weapon.MEGA_GRENADE, Weapon.NUKE)) {
             if (!match.hasAmmo(weapon) || enemies.isEmpty()) continue
             val spec = weapon.spec!!
             fun evaluate(facing: Int, aim: Double, power: Double): AiPlan? {

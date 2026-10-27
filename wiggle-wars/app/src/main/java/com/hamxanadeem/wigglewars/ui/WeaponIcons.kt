@@ -38,6 +38,11 @@ object WeaponIcons {
         paint.style = Paint.Style.FILL
         when (weapon) {
             Weapon.BAZOOKA -> bazooka(canvas)
+            Weapon.HOMING -> missile(canvas, 0xFF00B8D4.toInt(), 0xFFE0F7FA.toInt(), target = true)
+            Weapon.DRILL -> drill(canvas)
+            Weapon.MIRV -> mirv(canvas)
+            Weapon.NAPALM -> napalm(canvas)
+            Weapon.NUKE -> nuke(canvas)
             Weapon.GRENADE -> grenade(canvas, 0xFF43A047.toInt(), 0xFF1B5E20.toInt())
             Weapon.CLUSTER -> cluster(canvas)
             Weapon.BANANA -> banana(canvas)
@@ -75,6 +80,88 @@ object WeaponIcons {
         canvas.drawRect(4f, 5f, 8f, 10f, fill(0xFF5D4037.toInt()))
         canvas.drawCircle(21f, 0f, 3.5f, fill(0xFFE53935.toInt()))
         canvas.restore()
+    }
+
+    /** A missile body pointing up and to the right. */
+    private fun missile(canvas: Canvas, body: Int, nose: Int, target: Boolean) {
+        canvas.save()
+        canvas.rotate(-35f)
+        path.reset()
+        path.moveTo(-18f, -5f); path.lineTo(10f, -5f); path.quadTo(22f, 0f, 10f, 5f); path.lineTo(-18f, 5f); path.close()
+        canvas.drawPath(path, fill(body))
+        canvas.drawRect(-18f, -5f, 10f, -2f, fill(0x44FFFFFF))
+        path.reset()
+        path.moveTo(10f, -5f); path.quadTo(22f, 0f, 10f, 5f); path.close()
+        canvas.drawPath(path, fill(nose))
+        // Fins and flame.
+        path.reset()
+        path.moveTo(-18f, -5f); path.lineTo(-24f, -11f); path.lineTo(-12f, -5f); path.close()
+        path.moveTo(-18f, 5f); path.lineTo(-24f, 11f); path.lineTo(-12f, 5f); path.close()
+        canvas.drawPath(path, fill(0xFF37474F.toInt()))
+        canvas.drawCircle(-21f, 0f, 3.5f, fill(0xFFFFAB40.toInt()))
+        canvas.restore()
+        if (target) {
+            stroke.style = Paint.Style.STROKE
+            stroke.strokeWidth = 1.8f
+            stroke.color = 0xFFFF1744.toInt()
+            canvas.drawCircle(14f, -14f, 6f, stroke)
+            line(canvas, 14f, -23f, 14f, -18f, 1.8f, 0xFFFF1744.toInt())
+            line(canvas, 14f, -10f, 14f, -5f, 1.8f, 0xFFFF1744.toInt())
+            line(canvas, 5f, -14f, 10f, -14f, 1.8f, 0xFFFF1744.toInt())
+            line(canvas, 18f, -14f, 23f, -14f, 1.8f, 0xFFFF1744.toInt())
+        }
+    }
+
+    private fun drill(canvas: Canvas) {
+        canvas.save()
+        canvas.rotate(35f)
+        canvas.drawRoundRect(-20f, -6f, 4f, 6f, 2f, 2f, fill(0xFFFF8F00.toInt()))
+        canvas.drawRect(-20f, -6f, 4f, -3f, fill(0x44FFFFFF))
+        path.reset()
+        path.moveTo(4f, -7f); path.lineTo(22f, 0f); path.lineTo(4f, 7f); path.close()
+        canvas.drawPath(path, fill(0xFF90A4AE.toInt()))
+        for (i in 0 until 3) line(canvas, 7f + i * 5f, -5f + i * 1.5f, 10f + i * 5f, 5f - i * 1.5f, 1.4f, 0xFF455A64.toInt())
+        canvas.drawRect(-24f, -4f, -20f, 4f, fill(0xFF37474F.toInt()))
+        canvas.restore()
+        // Dirt flying off.
+        for ((x, y) in listOf(16f to 18f, 21f to 12f, 10f to 21f)) canvas.drawCircle(x, y, 2.2f, fill(0xFF8D6E63.toInt()))
+    }
+
+    private fun mirv(canvas: Canvas) {
+        missile(canvas, 0xFF7E57C2.toInt(), 0xFFD1C4E9.toInt(), target = false)
+        for ((x, y) in listOf(10f to 14f, 18f to 8f, 2f to 19f)) {
+            canvas.drawCircle(x, y, 2.8f, fill(0xFFB39DDB.toInt()))
+        }
+    }
+
+    private fun napalm(canvas: Canvas) {
+        missile(canvas, 0xFFD84315.toInt(), 0xFFFFCC80.toInt(), target = false)
+        // Flames.
+        for ((x, r) in listOf(-6f to 6f, 4f to 8f, 14f to 5f)) {
+            path.reset()
+            path.moveTo(x - r, 22f); path.quadTo(x - r, 22f - r * 1.6f, x, 22f - r * 2.4f); path.quadTo(x + r, 22f - r * 1.6f, x + r, 22f); path.close()
+            canvas.drawPath(path, fill(0xFFFF6D00.toInt()))
+            path.reset()
+            path.moveTo(x - r * 0.5f, 22f); path.quadTo(x, 22f - r * 1.4f, x + r * 0.5f, 22f); path.close()
+            canvas.drawPath(path, fill(0xFFFFEB3B.toInt()))
+        }
+    }
+
+    private fun nuke(canvas: Canvas) {
+        canvas.drawRoundRect(-10f, -20f, 10f, 14f, 10f, 10f, fill(0xFF424242.toInt()))
+        canvas.drawRoundRect(-10f, -20f, -3f, 14f, 6f, 6f, fill(0x33FFFFFF))
+        path.reset()
+        path.moveTo(-10f, 10f); path.lineTo(-16f, 22f); path.lineTo(-4f, 14f); path.close()
+        path.moveTo(10f, 10f); path.lineTo(16f, 22f); path.lineTo(4f, 14f); path.close()
+        canvas.drawPath(path, fill(0xFF212121.toInt()))
+        // Radiation sign.
+        canvas.drawCircle(0f, -3f, 8.5f, fill(0xFFFFD600.toInt()))
+        for (k in 0 until 3) {
+            rect.set(-7.5f, -10.5f, 7.5f, 4.5f)
+            canvas.drawArc(rect, -120f + k * 120f, 60f, true, fill(0xFF212121.toInt()))
+        }
+        canvas.drawCircle(0f, -3f, 2.4f, fill(0xFFFFD600.toInt()))
+        canvas.drawCircle(0f, -3f, 1.4f, fill(0xFF212121.toInt()))
     }
 
     private fun grenade(canvas: Canvas, body: Int, dark: Int) {

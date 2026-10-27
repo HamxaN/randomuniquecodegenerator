@@ -185,7 +185,7 @@ class MatchTest {
         val missiles = events.count { it is GameEvent.Explosion } - events.count { it is GameEvent.Died } +
             events.count { it is GameEvent.Splash } - events.count { it is GameEvent.Drowned }
         assertEquals(Weapon.AIRSTRIKE_MISSILES, missiles)
-        assertFalse(m.select(Weapon.BANANA), "no bananas without the bonus")
+        assertTrue(m.select(Weapon.BANANA), "every weapon is available from the start")
     }
 
     @Test
@@ -219,7 +219,7 @@ class MatchTest {
     @Test
     fun `bonus bananas go to human teams only`() {
         val m = Match(MatchConfig(listOf(TeamSetup("You", false), TeamSetup("CPU", true)), bonusBananas = 2))
-        assertEquals(2, m.ammo(Weapon.BANANA, 0))
-        assertEquals(0, m.ammo(Weapon.BANANA, 1))
+        assertEquals(Weapon.BANANA.startAmmo + 2, m.ammo(Weapon.BANANA, 0))
+        assertEquals(Weapon.BANANA.startAmmo, m.ammo(Weapon.BANANA, 1))
     }
 }

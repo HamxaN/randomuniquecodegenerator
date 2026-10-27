@@ -2,6 +2,7 @@ package com.hamxanadeem.wigglewars.core
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -120,5 +121,69 @@ class WeaponsTest {
         val crate = m.crates.firstOrNull() ?: return
         assertTrue(crate.y > 0, "crate starts below the roof, at ${crate.y}")
         assertFalse(m.terrain.isSolid(crate.x, crate.y))
+    }
+
+    @Test
+    fun `every weapon is available at the start of a standard match`() {
+        val m = settled()
+        for (w in Weapon.entries) assertTrue(m.hasAmmo(w), "$w has ammo")
+        assertEquals(1, m.ammo(Weapon.NUKE))
+    }
+
+    @Test
+    fun `homing missiles chase the nearest enemy`() {
+        val m = settled(seed = 6)
+        val me = m.activeWorm
+        val enemy = m.worms.filter { it.team != me.team }.minBy { kotlin.math.hypot(it.x - me.x, it.y - me.y) }
+        // Fire straight up and away; it should still end up near the enemy.
+        m.face(if (enemy.x > me.x) -1 else 1)
+        m.setAim(-1.4)
+        assertTrue(m.select(Weapon.HOMING))
+        assertTrue(m.fire(0.6))
+        var boom: GameEvent.Explosion? = null
+        var t = 0.0
+        while (boom == null && t < 15) {
+            boom = m.update(0.05).filterIsInstance<GameEvent.Explosion>().firstOrNull()
+            t += 0.05
+        }
+        assertNotNull(boom)
+        assertTrue(kotlin.math.hypot(boom!!.x - enemy.x, boom.y - enemy.y) < 120, "exploded ${boom.x},${boom.y} vs enemy ${enemy.x},${enemy.y}")
+    }
+
+    @Test
+    fun `drill missiles bore through land before exploding`() {
+        val m = settled()
+        m.setAim(0.5)
+        assertTrue(m.select(Weapon.DRILL))
+        assertTrue(m.fire(0.9))
+        val events = runFor(m, 6.0)
+        assertTrue(events.count { it is GameEvent.Carved } > 5, "bored a tunnel")
+        assertTrue(events.any { it is GameEvent.Explosion })
+    }
+
+    @Test
+    fun `cluster missiles split in four at the top of their flight`() {
+        val m = settled()
+        m.setAim(-1.0)
+        assertTrue(m.select(Weapon.MIRV))
+        assertTrue(m.fire(0.8))
+        var split = false
+        var t = 0.0
+        while (!split && t < 6) {
+            split = m.update(0.02).any { it is GameEvent.Split }
+            t += 0.02
+        }
+        assertTrue(split)
+        assertEquals(4, m.projectiles.count { it.weapon == Weapon.MIRV })
+    }
+
+    @Test
+    fun `the computer can plan with every weapon set`() {
+        for (set in WeaponSet.entries) {
+            val m = Match(MatchConfig(listOf(TeamSetup("A", true), TeamSetup("B", true)), seed = 9, weaponSet = set))
+            repeat(40) { m.update(0.05) }
+            val plan = Ai.plan(m, Difficulty.NORMAL, kotlin.random.Random(1))
+            assertTrue(m.hasAmmo(plan.weapon), "$set: planned ${plan.weapon}")
+        }
     }
 }
