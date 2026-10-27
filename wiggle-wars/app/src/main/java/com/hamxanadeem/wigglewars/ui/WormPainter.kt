@@ -128,6 +128,37 @@ class WormPainter {
                 paint.color = 0xFFAB47BC.toInt()
                 canvas.drawCircle(7f, 0f, 2.5f, paint)
             }
+            Weapon.MEGA_GRENADE -> ball(canvas, 0xFFFFC107.toInt())
+            Weapon.MINE -> {
+                paint.color = 0xFF546E7A.toInt()
+                oval.set(3f, -3f, 11f, 5f)
+                canvas.drawArc(oval, 180f, 180f, true, paint)
+                paint.color = 0xFFFF1744.toInt()
+                canvas.drawCircle(7f, -1.5f, 0.9f, paint)
+            }
+            Weapon.UZI -> {
+                paint.color = 0xFF37474F.toInt()
+                canvas.drawRect(-1f, -1.6f, 8f, 1.2f, paint)
+                canvas.drawRect(8f, -1f, 11f, 0.2f, paint)
+                canvas.drawRect(2f, 1.2f, 4f, 4.5f, paint)
+            }
+            Weapon.SNIPER -> {
+                paint.color = 0xFF5D4037.toInt()
+                canvas.drawRect(-5f, -1.2f, 2f, 1.6f, paint)
+                paint.color = 0xFF263238.toInt()
+                canvas.drawRect(2f, -0.7f, 19f, 0.7f, paint)
+                canvas.drawRect(1f, -3.2f, 7f, -1.2f, paint)
+            }
+            Weapon.SHEEP -> {
+                paint.color = 0xFFF5F5F5.toInt()
+                canvas.drawCircle(7f, 0f, 3.5f, paint)
+                paint.color = 0xFF212121.toInt()
+                canvas.drawCircle(10.5f, -1f, 1.6f, paint)
+            }
+            Weapon.GIRDER -> {
+                paint.color = 0xFFE67E22.toInt()
+                canvas.drawRect(2f, -1.8f, 14f, 1.8f, paint)
+            }
         }
         canvas.restoreToCount(save)
     }

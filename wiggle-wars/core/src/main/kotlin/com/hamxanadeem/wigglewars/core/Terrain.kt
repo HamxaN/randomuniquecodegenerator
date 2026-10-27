@@ -1,9 +1,7 @@
 package com.hamxanadeem.wigglewars.core
 
-import kotlin.math.PI
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.random.Random
 
 /** A rectangle of terrain cells that changed, so the renderer only redraws that part. */
 data class Area(val left: Int, val top: Int, val right: Int, val bottom: Int)
@@ -16,7 +14,9 @@ class Terrain(val width: Int, val height: Int) {
 
     private val solid = ByteArray(width * height)
 
-    val waterY: Int get() = height - WATER_DEPTH
+    /** The sea level. It rises during sudden death. */
+    var waterY: Int = height - WATER_DEPTH
+        internal set
 
     fun isSolid(x: Int, y: Int): Boolean =
         x in 0 until width && y in 0 until height && solid[y * width + x] != 0.toByte()
@@ -58,66 +58,42 @@ class Terrain(val width: Int, val height: Int) {
         return null
     }
 
+    /** Fills a rectangle with land (for girders). Returns the area that changed. */
+    fun fillRect(left: Int, top: Int, right: Int, bottom: Int): Area? {
+        val l = max(0, left)
+        val t = max(0, top)
+        val r = min(width - 1, right)
+        val b = min(height - 1, bottom)
+        if (l > r || t > b) return null
+        for (y in t..b) for (x in l..r) solid[y * width + x] = 1
+        return Area(l, t, r, b)
+    }
+
+    /**
+     * Every place in column [x] where land has open air above it, from the top down.
+     * Used to spawn worms on any level: hilltops, cave floors, castle halls.
+     */
+    fun surfaces(x: Int, clearance: Int = 20): List<Int> {
+        val out = ArrayList<Int>()
+        var air = if (isSolid(x, 0)) 0 else clearance
+        for (y in 0 until waterY) {
+            if (isSolid(x, y)) {
+                if (air >= clearance) out += y
+                air = 0
+            } else {
+                air++
+            }
+        }
+        return out
+    }
+
     fun solidCount(): Int = solid.count { it != 0.toByte() }
 
     companion object {
         const val WATER_DEPTH = 70
 
-        /**
-         * Rolling islands with caves and tunnels. The ends drop into the sea so worms
-         * can be knocked off the map.
-         */
-        fun generate(seed: Long, width: Int = 2000, height: Int = 1000): Terrain {
-            val t = Terrain(width, height)
-            val r = Random(seed)
-            val waves = List(5) { Triple(0.5 + r.nextDouble() * 3.0 * (it + 1), r.nextDouble() * 2 * PI, 0.4 / (it + 1)) }
-            val base = height * 0.5
-            val amplitude = height * 0.22
-            // Optional canyon splitting the land into two islands.
-            val canyon = if (r.nextBoolean()) width * (0.4 + r.nextDouble() * 0.2) else -1.0
-            val canyonWidth = 50 + r.nextDouble() * 60
-            for (x in 0 until width) {
-                val u = x.toDouble() / width
-                var h = 0.0
-                for ((freq, phase, weight) in waves) h += sin(u * freq * 2 * PI + phase) * weight
-                // Fall away into the sea at both ends.
-                val edge = min(1.0, min(u, 1 - u) / 0.12)
-                var top = base - h * amplitude
-                top += (1 - edge) * height * 0.6
-                if (canyon > 0 && kotlin.math.abs(x - canyon) < canyonWidth) {
-                    val k = 1 - kotlin.math.abs(x - canyon) / canyonWidth
-                    top += k * k * height * 0.45
-                }
-                val start = top.toInt().coerceIn(40, height)
-                for (y in start until height) t.set(x, y, true)
-            }
-            // Caves and tunnels.
-            repeat(3 + r.nextInt(4)) {
-                val cx = width * (0.15 + r.nextDouble() * 0.7)
-                val ground = t.groundBelow(cx.toInt()) ?: return@repeat
-                val cy = ground + 60 + r.nextDouble() * 140
-                if (cy > t.waterY - 40) return@repeat
-                val rx = 40 + r.nextDouble() * 90
-                val ry = 22 + r.nextDouble() * 30
-                for (y in (cy - ry).toInt()..(cy + ry).toInt()) for (x in (cx - rx).toInt()..(cx + rx).toInt()) {
-                    val dx = (x - cx) / rx
-                    val dy = (y - cy) / ry
-                    if (dx * dx + dy * dy <= 1) t.set(x, y, false)
-                }
-            }
-            // A few floating ledges in the sky.
-            repeat(2 + r.nextInt(3)) {
-                val cx = width * (0.15 + r.nextDouble() * 0.7)
-                val cy = height * (0.15 + r.nextDouble() * 0.2)
-                val rx = 50 + r.nextDouble() * 70
-                val ry = 10 + r.nextDouble() * 10
-                for (y in (cy - ry).toInt()..(cy + ry * 1.8).toInt()) for (x in (cx - rx).toInt()..(cx + rx).toInt()) {
-                    val dx = (x - cx) / rx
-                    val dy = if (y < cy) (y - cy) / ry else (y - cy) / (ry * 1.8)
-                    if (dx * dx + dy * dy <= 1) t.set(x, y, true)
-                }
-            }
-            return t
-        }
+        /** Builds the land for [arena]. The same seed and arena always give the same map. */
+        fun generate(seed: Long, arena: Arena = Arena.HILLS, width: Int = 2000, height: Int = 1000): Terrain =
+            arena.generate(seed, width, height)
     }
 }

@@ -24,8 +24,6 @@
     <string name="fire">FIRE</string>
     <string name="target">TAP MAP</string>
     <string name="weapon_ammo">%1$s ×%2$d</string>
-    <string name="weapon_unlimited">%1$s\n∞</string>
-    <string name="weapon_count">%1$s\n×%2$d</string>
     <string name="walk_left">Walk left</string>
     <string name="walk_right">Walk right</string>
     <string name="jump">Jump</string>
@@ -36,6 +34,13 @@
     <string name="resume">Resume</string>
     <string name="quit">Quit match</string>
     <string name="choose_weapon">Choose a weapon</string>
+    <string name="armory">🔫 Armory</string>
+    <string name="weapon_set_format">Weapons: %1$s\n%2$s</string>
+    <string name="sudden_death">🌊 Sudden death! The water is rising…</string>
+    <string name="rules_format">🗺 %1$s  ·  🔫 %2$s</string>
+    <string name="random_arena">Random arena</string>
+    <string name="change_arena">Change arena</string>
+    <string name="change_weapons">Change weapons</string>
     <string name="cant_go_there">Can\'t go there!</string>
     <string name="you_win">🏆 VICTORY!</string>
     <string name="you_lose">Defeated…</string>

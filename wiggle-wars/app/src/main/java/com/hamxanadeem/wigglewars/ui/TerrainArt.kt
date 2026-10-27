@@ -13,7 +13,7 @@ import kotlin.math.sin
  * Paints the terrain into a bitmap once (grass or sand on top, layered soil, stones)
  * and then only updates the pixels around each explosion, with a scorched rim.
  */
-class TerrainArt(private val terrain: Terrain, private val theme: MapTheme) {
+class TerrainArt(private val terrain: Terrain, private val theme: MapTheme, withBackdrop: Boolean = true) {
 
     val bitmap: Bitmap = createBitmap(terrain.width, terrain.height)
     private var buffer = IntArray(0)
@@ -41,7 +41,7 @@ class TerrainArt(private val terrain: Terrain, private val theme: MapTheme) {
             }
         }
         bitmap.setPixels(pixels, 0, w, 0, 0, w, h)
-        buildBackdrop()
+        if (withBackdrop) buildBackdrop()
     }
 
     private fun buildBackdrop() {
@@ -108,8 +108,48 @@ class TerrainArt(private val terrain: Terrain, private val theme: MapTheme) {
         bitmap.setPixels(buffer, 0, w, left, top, w, h)
     }
 
+    /** Paints a newly built girder: orange steel with a darker rim and rivets. */
+    fun build(area: Area) {
+        val w = area.right - area.left + 1
+        val h = area.bottom - area.top + 1
+        if (buffer.size < w * h) buffer = IntArray(w * h)
+        for (y in 0 until h) for (x in 0 until w) {
+            val edge = y == 0 || y == h - 1 || x == 0 || x == w - 1
+            val rivet = y == h / 2 && x % 10 == 5
+            buffer[y * w + x] = when {
+                edge -> GIRDER_DARK
+                rivet -> GIRDER_LIGHT
+                else -> shade(GIRDER, 1f - y * 0.04f)
+            }
+        }
+        bitmap.setPixels(buffer, 0, w, area.left, area.top, w, h)
+    }
+
     companion object {
+        private const val GIRDER = 0xFFE67E22.toInt()
+        private const val GIRDER_DARK = 0xFF8E3B0B.toInt()
+        private const val GIRDER_LIGHT = 0xFFFFD180.toInt()
         private const val BACKDROP_STEP = 4
+
+        /** A small picture of a whole map, for the arena picker. */
+        fun preview(terrain: Terrain, theme: MapTheme, width: Int, height: Int): Bitmap {
+            val pixels = IntArray(width * height)
+            val sx = terrain.width.toFloat() / width
+            val sy = terrain.height.toFloat() / height
+            for (y in 0 until height) {
+                val wy = (y * sy).toInt()
+                val sky = mix(theme.skyTop, theme.skyBottom, y / height.toFloat())
+                for (x in 0 until width) {
+                    val wx = (x * sx).toInt()
+                    pixels[y * width + x] = when {
+                        terrain.isSolid(wx, wy) -> if (!terrain.isSolid(wx, (wy - sy * 1.5f).toInt())) theme.surface else mix(theme.soil, theme.soilDark, y / height.toFloat())
+                        wy > terrain.waterY -> theme.water
+                        else -> sky
+                    }
+                }
+            }
+            return createBitmap(width, height).apply { setPixels(pixels, 0, width, 0, 0, width, height) }
+        }
         private const val MIN_GROUND = 60
 
         fun hash(x: Int, y: Int): Int {

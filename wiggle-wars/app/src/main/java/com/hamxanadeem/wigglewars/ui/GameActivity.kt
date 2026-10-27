@@ -9,17 +9,17 @@ import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.OvershootInterpolator
+import android.graphics.drawable.BitmapDrawable
 import android.widget.Button
-import android.widget.GridLayout
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.AppCompatButton
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.hamxanadeem.wigglewars.R
 import com.hamxanadeem.wigglewars.ads.AdsManager
+import com.hamxanadeem.wigglewars.core.Arena
 import com.hamxanadeem.wigglewars.core.Command
 import com.hamxanadeem.wigglewars.core.Difficulty
 import com.hamxanadeem.wigglewars.core.FireMode
@@ -30,6 +30,7 @@ import com.hamxanadeem.wigglewars.core.MatchConfig
 import com.hamxanadeem.wigglewars.core.Phase
 import com.hamxanadeem.wigglewars.core.TeamSetup
 import com.hamxanadeem.wigglewars.core.Weapon
+import com.hamxanadeem.wigglewars.core.WeaponSet
 import com.hamxanadeem.wigglewars.data.Settings
 import com.hamxanadeem.wigglewars.data.Stats
 import com.hamxanadeem.wigglewars.fx.GameSounds
@@ -47,7 +48,7 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
     private lateinit var fireButton: Button
     private lateinit var controls: View
     private lateinit var weaponPanel: View
-    private lateinit var weaponGrid: GridLayout
+    private lateinit var picker: WeaponPickerView
     private lateinit var pauseOverlay: View
     private lateinit var overOverlay: View
 
@@ -78,7 +79,7 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
         fireButton = findViewById(R.id.fireButton)
         controls = findViewById(R.id.controls)
         weaponPanel = findViewById(R.id.weaponPanel)
-        weaponGrid = findViewById(R.id.weaponGrid)
+        picker = findViewById(R.id.weaponPicker)
         pauseOverlay = findViewById(R.id.pauseOverlay)
         overOverlay = findViewById(R.id.overOverlay)
         battle.listener = this
@@ -105,6 +106,10 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
     private fun startMatch() {
         val room = intent.getStringExtra(EXTRA_ROOM)
         val difficulty = Difficulty.entries[intent.getIntExtra(EXTRA_DIFFICULTY, 1)]
+        val weaponSet = intent.getStringExtra(EXTRA_WEAPONS)?.let { name -> WeaponSet.entries.firstOrNull { it.name == name } } ?: WeaponSet.STANDARD
+        // Offline with no arena chosen ("random"): a different one each rematch. Online, the room decides.
+        val arena = intent.getStringExtra(EXTRA_ARENA)?.let { name -> Arena.entries.firstOrNull { it.name == name } }
+            ?: if (room != null) Arena.HILLS else Arena.entries.random()
         val config = if (room != null) {
             // Every phone builds the same match from the room's seed.
             val names = intent.getStringArrayExtra(EXTRA_NAMES) ?: arrayOf("Player 1", "Player 2")
@@ -112,6 +117,8 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
                 teams = names.map { TeamSetup(it, false) },
                 wormsPerTeam = intent.getIntExtra(EXTRA_WORMS, 3),
                 seed = intent.getLongExtra(EXTRA_SEED, 1L),
+                arena = arena,
+                weaponSet = weaponSet,
             )
         } else {
             val cpu = intent.getBooleanArrayExtra(EXTRA_CPU) ?: booleanArrayOf(false, true)
@@ -121,6 +128,8 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
                 seed = System.nanoTime(),
                 difficulty = difficulty,
                 bonusBananas = intent.getIntExtra(EXTRA_BANANAS, 0),
+                arena = arena,
+                weaponSet = weaponSet,
             )
         }
         if (::ai.isInitialized) ai.shutdown()
@@ -215,14 +224,17 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
                     Sounds.play(if (e.radius >= 40) GameSounds.BIG_BOOM else GameSounds.BOOM, rate = 0.9f + (e.radius % 7).toFloat() * 0.03f)
                     haptic(HapticFeedbackConstants.LONG_PRESS)
                 }
-                is GameEvent.Fired -> Sounds.play(
-                    when (e.weapon) {
-                        Weapon.SHOTGUN -> GameSounds.SHOTGUN
-                        Weapon.BAT -> GameSounds.WHACK
-                        Weapon.TELEPORT -> GameSounds.TELEPORT
-                        else -> GameSounds.LAUNCH
-                    },
-                )
+                is GameEvent.Fired -> when (e.weapon) {
+                    Weapon.SHOTGUN -> Sounds.play(GameSounds.SHOTGUN)
+                    Weapon.UZI -> Sounds.play(GameSounds.SHOTGUN, rate = 1.7f, volume = 0.8f)
+                    Weapon.SNIPER -> Sounds.play(GameSounds.SHOTGUN, rate = 0.7f)
+                    Weapon.BAT -> Sounds.play(GameSounds.WHACK)
+                    Weapon.TELEPORT -> Sounds.play(GameSounds.TELEPORT)
+                    Weapon.GIRDER -> Sounds.play(GameSounds.WHACK, rate = 1.5f)
+                    Weapon.MINE, Weapon.SHEEP -> Sounds.play(GameSounds.JUMP)
+                    else -> Sounds.play(GameSounds.LAUNCH)
+                }
+                is GameEvent.WaterRose -> if (e.first) waterNotice = true
                 is GameEvent.Damaged -> Sounds.play(GameSounds.OUCH, rate = 0.85f + (e.worm % 4) * 0.1f, volume = 0.8f)
                 is GameEvent.Jumped -> Sounds.play(GameSounds.JUMP, volume = 0.7f)
                 is GameEvent.Splash -> Sounds.play(GameSounds.SPLASH)
@@ -252,7 +264,9 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
             humans > 1 -> "${team.name}, your turn! (${worm.name})"
             else -> "Your turn: ${worm.name}"
         }
-        battle.showBanner(text, TeamColors.colors[e.team])
+        val sub = if (waterNotice) getString(R.string.sudden_death) else null
+        waterNotice = false
+        battle.showBanner(text, TeamColors.colors[e.team], sub)
         if (!team.cpu && humans > 1 && lastHumanTeam != e.team) haptic(HapticFeedbackConstants.VIRTUAL_KEY)
         if (!team.cpu) lastHumanTeam = e.team
         weaponPanel.visibility = View.GONE
@@ -352,6 +366,7 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
     }
 
     private var shownState = ""
+    private var waterNotice = false
 
     private fun refreshControls() {
         val human = myTurn() && match.phase != Phase.GAME_OVER
@@ -361,36 +376,28 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
         controls.alpha = if (human && match.canMove) 1f else 0.35f
         val ammo = match.ammo(match.selected)
         weaponButton.text = if (ammo < 0) match.selected.displayName else getString(R.string.weapon_ammo, match.selected.displayName, ammo)
+        val iconSize = (resources.displayMetrics.density * 30).toInt()
+        val icon = BitmapDrawable(resources, WeaponIcons.bitmap(match.selected, iconSize))
+        weaponButton.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null)
         fireButton.text = getString(if (match.selected.mode == FireMode.TARGET) R.string.target else R.string.fire)
     }
 
     private fun showWeapons() {
-        weaponGrid.removeAllViews()
-        for (weapon in Weapon.entries) {
-            val ammo = match.ammo(weapon)
-            val button = AppCompatButton(this).apply {
-                text = if (ammo < 0) getString(R.string.weapon_unlimited, weapon.displayName) else getString(R.string.weapon_count, weapon.displayName, ammo)
-                isEnabled = ammo != 0
-                alpha = if (ammo != 0) 1f else 0.4f
-                setBackgroundResource(if (weapon == match.selected) R.drawable.bg_button_play else R.drawable.bg_button_secondary)
-                setTextColor(0xFFFFFFFF.toInt())
-                textSize = 13f
-                isAllCaps = false
-                stateListAnimator = null
-                setOnClickListener {
-                    Sounds.play(GameSounds.TAP)
-                    act(Command.Select(weapon))
-                    weaponPanel.visibility = View.GONE
-                    shownState = ""
-                }
+        picker.ammoOf = { match.ammo(it) }
+        picker.listener = object : WeaponPickerView.Listener {
+            override fun onEquip(weapon: Weapon) {
+                Sounds.play(GameSounds.TAP)
+                if (humanCanAct()) act(Command.Select(weapon))
+                weaponPanel.visibility = View.GONE
+                shownState = ""
             }
-            val size = (resources.displayMetrics.density * 54).toInt()
-            weaponGrid.addView(button, GridLayout.LayoutParams().apply {
-                width = (resources.displayMetrics.density * 128).toInt()
-                height = size
-                setMargins(6, 6, 6, 6)
-            })
+
+            override fun onClose() {
+                Sounds.play(GameSounds.TAP)
+                weaponPanel.visibility = View.GONE
+            }
         }
+        picker.open(match.selected)
         weaponPanel.visibility = View.VISIBLE
     }
 
@@ -474,5 +481,7 @@ class GameActivity : AppCompatActivity(), Choreographer.FrameCallback, BattleVie
         const val EXTRA_SLOT = "slot"
         const val EXTRA_NAMES = "names"
         const val EXTRA_SEED = "seed"
+        const val EXTRA_ARENA = "arena"
+        const val EXTRA_WEAPONS = "weapons"
     }
 }

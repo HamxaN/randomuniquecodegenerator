@@ -16,7 +16,9 @@ import com.google.firebase.database.DataSnapshot
 import com.hamxanadeem.wigglewars.R
 import com.hamxanadeem.wigglewars.fx.GameSounds
 import com.hamxanadeem.wigglewars.fx.Sounds
+import com.hamxanadeem.wigglewars.core.Arena
 import com.hamxanadeem.wigglewars.core.Codes
+import com.hamxanadeem.wigglewars.core.WeaponSet
 import com.hamxanadeem.wigglewars.online.Friend
 import com.hamxanadeem.wigglewars.online.Friends
 import com.hamxanadeem.wigglewars.online.Invite
@@ -44,6 +46,8 @@ class OnlineActivity : AppCompatActivity() {
     private var code: String? = null
     private var isHost = false
     private var worms = 3
+    private var arena: Arena? = null
+    private var weaponSet = WeaponSet.STANDARD
     private var watch: Rooms.Watch? = null
     private var launched = false
 
@@ -86,6 +90,20 @@ class OnlineActivity : AppCompatActivity() {
         findViewById<Button>(R.id.leaveButton).setOnClickListener { leave() }
         findViewById<Button>(R.id.onlineWormsMinus).setOnClickListener { worms = (worms - 1).coerceAtLeast(1); renderWorms() }
         findViewById<Button>(R.id.onlineWormsPlus).setOnClickListener { worms = (worms + 1).coerceAtMost(5); renderWorms() }
+        val settings = com.hamxanadeem.wigglewars.data.Settings(this)
+        arena = Arena.entries.firstOrNull { it.name == settings.arena }
+        weaponSet = WeaponSet.entries.firstOrNull { it.name == settings.weaponSet } ?: WeaponSet.STANDARD
+        findViewById<Button>(R.id.onlineArenaButton).setOnClickListener {
+            Sounds.play(GameSounds.TAP)
+            val options = listOf<Arena?>(null) + Arena.entries
+            arena = options[(options.indexOf(arena) + 1) % options.size]
+            pushRules()
+        }
+        findViewById<Button>(R.id.onlineWeaponsButton).setOnClickListener {
+            Sounds.play(GameSounds.TAP)
+            weaponSet = WeaponSet.entries[(weaponSet.ordinal + 1) % WeaponSet.entries.size]
+            pushRules()
+        }
         startButton.setOnClickListener { startMatch() }
         intent?.data?.getQueryParameter("room")?.let { codeField.setText(it) }
     }
@@ -187,7 +205,7 @@ class OnlineActivity : AppCompatActivity() {
             return
         }
         val newCode = Rooms.newCode()
-        Rooms.create(this, newCode, playerId, name, worms) { ok ->
+        Rooms.create(this, newCode, playerId, name, worms, arena?.name ?: "", weaponSet.name) { ok ->
             if (!ok) {
                 Toast.makeText(this, R.string.online_failed, Toast.LENGTH_LONG).show()
                 return@create
@@ -220,7 +238,7 @@ class OnlineActivity : AppCompatActivity() {
         val name = name() ?: return
         Sounds.play(GameSounds.TAP)
         val newCode = Rooms.newCode()
-        Rooms.create(this, newCode, playerId, name, worms) { ok ->
+        Rooms.create(this, newCode, playerId, name, worms, arena?.name ?: "", weaponSet.name) { ok ->
             if (ok) enterLobby(newCode, host = true) else Toast.makeText(this, R.string.online_failed, Toast.LENGTH_LONG).show()
         }
     }
@@ -255,6 +273,7 @@ class OnlineActivity : AppCompatActivity() {
         lobby.visibility = View.VISIBLE
         findViewById<TextView>(R.id.roomCodeText).text = roomCode
         findViewById<View>(R.id.hostControls).visibility = if (host) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.hostOptions).visibility = if (host) View.VISIBLE else View.GONE
         startButton.visibility = if (host) View.VISIBLE else View.GONE
         renderWorms()
         watch?.stop()
@@ -273,6 +292,13 @@ class OnlineActivity : AppCompatActivity() {
         if (!snapshot.child("meta").exists()) return
         val players = playersInOrder(snapshot)
         playersText.text = players.mapIndexed { i, (_, n) -> "● ${TeamColors.names[i].substringBefore(' ')}: $n" }.joinToString("\n")
+        val roomArena = snapshot.child("meta/arena").getValue(String::class.java).orEmpty()
+        val roomWeapons = snapshot.child("meta/weapons").getValue(String::class.java).orEmpty()
+        findViewById<TextView>(R.id.rulesText).text = getString(
+            R.string.rules_format,
+            Arena.entries.firstOrNull { it.name == roomArena }?.displayName ?: getString(R.string.random_arena),
+            (WeaponSet.entries.firstOrNull { it.name == roomWeapons } ?: WeaponSet.STANDARD).displayName,
+        )
         startButton.isEnabled = players.size >= 2
         startButton.alpha = if (players.size >= 2) 1f else 0.5f
         if (snapshot.child("meta/status").getValue(String::class.java) == "playing" && !launched) {
@@ -290,10 +316,17 @@ class OnlineActivity : AppCompatActivity() {
                     .putExtra(GameActivity.EXTRA_SLOT, slot)
                     .putExtra(GameActivity.EXTRA_NAMES, names.toTypedArray())
                     .putExtra(GameActivity.EXTRA_SEED, snapshot.child("meta/seed").getValue(Long::class.javaObjectType) ?: 1L)
-                    .putExtra(GameActivity.EXTRA_WORMS, snapshot.child("meta/worms").getValue(Int::class.javaObjectType) ?: 3),
+                    .putExtra(GameActivity.EXTRA_WORMS, snapshot.child("meta/worms").getValue(Int::class.javaObjectType) ?: 3)
+                    .putExtra(GameActivity.EXTRA_ARENA, roomArena.ifEmpty { Arena.HILLS.name })
+                    .putExtra(GameActivity.EXTRA_WEAPONS, roomWeapons.ifEmpty { WeaponSet.STANDARD.name }),
             )
             finish()
         }
+    }
+
+    private fun pushRules() {
+        val room = code ?: return
+        if (isHost) Rooms.setRules(this, room, arena?.name ?: "", weaponSet.name)
     }
 
     private fun renderWorms() {
@@ -309,7 +342,9 @@ class OnlineActivity : AppCompatActivity() {
                 .sortedWith(compareBy({ it.second }, { it.first }))
                 .map { it.first }
                 .take(Rooms.MAX_PLAYERS)
-            if (order.size >= 2) Rooms.start(this, roomCode, order, worms)
+            // A random arena is picked once here, so every phone builds the same map.
+            val chosen = arena ?: Arena.entries.random()
+            if (order.size >= 2) Rooms.start(this, roomCode, order, worms, chosen.name, weaponSet.name)
         }
     }
 

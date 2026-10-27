@@ -52,7 +52,7 @@ class BattleView @JvmOverloads constructor(
 
     private var match: Match? = null
     private var art: TerrainArt? = null
-    private var theme = MapTheme.all.first()
+    private var theme = MapTheme.grassland
     private val dp = resources.displayMetrics.density
     private val random = Random(SystemClock.uptimeMillis())
     private val wormPainter = WormPainter()
@@ -92,7 +92,10 @@ class BattleView @JvmOverloads constructor(
     private val tracers = ArrayList<Tracer>()
     private val graves = ArrayList<Grave>()
     private val hurtAt = HashMap<Int, Long>()
+    private var introAt = 0L
+    private val miniMap = RectF()
     private var banner: String? = null
+    private var subBanner: String? = null
     private var bannerColor = 0
     private var bannerAt = 0L
 
@@ -110,9 +113,10 @@ class BattleView @JvmOverloads constructor(
 
     fun start(newMatch: Match) {
         match = newMatch
-        theme = MapTheme.forSeed(newMatch.config.seed)
+        theme = MapTheme.forArena(newMatch.arena)
         art?.bitmap?.recycle()
-        art = TerrainArt(newMatch.terrain, theme)
+        art = TerrainArt(newMatch.terrain, theme, newMatch.arena.backdrop)
+        introAt = SystemClock.uptimeMillis()
         backdropPaint.color = TerrainArt.shade(theme.soilDark, 0.5f)
         fireballs.clear()
         texts.clear()
@@ -128,7 +132,8 @@ class BattleView @JvmOverloads constructor(
         postInvalidateOnAnimation()
     }
 
-    fun showBanner(text: String, color: Int) {
+    fun showBanner(text: String, color: Int, sub: String? = null) {
+        subBanner = sub
         banner = text
         bannerColor = color
         bannerAt = SystemClock.uptimeMillis()
@@ -196,7 +201,14 @@ class BattleView @JvmOverloads constructor(
                     val label = if (e.crate.kind == CrateKind.HEALTH) "+${Match.CRATE_HEALTH} ❤" else "+1 ${e.crate.weapon!!.displayName}"
                     addText(label, 0xFF69F0AE.toInt(), w.x.toFloat(), w.y.toFloat() - 30, big = false)
                 }
-                is GameEvent.Fired -> if (e.weapon == Weapon.BAZOOKA || e.weapon == Weapon.SHOTGUN) {
+                is GameEvent.Built -> {
+                    art?.build(e.area)
+                    val cx = (e.area.left + e.area.right) / 2f
+                    val cy = (e.area.top + e.area.bottom) / 2f
+                    repeat(18) { spawn(cx, cy, 90f, 1, 0xFFFFD180.toInt(), 0.5f, 1.4f) }
+                    shake = max(shake, 3 * dp)
+                }
+                is GameEvent.Fired -> if (e.weapon == Weapon.BAZOOKA || e.weapon == Weapon.SHOTGUN || e.weapon == Weapon.UZI || e.weapon == Weapon.SNIPER) {
                     val w = m.worms[e.worm]
                     repeat(6) { spawn((w.x + w.aimX * 14).toFloat(), (w.y + w.aimY * 14).toFloat(), 20f, 2, 0xFFBDBDBD.toInt(), 0.8f, 4f) }
                 }
@@ -216,6 +228,10 @@ class BattleView @JvmOverloads constructor(
         py[i] = y
         pvx[i] = cos(a) * s
         pvy[i] = sin(a) * s - (if (kind == 3) 180f + random.nextFloat() * 120f else speed * 0.4f)
+        if (kind == 4) {
+            pvx[i] = (random.nextFloat() - 0.5f) * 20f
+            pvy[i] = -20f - random.nextFloat() * 30f
+        }
         if (kind == 3) pvx[i] *= 0.3f
         pLife[i] = life * (0.6f + random.nextFloat() * 0.6f)
         pMax[i] = pLife[i]
@@ -274,7 +290,7 @@ class BattleView @JvmOverloads constructor(
         val viewW = width / scale
         val viewH = height / scale
         if (SystemClock.uptimeMillis() > manualUntil) {
-            val p = m.projectiles.firstOrNull()
+            val p = m.projectiles.firstOrNull { !it.idle }
             val (tx, ty) = if (p != null) p.x.toFloat() to p.y.toFloat() else m.activeWorm.x.toFloat() to m.activeWorm.y.toFloat()
             val k = min(1f, dt * if (p != null) 6f else 3f)
             camX += (tx - viewW / 2 - camX) * k
@@ -289,6 +305,15 @@ class BattleView @JvmOverloads constructor(
         paint.shader = skyShader
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
         paint.shader = null
+        if (theme.stars) drawStars(canvas, t)
+        if (theme.lava) {
+            // Embers drifting up from the lava.
+            if (random.nextFloat() < 0.5f) {
+                val wx = camX + random.nextFloat() * width / scale
+                spawn(wx, m.terrain.waterY.toFloat(), 0f, 4, if (random.nextBoolean()) 0xFFFFAB40.toInt() else 0xFFFF5722.toInt(), 2.2f, 1f + random.nextFloat() * 1.5f)
+            }
+        }
+        if (!theme.clouds) return
         // Clouds drift with the wind, which shows its strength at a glance.
         paint.color = 0xCCFFFFFF.toInt()
         val drift = (t * (8 + m.wind * 70)).toFloat()
@@ -303,7 +328,39 @@ class BattleView @JvmOverloads constructor(
         }
     }
 
+    private fun drawStars(canvas: Canvas, t: Float) {
+        for (i in 0 until 70) {
+            val h1 = TerrainArt.hash(i, 7)
+            val h2 = TerrainArt.hash(i, 13)
+            val x = ((h1 % 10000) / 10000f * (width + 200 * dp) - camX * scale * 0.05f).mod(width + 200 * dp) - 100 * dp
+            val y = (h2 % 10000) / 10000f * height * 0.75f
+            val twinkle = 0.6f + 0.4f * sin(t * (1.5f + i % 5) + i)
+            paint.color = 0xFFFFFFFF.toInt()
+            paint.alpha = (255 * twinkle).toInt()
+            canvas.drawCircle(x, y, (0.8f + (h1 % 3) * 0.5f) * dp, paint)
+        }
+        paint.alpha = 255
+        // The Earth hangs in the sky.
+        val ex = width * 0.78f - camX * scale * 0.03f
+        val ey = height * 0.2f
+        val er = 26 * dp
+        paint.color = 0xFF1E88E5.toInt()
+        canvas.drawCircle(ex, ey, er, paint)
+        paint.color = 0xFF43A047.toInt()
+        canvas.drawCircle(ex - er * 0.3f, ey - er * 0.2f, er * 0.45f, paint)
+        canvas.drawCircle(ex + er * 0.4f, ey + er * 0.35f, er * 0.3f, paint)
+        paint.color = 0x55000000
+        canvas.drawCircle(ex + er * 0.35f, ey, er * 0.95f, paint)
+    }
+
     private fun drawMountains(canvas: Canvas, m: Match) {
+        when (theme.scenery) {
+            Scenery.MOUNTAINS -> Unit
+            Scenery.DUNES -> return drawDunes(canvas, m)
+            Scenery.CASTLES -> return drawCastles(canvas, m)
+            Scenery.STALACTITES -> return drawCaveWall(canvas, m)
+            Scenery.NONE -> return
+        }
         // Distant hills in world space, slightly parallaxed.
         paint.color = theme.mountains
         val baseY = m.terrain.height * 0.62f
@@ -325,12 +382,70 @@ class BattleView @JvmOverloads constructor(
         canvas.drawPath(path, paint)
     }
 
+    private fun drawDunes(canvas: Canvas, m: Match) {
+        paint.color = theme.mountains
+        val baseY = m.terrain.height * 0.6f
+        val offset = camX * 0.35f
+        path.reset()
+        path.moveTo(-600f + offset, m.terrain.height.toFloat())
+        var x = -600f
+        var i = 0
+        while (x < m.terrain.width + 600f) {
+            val rise = 70f + ((i * 7919) % 5) * 25f
+            path.quadTo(x + offset + 120f, baseY - rise * 2, x + offset + 240f, baseY)
+            x += 240f
+            i++
+        }
+        path.lineTo(x + offset, m.terrain.height.toFloat())
+        path.close()
+        canvas.drawPath(path, paint)
+    }
+
+    private fun drawCastles(canvas: Canvas, m: Match) {
+        // Far-off hills with little castles on them.
+        drawDunes(canvas, m)
+        paint.color = TerrainArt.shade(theme.mountains, 0.8f)
+        val offset = camX * 0.35f
+        val baseY = m.terrain.height * 0.6f
+        var x = 100f
+        while (x < m.terrain.width) {
+            val cx = x + offset
+            val top = baseY - 150f
+            canvas.drawRect(cx - 40f, top, cx + 40f, baseY, paint)
+            canvas.drawRect(cx - 55f, top - 50f, cx - 30f, baseY, paint)
+            canvas.drawRect(cx + 30f, top - 50f, cx + 55f, baseY, paint)
+            for (k in 0 until 3) canvas.drawRect(cx - 55f + k * 10f, top - 60f, cx - 50f + k * 10f, top - 50f, paint)
+            for (k in 0 until 3) canvas.drawRect(cx + 30f + k * 10f, top - 60f, cx + 35f + k * 10f, top - 50f, paint)
+            x += 700f
+        }
+    }
+
+    private fun drawCaveWall(canvas: Canvas, m: Match) {
+        // Glowing crystals far back in the dark.
+        val offset = camX * 0.3f
+        for (i in 0 until 40) {
+            val h = TerrainArt.hash(i, 3)
+            val x = (h % 2400) - 200f + offset
+            val y = 200f + (TerrainArt.hash(i, 9) % 500)
+            val size = 6f + (h % 7) * 2f
+            paint.color = if (i % 3 == 0) 0x6680DEEA else 0x55CE93D8
+            path.reset()
+            path.moveTo(x, y - size * 1.6f)
+            path.lineTo(x + size * 0.6f, y)
+            path.lineTo(x, y + size * 0.4f)
+            path.lineTo(x - size * 0.6f, y)
+            path.close()
+            canvas.drawPath(path, paint)
+        }
+    }
+
     private fun drawWater(canvas: Canvas, m: Match, t: Float) {
         val waterY = m.terrain.waterY.toFloat()
         val left = camX - 50
         val right = camX + width / scale + 50
         for (layer in 0..2) {
-            paint.color = (theme.water and 0x00FFFFFF) or ((150 + layer * 35) shl 24)
+            val base = if (theme.lava) TerrainArt.mix(theme.water, 0xFFFFD54F.toInt(), (0.5f + 0.5f * sin(t * 2f + layer)) * 0.35f) else theme.water
+            paint.color = (base and 0x00FFFFFF) or ((if (theme.lava) 220 + layer * 15 else 150 + layer * 35) shl 24)
             path.reset()
             path.moveTo(left, m.terrain.height + 400f)
             var x = left
@@ -439,6 +554,29 @@ class BattleView @JvmOverloads constructor(
                     // Fizzing fuse.
                     spawn(x, y - 8, 30f, 1, 0xFFFFEB3B.toInt(), 0.2f, 1.2f)
                 }
+                Weapon.MEGA_GRENADE -> {
+                    grenade(canvas, 0xFFFFC107.toInt(), t)
+                    if (random.nextFloat() < 0.3f) spawn(x, y, 20f, 1, 0xFFFFF59D.toInt(), 0.4f, 1f)
+                }
+                Weapon.MINE -> {
+                    paint.color = 0xFF455A64.toInt()
+                    rect.set(-4.5f, -3f, 4.5f, 5f)
+                    canvas.drawArc(rect, 180f, 180f, true, paint)
+                    canvas.drawRect(-5f, 0.5f, 5f, 2f, paint)
+                    // Blinks red once armed.
+                    val on = p.armed && (t * 3f).toInt() % 2 == 0
+                    paint.color = if (on) 0xFFFF1744.toInt() else 0xFF7F0000.toInt()
+                    canvas.drawCircle(0f, -1.5f, 1.2f, paint)
+                    if (on) {
+                        paint.color = 0x55FF1744
+                        canvas.drawCircle(0f, -1.5f, 4f, paint)
+                    }
+                }
+                Weapon.SHEEP -> {
+                    canvas.translate(0f, -1f)
+                    canvas.scale(p.dir * 0.3f, 0.3f)
+                    WeaponIcons.sheep(canvas, t * 18f)
+                }
                 else -> {
                     paint.color = 0xFF424242.toInt()
                     canvas.drawCircle(0f, 0f, 2f, paint)
@@ -446,7 +584,7 @@ class BattleView @JvmOverloads constructor(
             }
             canvas.restoreToCount(save)
             p.fuse?.let {
-                if (p.spec.childSpec != null || p.weapon == Weapon.GRENADE || p.weapon == Weapon.DYNAMITE) {
+                if (p.spec.childSpec != null || p.weapon == Weapon.GRENADE || p.weapon == Weapon.DYNAMITE || p.weapon == Weapon.MEGA_GRENADE || p.weapon == Weapon.SHEEP) {
                     textFill.textSize = 8f
                     textFill.color = 0xFFFFFFFF.toInt()
                     textStroke.textSize = 8f
@@ -560,6 +698,10 @@ class BattleView @JvmOverloads constructor(
                     pSize[i] += dt * 8f
                 }
                 1 -> pvy[i] += 120f * dt
+                4 -> { // embers float up
+                    pvy[i] += (-40f - pvy[i]) * dt
+                    pvx[i] += (m.wind * 30f - pvx[i]).toFloat() * dt
+                }
                 else -> pvy[i] += 420f * dt
             }
             px[i] += pvx[i] * dt
@@ -567,7 +709,7 @@ class BattleView @JvmOverloads constructor(
             val k = pLife[i] / pMax[i]
             paint.color = pColor[i]
             paint.alpha = ((if (kind == 2) 140 else 255) * min(1f, k * 1.5f)).toInt()
-            canvas.drawCircle(px[i], py[i], pSize[i] * (if (kind == 1) k else 1f), paint)
+            canvas.drawCircle(px[i], py[i], pSize[i] * (if (kind == 1 || kind == 4) k else 1f), paint)
             i++
         }
         paint.alpha = 255
@@ -659,20 +801,84 @@ class BattleView @JvmOverloads constructor(
             by += barH + 5 * dp
         }
 
+        drawMiniMap(canvas, m)
+        drawIntro(canvas, m, now)
+
         // Big banner at the start of each turn.
         val b = banner
         if (b != null) {
-            val k = (now - bannerAt) / 1800f
+            val k = (now - bannerAt) / (if (subBanner != null) 3000f else 1800f)
             if (k < 1f) {
                 val alpha = (255 * min(1f, (1 - k) * 3)).toInt()
                 hudText(canvas, b, width / 2f, height * 0.3f, 26 * dp, bannerColor, alpha)
+                subBanner?.let { hudText(canvas, it, width / 2f, height * 0.3f + 26 * dp, 16 * dp, 0xFF81D4FA.toInt(), alpha) }
             } else {
                 banner = null
             }
         }
         if (humanTurn && m.phase == Phase.AIM && m.selected.mode == FireMode.TARGET) {
-            hudText(canvas, "Tap where to ${if (m.selected == Weapon.TELEPORT) "teleport" else "strike"}", width / 2f, height * 0.42f, 16 * dp, 0xFFFFFFFF.toInt())
+            val verb = when (m.selected) {
+                Weapon.TELEPORT -> "teleport"
+                Weapon.GIRDER -> "build a girder"
+                else -> "strike"
+            }
+            hudText(canvas, "Tap where to $verb", width / 2f, height * 0.42f, 16 * dp, 0xFFFFFFFF.toInt())
         }
+    }
+
+    /** The arena's name for the first few seconds of a match. */
+    private fun drawIntro(canvas: Canvas, m: Match, now: Long) {
+        val k = (now - introAt) / 3500f
+        if (k >= 1f) return
+        val alpha = (255 * min(1f, (1 - k) * 4) * min(1f, k * 8)).toInt()
+        val y = topInset + 74 * dp
+        hudText(canvas, m.arena.displayName.uppercase(), width / 2f, y, 22 * dp, 0xFFFFD54F.toInt(), alpha)
+        hudText(canvas, m.arena.tagline, width / 2f, y + 20 * dp, 12 * dp, 0xFFFFFFFF.toInt(), alpha)
+    }
+
+    /** A small map of the whole battlefield, top right. Tap it to look somewhere. */
+    private fun drawMiniMap(canvas: Canvas, m: Match) {
+        val art = art ?: return
+        val mw = 150 * dp
+        val mh = mw * m.terrain.height / m.terrain.width
+        val right = width - 64 * dp
+        miniMap.set(right - mw, topInset + 10 * dp, right, topInset + 10 * dp + mh)
+        paint.color = 0x99000000.toInt()
+        rect.set(miniMap.left - 3 * dp, miniMap.top - 3 * dp, miniMap.right + 3 * dp, miniMap.bottom + 3 * dp)
+        canvas.drawRoundRect(rect, 8 * dp, 8 * dp, paint)
+        paint.color = TerrainArt.mix(theme.skyTop, theme.skyBottom, 0.5f)
+        paint.alpha = 160
+        canvas.drawRect(miniMap, paint)
+        paint.alpha = 255
+        val sx = mw / m.terrain.width
+        val sy = mh / m.terrain.height
+        val waterTop = miniMap.top + m.terrain.waterY * sy
+        paint.color = theme.water
+        canvas.drawRect(miniMap.left, waterTop, miniMap.right, miniMap.bottom, paint)
+        canvas.drawBitmap(art.bitmap, null, miniMap, bitmapPaint)
+        for (c in m.crates) {
+            paint.color = 0xFFFFD54F.toInt()
+            canvas.drawCircle(miniMap.left + c.x.toFloat() * sx, miniMap.top + c.y.toFloat() * sy, 1.6f * dp, paint)
+        }
+        for (w in m.worms) {
+            if (!w.alive) continue
+            val x = miniMap.left + w.x.toFloat() * sx
+            val y = miniMap.top + w.y.toFloat() * sy
+            if (w.id == m.activeWormId) {
+                paint.color = 0xFFFFFFFF.toInt()
+                canvas.drawCircle(x, y, 3.4f * dp, paint)
+            }
+            paint.color = TeamColors.colors[w.team]
+            canvas.drawCircle(x, y, 2.3f * dp, paint)
+        }
+        // What the screen is showing.
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = 1.2f * dp
+        paint.color = 0xCCFFFFFF.toInt()
+        rect.set(miniMap.left + camX * sx, miniMap.top + camY * sy, miniMap.left + (camX + width / scale) * sx, miniMap.top + (camY + height / scale) * sy)
+        rect.intersect(miniMap)
+        canvas.drawRect(rect, paint)
+        paint.style = Paint.Style.FILL
     }
 
     private fun hudText(canvas: Canvas, text: String, x: Float, y: Float, size: Float, color: Int, alpha: Int = 255) {
@@ -696,11 +902,30 @@ class BattleView @JvmOverloads constructor(
     private var downY = 0f
     private var pinchDist = 0f
     private var multi = false
+    private var onMiniMap = false
+
+    /** Moves the camera to the spot under ([sx], [sy]) on the mini map. Returns false if that's not on the map. */
+    private fun lookAt(m: Match, sx: Float, sy: Float): Boolean {
+        if (miniMap.isEmpty) return false
+        rect.set(miniMap.left - 8 * dp, miniMap.top - 8 * dp, miniMap.right + 8 * dp, miniMap.bottom + 8 * dp)
+        if (!onMiniMap && !rect.contains(sx, sy)) return false
+        val wx = (sx - miniMap.left) / miniMap.width() * m.terrain.width
+        val wy = (sy - miniMap.top) / miniMap.height() * m.terrain.height
+        camX = wx - width / scale / 2
+        camY = wy - height / scale / 2
+        manualUntil = SystemClock.uptimeMillis() + 3000
+        return true
+    }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         val m = match ?: return false
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
+                if (lookAt(m, event.x, event.y)) {
+                    onMiniMap = true
+                    return true
+                }
+                onMiniMap = false
                 downX = event.x
                 downY = event.y
                 lastX = event.x
@@ -715,6 +940,10 @@ class BattleView @JvmOverloads constructor(
                 lastY = (event.getY(0) + event.getY(1)) / 2
             }
             MotionEvent.ACTION_MOVE -> {
+                if (onMiniMap) {
+                    lookAt(m, event.x, event.y)
+                    return true
+                }
                 if (multi && event.pointerCount >= 2) {
                     // Two fingers: pan and pinch to zoom.
                     val mx = (event.getX(0) + event.getX(1)) / 2
@@ -748,6 +977,10 @@ class BattleView @JvmOverloads constructor(
             }
             MotionEvent.ACTION_UP -> {
                 performClick()
+                if (onMiniMap) {
+                    onMiniMap = false
+                    return true
+                }
                 val tap = !multi && hypot(event.x - downX, event.y - downY) < 12 * dp
                 if (tap && humanTurn && m.canAct && m.selected.mode == FireMode.TARGET) {
                     listener?.onTarget(toWorldX(event.x).toDouble(), toWorldY(event.y).toDouble())
