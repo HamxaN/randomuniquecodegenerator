@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Tidy Room</string>
+    <string name="title">TIDY\nROOM</string>
+    <string name="tagline">Put everything back in its place</string>
+    <string name="menu">Menu</string>
+    <string name="sound">Sound</string>
+    <string name="vibration">Vibration</string>
+    <string name="privacy_settings">Privacy settings</string>
+    <string name="play_level">Tidy room %1$d</string>
+    <string name="menu_stats">★ %1$d   🪙 %2$d</string>
+    <string name="level_format">%1$s · %2$d</string>
+    <string name="coins_format">🪙 %1$d</string>
+    <string name="hint_cost">💡 Hint (%1$d 🪙)</string>
+    <string name="tidied">%1$s tidied!</string>
+    <string name="win_text">+%1$d coins\n%2$d wrong guesses</string>
+    <string name="double_coins">▶ Watch ad: double coins</string>
+    <string name="next_room">Next room</string>
+    <string name="no_ad">No ad available right now, try again in a moment</string>
+    <string name="not_enough_coins">Not enough coins for a hint. Watch an ad for a free one!</string>
+    <string name="room_description">A messy room. Drag each item onto its outline to put it away.</string>
+</resources>
