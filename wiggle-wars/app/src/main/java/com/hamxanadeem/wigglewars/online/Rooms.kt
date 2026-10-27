@@ -11,6 +11,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ServerValue
 import com.google.firebase.database.ValueEventListener
 import com.hamxanadeem.wigglewars.BuildConfig
+import com.hamxanadeem.wigglewars.core.Codes
 import com.hamxanadeem.wigglewars.core.Move
 import kotlin.random.Random
 
@@ -46,11 +47,7 @@ object Rooms {
 
     fun room(context: Context, code: String): DatabaseReference = database(context).getReference("rooms").child(code)
 
-    /** Five letters without look-alikes (no I, L, O, 0, 1). */
-    fun newCode(): String {
-        val letters = "ABCDEFGHJKMNPQRSTUVWXYZ"
-        return String(CharArray(5) { letters[Random.nextInt(letters.length)] })
-    }
+    fun newCode(): String = Codes.room()
 
     fun newPlayerId(): String = java.util.UUID.randomUUID().toString().take(12)
 

@@ -5,17 +5,28 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatButton
 import androidx.core.content.edit
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.database.DataSnapshot
 import com.hamxanadeem.wigglewars.R
 import com.hamxanadeem.wigglewars.fx.GameSounds
 import com.hamxanadeem.wigglewars.fx.Sounds
+import com.hamxanadeem.wigglewars.core.Codes
+import com.hamxanadeem.wigglewars.online.Friend
+import com.hamxanadeem.wigglewars.online.Friends
+import com.hamxanadeem.wigglewars.online.Invite
 import com.hamxanadeem.wigglewars.online.Rooms
 
-/** Create or join a room with a code, wait for friends, then start together. */
+/**
+ * Online play: create or join a room by code, wait for friends, then start
+ * together. Below that, your friends list: add friends by friend code, see who's
+ * online, and invite them straight into your room.
+ */
 class OnlineActivity : AppCompatActivity() {
 
     private lateinit var nameField: EditText
@@ -36,6 +47,14 @@ class OnlineActivity : AppCompatActivity() {
     private var watch: Rooms.Watch? = null
     private var launched = false
 
+    private lateinit var friendList: LinearLayout
+    private lateinit var friendCodeField: EditText
+    private var friendsWatch: Rooms.Watch? = null
+    private var invitesWatch: Rooms.Watch? = null
+    private var friendCode: String? = null
+    private var profileName: String? = null
+    private val shownInvites = HashSet<String>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_online)
@@ -48,12 +67,19 @@ class OnlineActivity : AppCompatActivity() {
         wormsText = findViewById(R.id.onlineWormsText)
         nameField.setText(prefs.getString("name", ""))
 
+        friendList = findViewById(R.id.friendList)
+        friendCodeField = findViewById(R.id.friendCodeField)
         findViewById<Button>(R.id.closeButton).setOnClickListener { finish() }
         if (!Rooms.isConfigured) {
             entry.visibility = View.GONE
+            findViewById<View>(R.id.friendsPanel).visibility = View.GONE
             findViewById<View>(R.id.notConfiguredText).visibility = View.VISIBLE
             return
         }
+        findViewById<Button>(R.id.addFriendButton).setOnClickListener { addFriend() }
+        findViewById<Button>(R.id.shareFriendCodeButton).setOnClickListener { shareFriendCode() }
+        // Returning players go online straight away so friends see them.
+        prefs.getString("name", null)?.takeIf { it.isNotBlank() }?.let { startProfile(it) }
         findViewById<Button>(R.id.createButton).setOnClickListener { create() }
         findViewById<Button>(R.id.joinButton).setOnClickListener { join() }
         findViewById<Button>(R.id.shareButton).setOnClickListener { share() }
@@ -71,7 +97,123 @@ class OnlineActivity : AppCompatActivity() {
             return null
         }
         prefs.edit { putString("name", name) }
+        if (name != profileName) startProfile(name)
         return name
+    }
+
+    // ---------------------------------------------------------------- friends
+
+    /** Publishes our name and friend code, goes online, and starts watching friends and invites. */
+    private fun startProfile(name: String) {
+        profileName = name
+        val wanted = prefs.getString("friend_code", null) ?: Codes.friend()
+        Friends.claimCode(this, playerId, wanted) { code ->
+            if (isFinishing) return@claimCode
+            friendCode = code
+            prefs.edit { putString("friend_code", code) }
+            findViewById<TextView>(R.id.myFriendCodeText).text = getString(R.string.my_friend_code, Codes.pretty(code))
+            Friends.goOnline(this, playerId, name, code)
+        }
+        friendsWatch?.stop()
+        friendsWatch = Friends.watch(this, playerId, ::renderFriends)
+        invitesWatch?.stop()
+        invitesWatch = Friends.watchInvites(this, playerId, ::onInvite)
+    }
+
+    private fun renderFriends(friends: List<Friend>) {
+        friendList.removeAllViews()
+        findViewById<View>(R.id.noFriendsText).visibility = if (friends.isEmpty()) View.VISIBLE else View.GONE
+        for (friend in friends) {
+            val row = layoutInflater.inflate(R.layout.item_friend, friendList, false)
+            row.findViewById<TextView>(R.id.friendName).text = friend.name
+            row.findViewById<TextView>(R.id.friendStatus).apply {
+                setText(if (friend.online) R.string.online else R.string.offline)
+                setTextColor(if (friend.online) 0xFF69F0AE.toInt() else 0x99FFFFFF.toInt())
+            }
+            row.findViewById<View>(R.id.friendDot).setBackgroundResource(if (friend.online) R.drawable.dot_online else R.drawable.dot_offline)
+            row.findViewById<AppCompatButton>(R.id.inviteButton).setOnClickListener { inviteFriend(friend) }
+            row.setOnLongClickListener {
+                MaterialAlertDialogBuilder(this)
+                    .setMessage(getString(R.string.remove_friend_question, friend.name))
+                    .setPositiveButton(R.string.remove) { _, _ -> Friends.remove(this, playerId, friend.id) }
+                    .setNegativeButton(R.string.cancel, null)
+                    .show()
+                true
+            }
+            friendList.addView(row)
+        }
+    }
+
+    private fun addFriend() {
+        val name = name() ?: return
+        val code = Codes.normalize(friendCodeField.text.toString(), Codes.FRIEND_LENGTH)
+        if (code == null) {
+            Toast.makeText(this, R.string.enter_friend_code, Toast.LENGTH_SHORT).show()
+            return
+        }
+        Sounds.play(GameSounds.TAP)
+        Friends.add(this, playerId, name, code) { result ->
+            val message = when (result) {
+                is Friends.AddResult.Added -> {
+                    friendCodeField.setText("")
+                    Sounds.play(GameSounds.CRATE)
+                    getString(R.string.friend_added, result.name)
+                }
+                Friends.AddResult.NotFound -> getString(R.string.friend_not_found)
+                Friends.AddResult.Yourself -> getString(R.string.friend_yourself)
+                Friends.AddResult.Failed -> getString(R.string.online_failed)
+            }
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun shareFriendCode() {
+        val code = friendCode ?: run {
+            name()
+            return
+        }
+        val text = getString(R.string.share_friend_text, Codes.pretty(code))
+        startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text), getString(R.string.share)))
+    }
+
+    /** Invites a friend into our room, creating one first if we aren't in a lobby yet. */
+    private fun inviteFriend(friend: Friend) {
+        val name = name() ?: return
+        Sounds.play(GameSounds.TAP)
+        val room = code
+        if (room != null) {
+            Friends.invite(this, friend.id, name, room)
+            Toast.makeText(this, getString(R.string.invite_sent, friend.name), Toast.LENGTH_SHORT).show()
+            return
+        }
+        val newCode = Rooms.newCode()
+        Rooms.create(this, newCode, playerId, name, worms) { ok ->
+            if (!ok) {
+                Toast.makeText(this, R.string.online_failed, Toast.LENGTH_LONG).show()
+                return@create
+            }
+            enterLobby(newCode, host = true)
+            Friends.invite(this, friend.id, name, newCode)
+            Toast.makeText(this, getString(R.string.invite_sent, friend.name), Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun onInvite(invite: Invite) {
+        if (isFinishing || !shownInvites.add(invite.id)) return
+        Sounds.play(GameSounds.TURN)
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.invite_title)
+            .setMessage(getString(R.string.invite_message, invite.fromName))
+            .setPositiveButton(R.string.join_room) { _, _ ->
+                Friends.dismissInvite(this, playerId, invite.id)
+                if (code != invite.room) {
+                    if (code != null) leave()
+                    codeField.setText(invite.room)
+                    join()
+                }
+            }
+            .setNegativeButton(R.string.not_now) { _, _ -> Friends.dismissInvite(this, playerId, invite.id) }
+            .show()
     }
 
     private fun create() {
@@ -189,6 +331,9 @@ class OnlineActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         watch?.stop()
+        friendsWatch?.stop()
+        invitesWatch?.stop()
+        if (Rooms.isConfigured && profileName != null) Friends.goOffline(this, playerId)
         if (!launched) code?.let { Rooms.leave(this, it, playerId) }
     }
 }

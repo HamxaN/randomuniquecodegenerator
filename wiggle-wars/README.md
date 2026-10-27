@@ -9,7 +9,16 @@ land, knocking each other into the sea, and using the wind to curve their shots.
 |---|---|
 | **vs Computer** | You against 1–3 computer teams (Easy / Normal / Hard) |
 | **Pass & Play** | 2–4 friends sharing one phone |
-| **Play Online with Friends** | 2–4 friends on their own phones, anywhere, by room code |
+| **Play Online with Friends** | 2–4 friends on their own phones, anywhere: by room code, or by inviting from your friends list |
+
+### Friends
+- Every player gets a **friend code** like `KTR-WMP`, which they can share in one tap.
+- **Add a friend** by typing their code. You both appear in each other's lists.
+- The **friends list** shows who has the game's online screen open right now, with
+  online friends at the top.
+- **Invite** sends a friend straight into your room. It creates one for you if
+  you're not in one yet. They get a "Battle invite! Join now?" pop-up.
+- Long-press a friend to remove them.
 
 ## Features
 - **Destructible terrain:** every explosion carves the map pixel by pixel, with
@@ -67,8 +76,19 @@ is free for this kind of use.
 2. In **Build → Realtime Database**, create a database and set these rules (open
    rooms, which is fine for a game):
    ```json
-   { "rules": { "rooms": { "$code": { ".read": true, ".write": true } } } }
+   {
+     "rules": {
+       "rooms":       { "$code": { ".read": true, ".write": true } },
+       "users":       { "$id":   { ".read": true, ".write": true } },
+       "friendCodes": { "$code": { ".read": true, ".write": true } },
+       "friends":     { "$id":   { ".read": true, ".write": true } },
+       "invites":     { "$id":   { ".read": true, ".write": true } }
+     }
+   }
    ```
+   These open rules are fine for testing with friends. Before a big launch, turn on
+   Firebase **Anonymous Authentication** and lock each `users`, `friends` and
+   `invites` entry to its owner.
 3. From **Project settings** copy the **Web API key**, **App ID** and **Project ID**,
    and from the Realtime Database page copy the **database URL**.
 4. Add them as GitHub secrets: `WIGGLE_FIREBASE_API_KEY`, `WIGGLE_FIREBASE_APP_ID`,

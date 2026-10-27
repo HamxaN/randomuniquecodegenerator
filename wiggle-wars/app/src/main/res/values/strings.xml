@@ -66,4 +66,27 @@
     <string name="waiting_for">Waiting for %1$s…</string>
     <string name="out_of_sync">Connection problem: this battle may look different on your friends\' phones.</string>
     <string name="online_your_turn">Your turn! (%1$s)</string>
+    <!-- Friends -->
+    <string name="friends">Friends</string>
+    <string name="my_friend_code">Your friend code: %1$s</string>
+    <string name="friend_code_pending">Enter your name to get a friend code</string>
+    <string name="friend_code_hint">Friend\'s code (ABC-DEF)</string>
+    <string name="add_friend">Add</string>
+    <string name="share_short">Share</string>
+    <string name="no_friends">No friends yet. Share your code, or add a friend\'s code above. Long-press a friend to remove them.</string>
+    <string name="online">● Online now</string>
+    <string name="offline">Offline</string>
+    <string name="invite">Invite</string>
+    <string name="invite_sent">Invite sent to %1$s!</string>
+    <string name="invite_title">Battle invite!</string>
+    <string name="invite_message">%1$s invited you to a Wiggle Wars battle. Join now?</string>
+    <string name="not_now">Not now</string>
+    <string name="enter_friend_code">Friend codes have 6 letters, like ABC-DEF</string>
+    <string name="friend_added">%1$s is now your friend!</string>
+    <string name="friend_not_found">No player with that friend code</string>
+    <string name="friend_yourself">That\'s your own code!</string>
+    <string name="remove_friend_question">Remove %1$s from your friends?</string>
+    <string name="remove">Remove</string>
+    <string name="cancel">Cancel</string>
+    <string name="share_friend_text">Add me on Wiggle Wars! My friend code is %1$s. Open the game, tap Play Online, and add me under Friends.</string>
 </resources>
