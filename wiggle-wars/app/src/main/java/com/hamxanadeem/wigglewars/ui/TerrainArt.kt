@@ -1,6 +1,7 @@
 package com.hamxanadeem.wigglewars.ui
 
 import android.graphics.Bitmap
+import android.graphics.Path
 import androidx.core.graphics.createBitmap
 import com.hamxanadeem.wigglewars.core.Area
 import com.hamxanadeem.wigglewars.core.Terrain
@@ -16,6 +17,13 @@ class TerrainArt(private val terrain: Terrain, private val theme: MapTheme) {
 
     val bitmap: Bitmap = createBitmap(terrain.width, terrain.height)
     private var buffer = IntArray(0)
+
+    /**
+     * The original ground line, filled downwards. Drawn in dark soil behind the
+     * terrain so caves and craters show dirt instead of sky. Thin floating ledges
+     * don't count as ground, so open sky under them stays sky.
+     */
+    val backdrop = Path()
 
     init {
         val w = terrain.width
@@ -33,6 +41,34 @@ class TerrainArt(private val terrain: Terrain, private val theme: MapTheme) {
             }
         }
         bitmap.setPixels(pixels, 0, w, 0, 0, w, h)
+        buildBackdrop()
+    }
+
+    private fun buildBackdrop() {
+        val w = terrain.width
+        val h = terrain.height
+        backdrop.moveTo(0f, h.toFloat())
+        var x = 0
+        while (x < w) {
+            backdrop.lineTo(x.toFloat(), groundTop(x).toFloat())
+            x += BACKDROP_STEP
+        }
+        backdrop.lineTo((w - 1).toFloat(), groundTop(w - 1).toFloat())
+        backdrop.lineTo(w.toFloat(), h.toFloat())
+        backdrop.close()
+    }
+
+    /** Top of the first solid run at least [MIN_GROUND] pixels deep in column [x]. */
+    private fun groundTop(x: Int): Int {
+        var run = 0
+        for (y in 0 until terrain.waterY) {
+            if (terrain.isSolid(x, y)) {
+                if (++run >= MIN_GROUND) return y - run + 1
+            } else {
+                run = 0
+            }
+        }
+        return terrain.height
     }
 
     private fun colorAt(x: Int, y: Int, depth: Int): Int {
@@ -73,6 +109,9 @@ class TerrainArt(private val terrain: Terrain, private val theme: MapTheme) {
     }
 
     companion object {
+        private const val BACKDROP_STEP = 4
+        private const val MIN_GROUND = 60
+
         fun hash(x: Int, y: Int): Int {
             var h = x * 374761393 + y * 668265263
             h = (h xor (h ushr 13)) * 1274126177

@@ -40,11 +40,21 @@ class TitleView @JvmOverloads constructor(
     }
     private class Burst(val x: Float, val y: Float, val color: Int, val start: Long)
     private val bursts = ArrayList<Burst>()
+
+    /** Pixels on the right covered by a menu panel; the logo and worms centre in the rest. */
+    var reservedRight = 0f
+        set(value) {
+            field = value
+            onSizeChanged(width, height, width, height)
+            invalidate()
+        }
+
+    private val areaWidth: Float get() = (width - reservedRight).coerceAtLeast(width * 0.4f)
     private var nextBurst = 0L
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         sky = LinearGradient(0f, 0f, 0f, h.toFloat(), 0xFF5EC4FF.toInt(), 0xFFFFE0B2.toInt(), Shader.TileMode.CLAMP)
-        val size = min(w / 7.5f, h * 0.2f)
+        val size = min((w - reservedRight).coerceAtLeast(w * 0.4f) / 7.5f, h * 0.2f)
         fill.textSize = size
         stroke.textSize = size
         stroke.strokeWidth = size * 0.16f
@@ -60,7 +70,7 @@ class TitleView @JvmOverloads constructor(
 
         // Fireworks in the sky.
         if (now > nextBurst) {
-            bursts += Burst(width * (0.1f + random.nextFloat() * 0.8f), height * (0.35f + random.nextFloat() * 0.2f), TeamColors.colors[random.nextInt(4)], now)
+            bursts += Burst(areaWidth * (0.1f + random.nextFloat() * 0.8f), height * (0.35f + random.nextFloat() * 0.2f), TeamColors.colors[random.nextInt(4)], now)
             nextBurst = now + 700 + random.nextInt(700)
         }
         val it = bursts.iterator()
@@ -102,7 +112,7 @@ class TitleView @JvmOverloads constructor(
         // Three worms bobbing on the hill.
         val s = height / 70f
         for ((i, w) in worms.withIndex()) {
-            val wx = width * (0.3f + i * 0.2f)
+            val wx = areaWidth * (0.3f + i * 0.2f)
             val ground = height * 0.78f - sin(wx / width * 3.14f) * height * 0.12f
             val hop = maxOf(0f, sin(t * 3f + i * 2f)) * 6 * s
             w.aim = sin(t + i) * 0.5
@@ -120,10 +130,10 @@ class TitleView @JvmOverloads constructor(
         val y1 = height * 0.12f + fill.textSize
         val wobble = sin(t * 2f) * 2f
         canvas.save()
-        canvas.rotate(wobble, width / 2f, y1)
-        canvas.drawText("WIGGLE WARS", width / 2f, y1, stroke)
+        canvas.rotate(wobble, areaWidth / 2f, y1)
+        canvas.drawText("WIGGLE WARS", areaWidth / 2f, y1, stroke)
         fill.shader = logo
-        canvas.drawText("WIGGLE WARS", width / 2f, y1, fill)
+        canvas.drawText("WIGGLE WARS", areaWidth / 2f, y1, fill)
         canvas.restore()
 
         if (isShown) postInvalidateOnAnimation()
