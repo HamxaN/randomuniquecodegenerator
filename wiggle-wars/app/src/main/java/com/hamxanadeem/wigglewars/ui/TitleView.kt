@@ -65,7 +65,12 @@ class TitleView @JvmOverloads constructor(
         val r = min(w, h) * 0.24f
         sun = LinearGradient(0f, hz - r * 1.6f, 0f, hz, 0xFFFFE66D.toInt(), 0xFFFF2BD6.toInt(), Shader.TileMode.CLAMP)
         floor = LinearGradient(0f, hz, 0f, h.toFloat(), 0xFF1A0638.toInt(), 0xFF05021A.toInt(), Shader.TileMode.CLAMP)
-        val size = min((w - reservedRight).coerceAtLeast(w * 0.4f) / 8f, h * 0.19f)
+        var size = h * 0.17f
+        // Orbitron is wide: shrink the logo until it fits the free space with a margin.
+        fill.textSize = size
+        val room = (w - reservedRight).coerceAtLeast(w * 0.4f) * 0.88f
+        val textWidth = fill.measureText(TITLE)
+        if (textWidth > room) size *= room / textWidth
         fill.textSize = size
         glow.textSize = size
         glow.strokeWidth = size * 0.08f
