@@ -154,7 +154,7 @@ object RoomGenerator {
             for (attempt in 0 until 60) {
                 x = 0.1f + random.nextFloat() * 0.8f
                 y = FLOOR_TOP + random.nextFloat() * (FLOOR_BOTTOM - FLOOR_TOP)
-                if (items.none { hypot(it.x - x, it.y - y) < 0.12f }) break
+                if (items.none { hypot(it.x - x, it.y - y) < 0.15f }) break
             }
             items += Item(i, s.type, x, y, s.size, tilt = (random.nextFloat() - 0.5f) * 50f)
         }
@@ -166,6 +166,6 @@ object RoomGenerator {
 
     /** How big each kind of item is, as a fraction of the room's width. */
     private val SIZES = floatArrayOf(
-        0.08f, 0.09f, 0.11f, 0.10f, 0.15f, 0.12f, 0.10f, 0.10f, 0.11f, 0.08f, 0.11f, 0.09f, 0.11f, 0.09f, 0.11f, 0.08f,
+        0.10f, 0.11f, 0.14f, 0.12f, 0.19f, 0.15f, 0.12f, 0.12f, 0.14f, 0.10f, 0.14f, 0.11f, 0.14f, 0.11f, 0.14f, 0.10f,
     )
 }
