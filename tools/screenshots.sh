@@ -42,6 +42,48 @@ install_all() {
 }
 install_all
 
+# ---------------------------------------------------------------- Car Parking Jam (portrait)
+P=com.hamxanadeem.parkingjam.debug
+U=com.hamxanadeem.parkingjam.ui
+start $P $U.MainActivity; sleep 4; shot parkingjam-1-menu
+tap $(( SHORT / 2 )) $(( LONG - $(dp 90) )); sleep 2; shot parkingjam-2-level
+# Tap cars across the lot; some drive out, some bump.
+for i in 1 2 3 4 5 6 7 8; do
+  tap $(( SHORT * (20 + (i * 37) % 60) / 100 )) $(( LONG * (30 + (i * 23) % 40) / 100 )); sleep 0.35
+  if [ $i -eq 3 ] || [ $i -eq 6 ]; then shot parkingjam-3-play-$i; fi
+done
+sleep 1; shot parkingjam-4-later
+stop $P
+
+# ---------------------------------------------------------------- Tidy Room (portrait)
+P=com.hamxanadeem.tidyroom.debug
+U=com.hamxanadeem.tidyroom.ui
+start $P $U.MainActivity; sleep 4; shot tidyroom-1-menu
+tap $(( SHORT / 2 )) $(( LONG - $(dp 90) )); sleep 2; shot tidyroom-2-room
+# Pick something up off the floor and carry it about.
+adb shell input swipe $(( SHORT / 2 )) $(( LONG * 80 / 100 )) $(( SHORT / 2 )) $(( LONG * 45 / 100 )) 900 &
+sleep 0.6; shot tidyroom-3-drag
+wait
+sleep 1; shot tidyroom-4-dropped
+stop $P
+
+# ---------------------------------------------------------------- Neon Runner (portrait)
+P=com.hamxanadeem.neonrunner.debug
+U=com.hamxanadeem.neonrunner.ui
+start $P $U.MainActivity; sleep 4; shot neonrunner-1-menu
+tap $(( SHORT / 2 )) $(( LONG - $(dp 190) )); sleep 2; shot neonrunner-2-start
+MID=$(( SHORT / 2 ))
+ROW=$(( LONG * 6 / 10 ))
+# Wander between lanes and hop now and then, with a shot every couple of seconds.
+for i in 1 2 3 4; do
+  drag $MID $ROW $(( MID - $(dp 90) )) $ROW 80; sleep 0.6
+  tap $MID $ROW; sleep 0.6
+  drag $MID $ROW $(( MID + $(dp 90) )) $ROW 80; sleep 0.5
+  shot neonrunner-3-run-$i
+done
+sleep 6; shot neonrunner-4-later
+stop $P
+
 # ---------------------------------------------------------------- Wash It Clean (portrait)
 P=com.hamxanadeem.washitclean.debug
 U=com.hamxanadeem.washitclean.ui
@@ -176,49 +218,6 @@ for attempt in 1 2; do
   for k in 1 2 3 4; do sleep 1; shot wigglewars-23-sheep-$attempt-$k; done
   sleep 12
 done
-stop $P
-
-# ---------------------------------------------------------------- Neon Runner (portrait)
-P=com.hamxanadeem.neonrunner.debug
-U=com.hamxanadeem.neonrunner.ui
-start $P $U.MainActivity; sleep 4; shot neonrunner-1-menu
-tap $(( SHORT / 2 )) $(( LONG - $(dp 190) )); sleep 2; shot neonrunner-2-start
-MID=$(( SHORT / 2 ))
-ROW=$(( LONG * 6 / 10 ))
-# Wander between lanes and hop now and then, with a shot every couple of seconds.
-for i in 1 2 3 4 5 6; do
-  drag $MID $ROW $(( MID - $(dp 90) )) $ROW 80; sleep 0.6
-  tap $MID $ROW; sleep 0.6
-  drag $MID $ROW $(( MID + $(dp 90) )) $ROW 80; sleep 0.5
-  shot neonrunner-3-run-$i
-done
-sleep 12; shot neonrunner-4-later
-sleep 10; shot neonrunner-5-end
-stop $P
-
-# ---------------------------------------------------------------- Car Parking Jam (portrait)
-P=com.hamxanadeem.parkingjam.debug
-U=com.hamxanadeem.parkingjam.ui
-start $P $U.MainActivity; sleep 4; shot parkingjam-1-menu
-tap $(( SHORT / 2 )) $(( LONG - $(dp 90) )); sleep 2; shot parkingjam-2-level
-# Tap cars across the lot; some drive out, some bump.
-for i in 1 2 3 4 5 6 7 8; do
-  tap $(( SHORT * (20 + (i * 37) % 60) / 100 )) $(( LONG * (30 + (i * 23) % 40) / 100 )); sleep 0.35
-  if [ $i -eq 3 ] || [ $i -eq 6 ]; then shot parkingjam-3-play-$i; fi
-done
-sleep 1; shot parkingjam-4-later
-stop $P
-
-# ---------------------------------------------------------------- Tidy Room (portrait)
-P=com.hamxanadeem.tidyroom.debug
-U=com.hamxanadeem.tidyroom.ui
-start $P $U.MainActivity; sleep 4; shot tidyroom-1-menu
-tap $(( SHORT / 2 )) $(( LONG - $(dp 90) )); sleep 2; shot tidyroom-2-room
-# Pick something up off the floor and carry it about.
-adb shell input swipe $(( SHORT / 2 )) $(( LONG * 80 / 100 )) $(( SHORT / 2 )) $(( LONG * 45 / 100 )) 900 &
-sleep 0.6; shot tidyroom-3-drag
-wait
-sleep 1; shot tidyroom-4-dropped
 stop $P
 
 echo "done: $(ls $OUT | wc -l) screenshots"
