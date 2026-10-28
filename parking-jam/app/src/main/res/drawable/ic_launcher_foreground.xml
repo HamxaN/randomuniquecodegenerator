@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A red cartoon car seen from above, squeezed between two others, with a "go" arrow. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FF37474F" android:pathData="M24,24 h60 v60 h-60 z" />
+    <path android:fillColor="#00000000" android:strokeColor="#88FFFFFF" android:strokeWidth="1.5" android:pathData="M44,24 v60 M64,24 v60" />
+    <path android:fillColor="#FF1E88E5" android:pathData="M27,30 h14 a4,4 0 0 1 4,4 v20 a4,4 0 0 1 -4,4 h-14 a4,4 0 0 1 -4,-4 v-20 a4,4 0 0 1 4,-4 z" />
+    <path android:fillColor="#FFFDD835" android:pathData="M67,52 h14 a4,4 0 0 1 4,4 v20 a4,4 0 0 1 -4,4 h-14 a4,4 0 0 1 -4,-4 v-20 a4,4 0 0 1 4,-4 z" />
+    <path android:fillColor="#FFE53935" android:pathData="M48,38 h12 a5,5 0 0 1 5,5 v30 a5,5 0 0 1 -5,5 h-12 a5,5 0 0 1 -5,-5 v-30 a5,5 0 0 1 5,-5 z" />
+    <path android:fillColor="#FF90CAF9" android:pathData="M47,46 h14 v8 h-14 z M47,62 h14 v6 h-14 z" />
+    <path android:fillColor="#FFFFF59D" android:pathData="M47,39 h4 v3 h-4 z M57,39 h4 v3 h-4 z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M54,18 L62,30 L57,30 L57,36 L51,36 L51,30 L46,30 Z" />
+</vector>
