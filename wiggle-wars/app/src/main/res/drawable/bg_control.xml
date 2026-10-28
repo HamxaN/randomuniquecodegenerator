@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Round on-screen control: dark glass with a cyan ring; fills with light while held. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <layer-list>
+            <item>
+                <shape android:shape="oval">
+                    <gradient android:type="radial" android:gradientRadius="60%" android:startColor="#CC00E5FF" android:endColor="#6600E5FF" />
+                    <stroke android:width="2.5dp" android:color="#FFFFFFFF" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    <item>
+        <layer-list>
+            <item>
+                <shape android:shape="oval">
+                    <gradient android:type="radial" android:gradientRadius="60%" android:startColor="#CC14204A" android:endColor="#E60A1024" />
+                    <stroke android:width="2dp" android:color="#E600E5FF" />
+                </shape>
+            </item>
+            <item android:left="6dp" android:top="6dp" android:right="6dp" android:bottom="6dp">
+                <shape android:shape="oval">
+                    <stroke android:width="1dp" android:color="#3300E5FF" android:dashWidth="6dp" android:dashGap="4dp" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+</selector>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A pink worm with a red headband holding a bazooka, with an explosion behind. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FFFF9800" android:pathData="M74,30 L79,40 L90,38 L83,47 L90,56 L79,54 L74,64 L69,54 L58,56 L65,47 L58,38 L69,40 Z" />
+    <path android:fillColor="#FFFFEB3B" android:pathData="M74,38 L77,44 L83,44 L78,48 L80,54 L74,51 L68,54 L70,48 L65,44 L71,44 Z" />
+    <path android:fillColor="#FFFFA5B4" android:pathData="M30,80 a10,6 0 1 0 20,0 a10,6 0 1 0 -20,0 z" />
+    <path android:fillColor="#FFFFA5B4" android:pathData="M38,48 a10,10 0 0 1 20,0 v26 a10,8 0 0 1 -20,0 z" />
+    <path android:fillColor="#FFE53935" android:pathData="M37,48 h22 v5 h-22 z M37,49 L28,45 L29,53 Z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M45,58 m-4,0 a4,4 0 1 0 8,0 a4,4 0 1 0 -8,0 M53,58 m-4,0 a4,4 0 1 0 8,0 a4,4 0 1 0 -8,0" />
+    <path android:fillColor="#FF111111" android:pathData="M46.5,58 m-2,0 a2,2 0 1 0 4,0 a2,2 0 1 0 -4,0 M54.5,58 m-2,0 a2,2 0 1 0 4,0 a2,2 0 1 0 -4,0" />
+    <path android:fillColor="#FF556B2F" android:pathData="M44,67 L72,59 L73.5,64 L45.5,72 Z" />
+    <path android:fillColor="#FF333333" android:pathData="M70,58 L75,56.5 L77,63.5 L72,65 Z" />
+</vector>

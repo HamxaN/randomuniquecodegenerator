@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.hamxanadeem.wigglewars.ui.TitleView
+        android:id="@+id/titleView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no" />
+
+    <!-- Everything here is padded clear of the camera cutout (see Screen.padForInsets). -->
+    <FrameLayout
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|start"
+            android:orientation="horizontal"
+            android:padding="12dp">
+
+            <ImageButton
+                android:id="@+id/soundButton"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/bg_round_button"
+                android:contentDescription="@string/sound"
+                android:src="@drawable/ic_volume_on" />
+
+            <ImageButton
+                android:id="@+id/vibrationButton"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_round_button"
+                android:contentDescription="@string/vibration"
+                android:src="@drawable/ic_vibration" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/bannerContainer"
+            android:layout_width="320dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|start"
+            android:layout_margin="8dp"
+            android:minHeight="50dp" />
+
+        <!-- Main menu on the right. -->
+        <LinearLayout
+            android:id="@+id/menuColumn"
+            android:layout_width="320dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:layout_margin="12dp"
+            android:background="@drawable/bg_panel"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <TextView
+                android:id="@+id/statsText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/bg_chip"
+                android:fontFamily="@font/orbitron_black"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="5dp"
+                android:textColor="@color/gold"
+                android:textSize="14sp" />
+
+            <com.hamxanadeem.wigglewars.ui.NeonButton
+                android:id="@+id/missionsButton"
+                style="@style/GameButton"
+                android:layout_width="match_parent"
+                android:layout_height="62dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/missions"
+                android:textSize="19sp"
+                app:neonColor="@color/neon_magenta" />
+
+            <com.hamxanadeem.wigglewars.ui.NeonButton
+                android:id="@+id/cpuButton"
+                style="@style/GameButton"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginBottom="6dp"
+                android:text="@string/quick_battle"
+                android:textSize="15sp"
+                app:neonColor="@color/neon_cyan" />
+
+            <com.hamxanadeem.wigglewars.ui.NeonButton
+                android:id="@+id/localButton"
+                style="@style/GameButton"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginBottom="6dp"
+                android:textSize="15sp"
+                android:text="@string/pass_and_play"
+                app:neonColor="@color/neon_violet" />
+
+            <com.hamxanadeem.wigglewars.ui.NeonButton
+                android:id="@+id/onlineButton"
+                style="@style/GameButton"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:text="@string/play_online"
+                android:textSize="17sp"
+                app:neonColor="@color/neon_lime" />
+
+            <com.hamxanadeem.wigglewars.ui.NeonButton
+                android:id="@+id/armoryButton"
+                style="@style/GameButton"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="6dp"
+                android:text="@string/armory"
+                android:textSize="16sp"
+                app:neonColor="@color/neon_violet" />
+
+            <Button
+                android:id="@+id/privacyButton"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/privacy_settings"
+                android:textColor="@color/text_soft"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- Match setup: one wide card with everything in view. -->
+        <ScrollView
+            android:id="@+id/setupPanel"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:visibility="gone">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:id="@+id/setupCard"
+                    android:layout_width="660dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_margin="12dp"
+                    android:background="@drawable/bg_panel"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="20dp"
+                    android:paddingVertical="14dp">
+
+                    <TextView
+                        android:id="@+id/setupTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginBottom="10dp"
+                        android:fontFamily="@font/orbitron_black"
+                        android:shadowColor="#66000000"
+                        android:shadowDy="2"
+                        android:shadowRadius="2"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="22sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <!-- Left: where and with what. -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="16dp"
+                            android:layout_weight="1.1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/SetupLabel"
+                                android:text="@string/label_arena" />
+
+                            <com.hamxanadeem.wigglewars.ui.ArenaCardView
+                                android:id="@+id/arenaCard"
+                                android:layout_width="match_parent"
+                                android:layout_height="150dp" />
+
+                            <TextView
+                                style="@style/SetupLabel"
+                                android:layout_marginTop="10dp"
+                                android:text="@string/label_weapons" />
+
+                            <com.hamxanadeem.wigglewars.ui.NeonButton
+                                android:id="@+id/weaponSetButton"
+                                style="@style/GameButton"
+                                android:layout_width="match_parent"
+                                android:layout_height="56dp"
+                                android:lineSpacingMultiplier="0.9"
+                                android:textSize="14sp"
+                                app:neonColor="@color/neon_violet" />
+                        </LinearLayout>
+
+                        <!-- Right: who's playing. -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/SetupLabel"
+                                android:text="@string/label_teams" />
+
+                            <LinearLayout
+                                style="@style/StepRow">
+
+                                <com.hamxanadeem.wigglewars.ui.NeonButton
+                                    android:id="@+id/teamsMinus"
+                                    style="@style/StepButton"
+                                    android:text="@string/minus"
+                                    app:neonColor="@color/neon_violet" />
+
+                                <TextView
+                                    android:id="@+id/teamsText"
+                                    style="@style/StepLabel" />
+
+                                <com.hamxanadeem.wigglewars.ui.NeonButton
+                                    android:id="@+id/teamsPlus"
+                                    style="@style/StepButton"
+                                    android:text="@string/plus"
+                                    app:neonColor="@color/neon_violet" />
+                            </LinearLayout>
+
+                            <TextView
+                                style="@style/SetupLabel"
+                                android:layout_marginTop="8dp"
+                                android:text="@string/label_worms" />
+
+                            <LinearLayout
+                                style="@style/StepRow">
+
+                                <com.hamxanadeem.wigglewars.ui.NeonButton
+                                    android:id="@+id/wormsMinus"
+                                    style="@style/StepButton"
+                                    android:text="@string/minus"
+                                    app:neonColor="@color/neon_violet" />
+
+                                <TextView
+                                    android:id="@+id/wormsText"
+                                    style="@style/StepLabel" />
+
+                                <com.hamxanadeem.wigglewars.ui.NeonButton
+                                    android:id="@+id/wormsPlus"
+                                    style="@style/StepButton"
+                                    android:text="@string/plus"
+                                    app:neonColor="@color/neon_violet" />
+                            </LinearLayout>
+
+                            <com.hamxanadeem.wigglewars.ui.NeonButton
+                                android:id="@+id/difficultyButton"
+                                style="@style/GameButton"
+                                android:layout_width="match_parent"
+                                android:layout_height="50dp"
+                                android:layout_marginTop="10dp"
+                                android:textSize="15sp"
+                                app:neonColor="@color/neon_violet" />
+
+                            <com.hamxanadeem.wigglewars.ui.NeonButton
+                                android:id="@+id/bananaButton"
+                                style="@style/GameButton"
+                                android:layout_width="match_parent"
+                                android:layout_height="50dp"
+                                android:layout_marginTop="8dp"
+                                android:textSize="14sp"
+                                app:neonColor="@color/neon_lime" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <com.hamxanadeem.wigglewars.ui.NeonButton
+                            android:id="@+id/backButton"
+                            style="@style/GameButton"
+                            android:layout_width="120dp"
+                            android:layout_height="58dp"
+                            android:layout_marginEnd="12dp"
+                            android:text="@string/back"
+                            android:textSize="17sp"
+                            app:neonColor="@color/neon_violet" />
+
+                        <com.hamxanadeem.wigglewars.ui.NeonButton
+                            android:id="@+id/startButton"
+                            style="@style/GameButton"
+                            android:layout_width="0dp"
+                            android:layout_height="58dp"
+                            android:layout_weight="1"
+                            android:text="@string/start"
+                            app:neonColor="@color/neon_cyan" />
+                    </LinearLayout>
+                </LinearLayout>
+            </FrameLayout>
+        </ScrollView>
+    </FrameLayout>
+
+    <!-- Campaign: missions and upgrades. -->
+    <FrameLayout
+        android:id="@+id/campaignPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#B3000000"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone">
+
+        <com.hamxanadeem.wigglewars.ui.CampaignView
+            android:id="@+id/campaignView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/missions" />
+    </FrameLayout>
+
+    <!-- Armory: browse every weapon. -->
+    <FrameLayout
+        android:id="@+id/armoryPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#B3000000"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone">
+
+        <com.hamxanadeem.wigglewars.ui.WeaponPickerView
+            android:id="@+id/armoryPicker"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/armory" />
+    </FrameLayout>
+</FrameLayout>

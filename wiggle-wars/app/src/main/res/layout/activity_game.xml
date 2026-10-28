@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.hamxanadeem.wigglewars.ui.BattleView
+        android:id="@+id/battleView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/battle_description" />
+
+    <FrameLayout
+        android:id="@+id/overlayContent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageButton
+            android:id="@+id/pauseButton"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="10dp"
+            android:background="@drawable/bg_control"
+            android:contentDescription="@string/pause"
+            android:src="@drawable/ic_pause" />
+
+        <!-- Fast forward, under the pause button. -->
+        <com.hamxanadeem.wigglewars.ui.NeonButton
+            android:id="@+id/ffButton"
+            style="@style/GameButton"
+            android:layout_width="56dp"
+            android:layout_height="48dp"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="60dp"
+            android:layout_marginEnd="4dp"
+            android:contentDescription="@string/fast_forward"
+            android:text="1×"
+            android:textSize="14sp"
+            app:neonColor="@color/neon_amber" />
+
+        <!-- Tutorial tips. -->
+        <TextView
+            android:id="@+id/coachText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|center_horizontal"
+            android:layout_marginTop="170dp"
+            android:background="@drawable/bg_panel"
+            android:fontFamily="@font/orbitron_bold"
+            android:gravity="center"
+            android:lineSpacingExtra="4dp"
+            android:maxWidth="440dp"
+            android:paddingHorizontal="22dp"
+            android:paddingVertical="14dp"
+            android:shadowColor="#FF00E5FF"
+            android:shadowRadius="8"
+            android:textColor="#FFFFFFFF"
+            android:textSize="14sp"
+            android:visibility="gone" />
+
+        <!-- Movement on the left. -->
+        <LinearLayout
+            android:id="@+id/controls"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|start"
+            android:layout_margin="12dp"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/backflipButton"
+                    style="@style/ControlButton"
+                    android:contentDescription="@string/backflip"
+                    android:padding="14dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_backflip" />
+
+                <ImageButton
+                    android:id="@+id/jumpButton"
+                    style="@style/ControlButton"
+                    android:layout_marginStart="12dp"
+                    android:contentDescription="@string/jump"
+                    android:padding="14dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_jump" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/leftButton"
+                    style="@style/ControlButton"
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:contentDescription="@string/walk_left"
+                    android:padding="16dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_walk_left" />
+
+                <ImageButton
+                    android:id="@+id/rightButton"
+                    style="@style/ControlButton"
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:layout_marginStart="12dp"
+                    android:contentDescription="@string/walk_right"
+                    android:padding="16dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_walk_right" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Weapons and fire on the right. -->
+        <LinearLayout
+            android:layout_width="190dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="12dp"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:orientation="horizontal">
+
+                <com.hamxanadeem.wigglewars.ui.NeonButton
+                    android:id="@+id/weaponButton"
+                    style="@style/GameButton"
+                    android:layout_width="0dp"
+                    android:layout_height="46dp"
+                    android:layout_weight="1"
+                    android:drawablePadding="4dp"
+                    android:ellipsize="end"
+                    android:gravity="center_vertical|start"
+                    android:maxLines="1"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="6dp"
+                    android:textSize="12sp"
+                    app:neonColor="@color/neon_violet" />
+
+                <com.hamxanadeem.wigglewars.ui.NeonButton
+                    android:id="@+id/skipButton"
+                    style="@style/GameButton"
+                    android:layout_width="52dp"
+                    android:layout_height="46dp"
+                    android:layout_marginStart="6dp"
+                    android:text="@string/skip"
+                    android:textSize="11sp"
+                    app:neonColor="@color/neon_violet" />
+            </LinearLayout>
+
+            <com.hamxanadeem.wigglewars.ui.NeonButton
+                android:id="@+id/fireButton"
+                style="@style/GameButton"
+                android:layout_width="match_parent"
+                android:layout_height="70dp"
+                android:text="@string/fire"
+                android:textSize="24sp"
+                app:neonColor="@color/neon_red" />
+        </LinearLayout>
+
+        <!-- Weapon picker. -->
+        <FrameLayout
+            android:id="@+id/weaponPanel"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#B3000000"
+            android:clickable="true"
+            android:focusable="true"
+            android:visibility="gone">
+
+            <com.hamxanadeem.wigglewars.ui.WeaponPickerView
+                android:id="@+id/weaponPicker"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/choose_weapon" />
+        </FrameLayout>
+
+        <!-- Pause. -->
+        <FrameLayout
+            android:id="@+id/pauseOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/scrim"
+            android:clickable="true"
+            android:focusable="true"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="280dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_panel"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="14dp"
+                    android:fontFamily="@font/orbitron_black"
+                    android:text="@string/paused"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="26sp" />
+
+                <com.hamxanadeem.wigglewars.ui.NeonButton
+                    android:id="@+id/resumeButton"
+                    style="@style/GameButton"
+                    android:layout_width="match_parent"
+                    android:layout_marginBottom="10dp"
+                    android:text="@string/resume"
+                    app:neonColor="@color/neon_cyan" />
+
+                <com.hamxanadeem.wigglewars.ui.NeonButton
+                    android:id="@+id/tipsButton"
+                    style="@style/GameButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginBottom="10dp"
+                    android:text="@string/tips"
+                    android:textSize="15sp"
+                    app:neonColor="@color/neon_lime" />
+
+                <com.hamxanadeem.wigglewars.ui.NeonButton
+                    android:id="@+id/quitButton"
+                    style="@style/GameButton"
+                    android:layout_width="match_parent"
+                    android:text="@string/quit"
+                    app:neonColor="@color/neon_violet" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- Game over. -->
+        <FrameLayout
+            android:id="@+id/overOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/scrim"
+            android:clickable="true"
+            android:focusable="true"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:id="@+id/overCard"
+                android:layout_width="440dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_panel"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:padding="22dp">
+
+                <TextView
+                    android:id="@+id/overTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/orbitron_black"
+                    android:gravity="center"
+                    android:shadowColor="#FF000000"
+                    android:shadowDy="3"
+                    android:shadowRadius="2"
+                    android:textSize="32sp" />
+
+                <TextView
+                    android:id="@+id/overStats"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginVertical="12dp"
+                    android:textColor="@color/text_soft"
+                    android:textSize="14sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.hamxanadeem.wigglewars.ui.NeonButton
+                        android:id="@+id/rematchButton"
+                        style="@style/GameButton"
+                        android:layout_width="0dp"
+                        android:layout_marginEnd="10dp"
+                        android:layout_weight="1"
+                        android:text="@string/rematch"
+                        app:neonColor="@color/neon_cyan" />
+
+                    <com.hamxanadeem.wigglewars.ui.NeonButton
+                        android:id="@+id/menuButton"
+                        style="@style/GameButton"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:text="@string/menu"
+                        app:neonColor="@color/neon_violet" />
+
+                    <com.hamxanadeem.wigglewars.ui.NeonButton
+                        android:id="@+id/nextButton"
+                        style="@style/GameButton"
+                        android:layout_width="0dp"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:text="@string/next_mission"
+                        android:visibility="gone"
+                        app:neonColor="@color/neon_lime" />
+                </LinearLayout>
+            </LinearLayout>
+        </FrameLayout>
+    </FrameLayout>
+</FrameLayout>
