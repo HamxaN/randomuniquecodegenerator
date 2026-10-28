@@ -115,7 +115,7 @@ object LotGenerator {
         }
         val height = width + if (l < 8) 2 else 3
         val cells = width * height
-        val cars = minOf((cells * 0.42).toInt() / 2, 4 + l / 2 + l / 8)
+        val cars = minOf((cells * 0.42).toInt() / 2, 6 + l / 2 + l / 8)
         return Shape(width, height, cars, trucks = minOf(0.3, 0.05 + l * 0.01))
     }
 
