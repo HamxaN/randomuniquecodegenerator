@@ -61,7 +61,12 @@ jobs:
           import glob, os
           from PIL import Image
           for path in sorted(glob.glob("shots/*.png")):
-              img = Image.open(path).convert("RGB")
+              # Skip a capture that came out empty (the emulator can drop one).
+              try:
+                  img = Image.open(path).convert("RGB")
+              except OSError as e:
+                  print("skipping", path, e)
+                  continue
               img = img.resize((img.width // 2, img.height // 2), Image.LANCZOS)
               img.save(os.path.join("shots-small", os.path.basename(path)[:-4] + ".jpg"), quality=82)
           PY
