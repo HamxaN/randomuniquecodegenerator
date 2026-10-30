@@ -47,6 +47,22 @@ Builds without it (desktop, CI) still run, and rewarded ads simply grant their r
    fails on any script error and publishes screenshots to the `screenshots-clan-fortress` branch.
 4. Exports a debug APK (artifact `clan-fortress-debug-apk`).
 
+## Releasing to Google Play
+Package `com.hamxanadeem.clanfortress`. Add these repository secrets:
+
+| Secret | What |
+|---|---|
+| `FORT_KEYSTORE_BASE64` | Your upload keystore (`base64 -w0 upload.jks`) |
+| `FORT_KEYSTORE_PASSWORD` | Keystore password. Use the same password for the key itself |
+| `FORT_KEY_ALIAS` | Key alias |
+| `FORT_ADMOB_APP_ID` | AdMob app ID (`ca-app-pub-…~…`) |
+| `FORT_ADMOB_BANNER_ID`, `FORT_ADMOB_INTERSTITIAL_ID`, `FORT_ADMOB_REWARDED_ID` | AdMob ad unit IDs |
+| `PLAY_SERVICE_ACCOUNT_JSON` | Shared with the other games |
+
+Then push a tag such as `fort-v1.0.0`, or run **Release** from the Actions tab. The workflow
+tests the game, adds the AdMob plugin with your IDs, builds a signed `.aab` with Gradle and
+uploads it to the internal track as a draft.
+
 ## Credits
 | Asset | Author | Licence |
 |---|---|---|
