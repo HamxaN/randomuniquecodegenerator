@@ -53,6 +53,22 @@ To run it locally, open the `squad-strike` folder in Godot 4.6, or run
 `godot --path squad-strike`. On desktop: WASD to move, Space to dash, G for a grenade,
 F for the airstrike.
 
+## Releasing to Google Play
+Package `com.hamxanadeem.squadstrike`. Add these repository secrets:
+
+| Secret | What |
+|---|---|
+| `SQUAD_KEYSTORE_BASE64` | Your upload keystore (`base64 -w0 upload.jks`) |
+| `SQUAD_KEYSTORE_PASSWORD` | Keystore password. Use the same password for the key itself |
+| `SQUAD_KEY_ALIAS` | Key alias |
+| `SQUAD_ADMOB_APP_ID` | AdMob app ID (`ca-app-pub-…~…`) |
+| `SQUAD_ADMOB_BANNER_ID`, `SQUAD_ADMOB_INTERSTITIAL_ID`, `SQUAD_ADMOB_REWARDED_ID` | AdMob ad unit IDs |
+| `PLAY_SERVICE_ACCOUNT_JSON` | Shared with the other games |
+
+Then push a tag such as `squad-v1.0.0`, or run **Release** from the Actions tab. The workflow
+tests the game, adds the AdMob plugin with your IDs, builds a signed `.aab` with Gradle and
+uploads it to the internal track as a draft.
+
 ## Credits
 | Asset | Author | Licence |
 |---|---|---|
