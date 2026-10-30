@@ -103,7 +103,7 @@ func _spawn_squad() -> void:
 	for i in 2:
 		var u := _make_squad(mates[i], mate_weapons[i], 1, false, Vector3(0, 0, 4) + offsets[i])
 		u.set_formation(offsets[i])
-		u.damage_mult *= 0.6
+		u.damage_mult *= 0.45
 
 
 func _make_squad(op: Dictionary, weapon_id: String, level: int, is_player: bool, pos: Vector3) -> Unit:

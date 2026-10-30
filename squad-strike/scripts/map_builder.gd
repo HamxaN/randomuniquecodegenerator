@@ -118,7 +118,7 @@ static func _ground(root: Node3D, id: String) -> void:
 	var row := 1.732 * TILE_SCALE
 	var xforms: Array[Transform3D] = []
 	var colors: Array[Color] = []
-	var tint := Color(0.66, 0.8, 0.52)
+	var tint := Color(0.54, 0.7, 0.42)
 	match id:
 		"graveyard":
 			tint = Color(0.5, 0.58, 0.46)

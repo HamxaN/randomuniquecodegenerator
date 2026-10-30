@@ -538,7 +538,7 @@ func open_armory(selected: String = "") -> void:
 	var dps := float(w["damage"]) * float(w["pellets"]) * float(w["rate"]) * power
 	d.add_child(_stat_row("DAMAGE", float(w["damage"]) * float(w["pellets"]) * power / 75.0, UI.ACCENT))
 	d.add_child(_stat_row("FIRE RATE", float(w["rate"]) / 13.0, UI.ACCENT))
-	d.add_child(_stat_row("RANGE", float(w["range"]) / 22.0, UI.ACCENT))
+	d.add_child(_stat_row("RANGE", float(w["range"]) / 15.0, UI.ACCENT))
 	d.add_child(_stat_row("MAGAZINE", float(w["mag"]) / 90.0, UI.ACCENT))
 	d.add_child(UI.label("%d damage per second" % int(dps), 24, UI.TEXT))
 	var pips := UI.hbox(4)

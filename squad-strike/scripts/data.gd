@@ -20,33 +20,33 @@ const OPERATORS := [
 ## rate: shots per second. spread: degrees. pellets: bullets per shot.
 const WEAPONS := [
 	{"id": "ar", "name": "M4 RAIDER", "kind": "Assault Rifle", "model": "blaster-repeater", "tint": Color("3b4350"),
-		"damage": 13.0, "rate": 7.5, "mag": 30, "reload": 1.6, "range": 15.0, "spread": 3.0, "pellets": 1, "pierce": 0,
+		"damage": 11.0, "rate": 7.5, "mag": 30, "reload": 1.6, "range": 11.0, "spread": 3.0, "pellets": 1, "pierce": 0,
 		"move": 1.0, "cost": 0, "sound": "rifle"},
 	{"id": "smg", "name": "VIPER SMG", "kind": "Submachine Gun", "model": "blaster", "tint": Color("2f6f4a"),
-		"damage": 8.0, "rate": 12.5, "mag": 40, "reload": 1.3, "range": 11.0, "spread": 7.0, "pellets": 1, "pierce": 0,
+		"damage": 7.0, "rate": 12.5, "mag": 40, "reload": 1.3, "range": 8.5, "spread": 7.0, "pellets": 1, "pierce": 0,
 		"move": 1.1, "cost": 1200, "sound": "smg"},
 	{"id": "shotgun", "name": "THUNDER 12", "kind": "Shotgun", "model": "blaster", "tint": Color("7a3a24"),
-		"damage": 10.0, "rate": 1.5, "mag": 6, "reload": 2.0, "range": 8.5, "spread": 20.0, "pellets": 7, "pierce": 0,
+		"damage": 11.0, "rate": 1.5, "mag": 6, "reload": 2.0, "range": 7.0, "spread": 20.0, "pellets": 7, "pierce": 0,
 		"move": 1.0, "cost": 2500, "sound": "shotgun"},
 	{"id": "dmr", "name": "LONGSHOT DMR", "kind": "Marksman Rifle", "model": "blaster-repeater", "tint": Color("6b5a2e"),
-		"damage": 48.0, "rate": 2.0, "mag": 10, "reload": 2.0, "range": 22.0, "spread": 0.5, "pellets": 1, "pierce": 2,
+		"damage": 52.0, "rate": 2.0, "mag": 10, "reload": 2.0, "range": 15.0, "spread": 0.5, "pellets": 1, "pierce": 2,
 		"move": 0.95, "cost": 4000, "sound": "dmr"},
 	{"id": "lmg", "name": "HAILSTORM LMG", "kind": "Light Machine Gun", "model": "blaster-repeater", "tint": Color("23272d"),
-		"damage": 15.0, "rate": 10.0, "mag": 90, "reload": 3.4, "range": 16.0, "spread": 5.0, "pellets": 1, "pierce": 1,
+		"damage": 13.0, "rate": 10.0, "mag": 90, "reload": 3.4, "range": 12.0, "spread": 5.0, "pellets": 1, "pierce": 1,
 		"move": 0.85, "cost": 6500, "sound": "rifle"},
 ]
 
 ## The undead. ranged ones keep their distance and shoot; the rest charge.
 const ENEMIES := {
-	"minion": {"name": "Skeleton", "model": "Skeleton_Minion", "gear": "Skeleton_Blade", "hp": 34.0, "speed": 3.6,
+	"minion": {"name": "Skeleton", "model": "Skeleton_Minion", "gear": "Skeleton_Blade", "hp": 70.0, "speed": 4.3,
 		"damage": 8.0, "reach": 1.6, "cooldown": 1.1, "ranged": false, "coins": 2, "xp": 10, "scale": 1.0},
-	"rogue": {"name": "Bone Archer", "model": "Skeleton_Rogue", "gear": "Skeleton_Crossbow", "hp": 42.0, "speed": 3.1,
-		"damage": 9.0, "reach": 11.0, "cooldown": 2.0, "ranged": true, "coins": 3, "xp": 14, "scale": 1.0},
-	"warrior": {"name": "Bone Knight", "model": "Skeleton_Warrior", "gear": "Skeleton_Axe", "hp": 120.0, "speed": 2.7,
+	"rogue": {"name": "Bone Archer", "model": "Skeleton_Rogue", "gear": "Skeleton_Crossbow", "hp": 70.0, "speed": 3.4,
+		"damage": 9.0, "reach": 9.0, "cooldown": 2.0, "ranged": true, "coins": 3, "xp": 14, "scale": 1.0},
+	"warrior": {"name": "Bone Knight", "model": "Skeleton_Warrior", "gear": "Skeleton_Axe", "hp": 230.0, "speed": 3.1,
 		"damage": 18.0, "reach": 1.9, "cooldown": 1.4, "ranged": false, "coins": 6, "xp": 24, "scale": 1.12},
-	"mage": {"name": "Necromancer", "model": "Skeleton_Mage", "gear": "Skeleton_Staff", "hp": 60.0, "speed": 2.9,
-		"damage": 15.0, "reach": 10.0, "cooldown": 2.6, "ranged": true, "coins": 5, "xp": 20, "scale": 1.0},
-	"boss": {"name": "BONE COLOSSUS", "model": "Skeleton_Warrior", "gear": "Skeleton_Axe", "hp": 1100.0, "speed": 2.5,
+	"mage": {"name": "Necromancer", "model": "Skeleton_Mage", "gear": "Skeleton_Staff", "hp": 110.0, "speed": 3.1,
+		"damage": 15.0, "reach": 8.5, "cooldown": 2.6, "ranged": true, "coins": 5, "xp": 20, "scale": 1.0},
+	"boss": {"name": "BONE COLOSSUS", "model": "Skeleton_Warrior", "gear": "Skeleton_Axe", "hp": 2400.0, "speed": 2.8,
 		"damage": 34.0, "reach": 3.2, "cooldown": 2.0, "ranged": false, "coins": 60, "xp": 200, "scale": 2.0},
 }
 
