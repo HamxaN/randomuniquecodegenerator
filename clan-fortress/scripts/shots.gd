@@ -55,7 +55,7 @@ func _run() -> void:
 	v.rig.focus = Vector3(1.0, 0, 0.5)
 	await _wait(0.5, 10)
 	await _shot("clanfortress-02-closeup")
-	v.rig.distance = 20.0
+	v.rig.distance = 17.0
 	v.rig.focus = Vector3(0, 0, 1.0)
 	var mine: Building = null
 	for id in v.nodes:
@@ -69,7 +69,7 @@ func _run() -> void:
 	await _wait(0.8, 16)
 	await _shot("clanfortress-04-shop")
 	v.hud.close_panel()
-	v.start_placing("archertower")
+	v.start_placing("house")
 	await _wait(0.5, 10)
 	await _shot("clanfortress-05-placing")
 	v.confirm_placing()

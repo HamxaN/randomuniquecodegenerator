@@ -247,7 +247,7 @@ func show_selection(b: Building) -> void:
 	var col := UI.vbox(6)
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
 	col.custom_minimum_size = Vector2(700, 0)
-	col.position = Vector2(-350, -170)
+	col.position = Vector2(-350, -215)
 	_selection.add_child(col)
 	var title := UI.label("%s (Level %d)" % [info["name"], int(data["level"])], 36)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

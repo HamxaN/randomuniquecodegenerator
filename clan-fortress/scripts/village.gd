@@ -26,7 +26,7 @@ func _ready() -> void:
 	rig = CameraRig.new()
 	add_child(rig)
 	rig.focus = Vector3(0, 0, 1.0)
-	rig.distance = 20.0
+	rig.distance = 17.0
 	rig.tapped.connect(_on_tap)
 	var layer := CanvasLayer.new()
 	add_child(layer)

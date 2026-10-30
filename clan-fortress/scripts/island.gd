@@ -8,8 +8,8 @@ static func build(root: Node3D, seed_value: int, enemy: bool) -> void:
 	var sea: Array[Vector2i] = []
 	for r in range(Hex.LAND_RADIUS + 1, Hex.WATER_RADIUS + 1):
 		sea.append_array(Hex.ring(r))
-	_tiles(root, Models.hex("hex_grass"), land, Color(0.92, 1.0, 0.85) if not enemy else Color(0.95, 0.9, 0.78))
-	_tiles(root, Models.hex("hex_water"), sea, Color(1, 1, 1))
+	_tiles(root, Models.hex("hex_grass"), land, Color(0.62, 0.8, 0.46) if not enemy else Color(0.74, 0.72, 0.5))
+	_tiles(root, Models.hex("hex_water"), sea, Color(0.55, 0.78, 0.92))
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
 	# Scenery on the outer land rings, where nothing is built.
@@ -27,19 +27,12 @@ static func build(root: Node3D, seed_value: int, enemy: bool) -> void:
 			root.add_child(node)
 			node.position = Hex.to_world(cell)
 			node.rotation.y = rng.randi_range(0, 5) * PI / 3.0
-	# A few lily pads and clouds.
+	# A few lily pads on the water.
 	for i in 10:
 		var cell: Vector2i = sea[rng.randi() % sea.size()]
 		var lily := Models.prop(Models.hex("waterlily_A"))
 		root.add_child(lily)
 		lily.position = Hex.to_world(cell) + Vector3(rng.randf_range(-0.5, 0.5), 0, rng.randf_range(-0.5, 0.5))
-	for i in 7:
-		var cloud := Models.prop(Models.hex("cloud_big" if i % 2 == 0 else "cloud_small"))
-		root.add_child(cloud)
-		cloud.position = Vector3(rng.randf_range(-22, 22), rng.randf_range(7, 10), rng.randf_range(-20, 8))
-		cloud.scale = Vector3.ONE * rng.randf_range(2.0, 3.4)
-		for m in cloud.find_children("*", "MeshInstance3D", true, false):
-			(m as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
 static func _environment(root: Node3D, enemy: bool) -> void:
@@ -55,9 +48,9 @@ static func _environment(root: Node3D, enemy: bool) -> void:
 	env.background_mode = Environment.BG_SKY
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.62, 0.68, 0.8)
-	env.ambient_light_energy = 0.55
+	env.ambient_light_energy = 0.42
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_exposure = 0.95
+	env.tonemap_exposure = 0.88
 	env.fog_enabled = true
 	env.fog_light_color = Color(0.7, 0.82, 0.95)
 	env.fog_density = 0.006
@@ -66,7 +59,7 @@ static func _environment(root: Node3D, enemy: bool) -> void:
 	root.add_child(we)
 	var sun := DirectionalLight3D.new()
 	sun.light_color = Color(1.0, 0.94, 0.82) if not enemy else Color(1.0, 0.84, 0.66)
-	sun.light_energy = 1.05
+	sun.light_energy = 0.95
 	sun.rotation_degrees = Vector3(-52, -30, 0)
 	sun.shadow_enabled = true
 	sun.directional_shadow_max_distance = 55.0
