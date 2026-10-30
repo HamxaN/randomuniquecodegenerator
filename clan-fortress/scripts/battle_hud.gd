@@ -160,7 +160,7 @@ func refresh_troops() -> void:
 		var c: Button = _cards[t]
 		var left := int(battle.available.get(t, 0))
 		(c.get_node("Count") as Label).text = "x%d" % left
-		var sel := battle.selected == t
+		var sel: bool = battle.selected == t
 		var color: Color = GameData.troop(t)["color"]
 		var st := UI.card_style(color.lightened(0.25) if sel else Color(0.55, 0.5, 0.45))
 		if sel:

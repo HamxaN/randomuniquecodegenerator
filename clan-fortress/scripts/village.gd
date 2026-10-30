@@ -160,7 +160,7 @@ func _move_ghost(cell: Vector2i) -> void:
 	ghost_cell = cell
 	ghost.position = Hex.to_world(cell)
 	ghost.pop()
-	var ok := Save.building_at(cell) == null and Hex.buildable(cell)
+	var ok: bool = Save.building_at(cell) == null and Hex.buildable(cell)
 	_ghost_ring.material_override = Models.material(Color(0.3, 1.0, 0.3, 0.5) if ok else Color(1.0, 0.2, 0.15, 0.5), 0.5, true)
 	Sfx.play("rotate", 1.2, -6.0)
 
