@@ -83,8 +83,8 @@ static func _environment(root: Node3D, id: String) -> void:
 			sm.sky_horizon_color = Color(1.0, 0.56, 0.32)
 			sm.ground_horizon_color = Color(0.6, 0.38, 0.28)
 			sm.ground_bottom_color = Color(0.18, 0.12, 0.12)
-			sun.light_color = Color(1.0, 0.7, 0.48)
-			sun.light_energy = 1.0
+			sun.light_color = Color(1.0, 0.8, 0.64)
+			sun.light_energy = 0.9
 			sun.rotation_degrees = Vector3(-38, 60, 0)
 			env.ambient_light_color = Color(0.56, 0.46, 0.55)
 			env.ambient_light_energy = 0.5
@@ -118,12 +118,12 @@ static func _ground(root: Node3D, id: String) -> void:
 	var row := 1.732 * TILE_SCALE
 	var xforms: Array[Transform3D] = []
 	var colors: Array[Color] = []
-	var tint := Color(0.86, 0.9, 0.78)
+	var tint := Color(0.66, 0.8, 0.52)
 	match id:
 		"graveyard":
 			tint = Color(0.5, 0.58, 0.46)
 		"fortress":
-			tint = Color(0.78, 0.74, 0.58)
+			tint = Color(0.66, 0.66, 0.5)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 77
 	for rz in range(-9, 10):

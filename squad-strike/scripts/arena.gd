@@ -200,7 +200,7 @@ func _run_wave(delta: float) -> void:
 		_wave_cleared()
 
 
-func _spawn_enemy(kind: String) -> void:
+func _spawn_enemy(kind: String, at: Variant = null) -> void:
 	var best := Vector3.ZERO
 	var best_score := -1.0
 	for i in 4:
@@ -210,6 +210,8 @@ func _spawn_enemy(kind: String) -> void:
 		if d > best_score:
 			best_score = d
 			best = p
+	if at is Vector3:
+		best = at
 	var u := Unit.new()
 	u.arena = self
 	u.setup_enemy(kind, wave)
@@ -237,7 +239,9 @@ func _wave_cleared() -> void:
 		u.cheer()
 	hud.wave_cleared(wave, bonus)
 	Sfx.play("levelup")
-	if wave % 2 == 0:
+	if wave % 2 == 0 and autopilot:
+		choose_perk(GameData.perk_choices(wave * 31 + kills)[0])
+	elif wave % 2 == 0:
 		state = "perk"
 		hud.show_perks(GameData.perk_choices(wave * 31 + kills))
 	else:
@@ -272,6 +276,16 @@ func choose_perk(perk: Dictionary) -> void:
 			streak_mult *= 1.3
 	state = "break"
 	state_time = 2.4
+
+
+## Raises a group of the undead in an arc in front of the squad (used by the screenshot run).
+func spawn_group(kinds: Array, distance: float) -> void:
+	for i in kinds.size():
+		var a := -0.9 + 1.8 * float(i) / maxf(1.0, float(kinds.size() - 1))
+		var p := player.global_position + Vector3(sin(a), 0, -cos(a)) * distance
+		p.x = clampf(p.x, -HALF.x + 1.5, HALF.x - 1.5)
+		p.z = clampf(p.z, -HALF.y + 1.5, HALF.y - 1.5)
+		_spawn_enemy(kinds[i], p)
 
 
 func alive_undead() -> int:
