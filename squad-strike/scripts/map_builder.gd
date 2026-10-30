@@ -69,23 +69,27 @@ static func _environment(root: Node3D, id: String) -> void:
 			sm.sky_horizon_color = Color(0.86, 0.8, 0.68)
 			sm.ground_horizon_color = Color(0.55, 0.5, 0.4)
 			sm.ground_bottom_color = Color(0.2, 0.18, 0.15)
-			sun.light_color = Color(1.0, 0.9, 0.74)
-			sun.light_energy = 1.35
+			sun.light_color = Color(1.0, 0.92, 0.8)
+			sun.light_energy = 1.0
 			sun.rotation_degrees = Vector3(-50, 30, 0)
-			env.ambient_light_color = Color(0.62, 0.66, 0.74)
-			env.ambient_light_energy = 0.75
-			env.fog_light_color = Color(0.78, 0.75, 0.7)
-			env.fog_density = 0.006
+			env.ambient_light_color = Color(0.5, 0.56, 0.68)
+			env.ambient_light_energy = 0.45
+			env.fog_light_color = Color(0.62, 0.68, 0.76)
+			env.fog_density = 0.004
+			env.glow_enabled = false
+			env.tonemap_exposure = 0.92
 		_:
 			sm.sky_top_color = Color(0.2, 0.18, 0.4)
 			sm.sky_horizon_color = Color(1.0, 0.56, 0.32)
 			sm.ground_horizon_color = Color(0.6, 0.38, 0.28)
 			sm.ground_bottom_color = Color(0.18, 0.12, 0.12)
-			sun.light_color = Color(1.0, 0.68, 0.45)
-			sun.light_energy = 1.2
-			sun.rotation_degrees = Vector3(-34, 60, 0)
-			env.ambient_light_color = Color(0.64, 0.52, 0.58)
-			env.ambient_light_energy = 0.75
+			sun.light_color = Color(1.0, 0.7, 0.48)
+			sun.light_energy = 1.0
+			sun.rotation_degrees = Vector3(-38, 60, 0)
+			env.ambient_light_color = Color(0.56, 0.46, 0.55)
+			env.ambient_light_energy = 0.5
+			env.glow_enabled = false
+			env.tonemap_exposure = 0.92
 			env.fog_light_color = Color(0.72, 0.5, 0.42)
 			env.fog_density = 0.009
 	sky.sky_material = sm
@@ -114,12 +118,12 @@ static func _ground(root: Node3D, id: String) -> void:
 	var row := 1.732 * TILE_SCALE
 	var xforms: Array[Transform3D] = []
 	var colors: Array[Color] = []
-	var tint := Color(1, 1, 1)
+	var tint := Color(0.86, 0.9, 0.78)
 	match id:
 		"graveyard":
 			tint = Color(0.5, 0.58, 0.46)
 		"fortress":
-			tint = Color(0.86, 0.82, 0.62)
+			tint = Color(0.78, 0.74, 0.58)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 77
 	for rz in range(-9, 10):

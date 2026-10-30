@@ -5,7 +5,7 @@ extends Node3D
 
 signal exit_requested(play_again: bool)
 
-const CAM_OFFSET := Vector3(0, 15.5, 10.5)
+const CAM_OFFSET := Vector3(0, 12.0, 8.6)
 const HALF := Vector2(22.0, 15.0)
 const GRENADE_RADIUS := 4.6
 const GRENADE_DAMAGE := 120.0
@@ -868,7 +868,7 @@ func _dust(at: Vector3, color: Color, amount: int) -> void:
 
 func _fireball(at: Vector3, radius: float) -> void:
 	_particles(at + Vector3(0, 0.5, 0), Color(1.0, 0.62, 0.15), 26, radius * 2.2, 1.4, 0.55, 3.0)
-	_particles(at + Vector3(0, 0.5, 0), Color(0.18, 0.16, 0.15), 18, radius * 1.2, 1.8, 1.1, -1.5)
+	_particles(at + Vector3(0, 0.5, 0), Color(0.42, 0.4, 0.38, 0.55), 14, radius * 1.1, 1.3, 1.0, -1.5)
 	_particles(at, Color(1.0, 0.9, 0.6), 14, radius * 3.5, 0.18, 0.5, 14.0)
 	_ring(at, radius, Color(1.0, 0.6, 0.2))
 	var light := OmniLight3D.new()
