@@ -52,8 +52,11 @@ jobs:
       - name: Play-test and capture screenshots
         run: .github/scripts/godot-shots.sh "$PROJECT" "$PWD/shots" 1600x720
 
+      - name: Add the AdMob plugin (Google test ads)
+        run: .github/scripts/godot-add-admob.sh "$PROJECT"
+
       - name: Build debug APK
-        # Unsigned for the store (debug key) and without the AdMob plugin; release builds add both.
+        # Debug key and Google's test ad IDs; release builds use the real ones.
         run: .github/scripts/godot-export-android.sh "$PROJECT" debug "$PWD/build/squad-strike-debug.apk"
 
       - name: Upload debug APK
