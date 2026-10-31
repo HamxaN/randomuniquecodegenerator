@@ -81,19 +81,19 @@ func _run() -> void:
 		_build(p[0], p[1])
 	s.colonists = 20
 	await _wait(1.0, 20)
-	c.rig.distance = 24.0
+	c.rig.distance = 20.0
 	await _shot("spacecolony-06-colony")
 	c.select(s.at(Vector2i(7, 3))["id"])
 	await _wait(0.5, 8)
 	await _shot("spacecolony-07-building-panel")
 	c.select(-1)
 	s.lander_t = GameData.LANDER_EVERY
-	await _wait(1.6, 16)
+	await _wait(1.2, 12)
 	await _shot("spacecolony-08-rocket")
 	c.start_shower(0)
 	for i in 4:
 		c.spawn_meteor(Vector2i(2 + i * 2, 2 + i % 3))
-	await _wait(2.5, 20)
+	await _wait(1.8, 16)
 	await _shot("spacecolony-09-meteors")
 	c.blast(0)
 	await _wait(0.2, 3)

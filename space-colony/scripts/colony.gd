@@ -43,7 +43,7 @@ func _ready() -> void:
 	rig = CameraRig.new()
 	add_child(rig)
 	rig.focus = Vector3(0, 0, 1.0)
-	rig.distance = 21.0
+	rig.distance = 17.0
 	rig.tapped.connect(_on_tap)
 	_marks = Node3D.new()
 	add_child(_marks)
@@ -69,20 +69,21 @@ func _environment() -> void:
 	_env.background_mode = Environment.BG_SKY
 	_env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	_env.ambient_light_color = Color(0.85, 0.7, 0.65)
-	_env.ambient_light_energy = 0.5
+	_env.ambient_light_energy = 0.32
 	_env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	_env.tonemap_exposure = 0.95
+	_env.tonemap_exposure = 0.82
 	_env.fog_enabled = true
 	_env.fog_light_color = Color(0.9, 0.55, 0.4)
-	_env.fog_density = 0.008
+	_env.fog_density = 0.004
 	_env.glow_enabled = true
-	_env.glow_intensity = 0.5
+	_env.glow_intensity = 0.25
+	_env.glow_hdr_threshold = 1.4
 	var we := WorldEnvironment.new()
 	we.environment = _env
 	add_child(we)
 	_sun = DirectionalLight3D.new()
 	_sun.light_color = Color(1.0, 0.88, 0.75)
-	_sun.light_energy = 1.05
+	_sun.light_energy = 0.85
 	_sun.rotation_degrees = Vector3(-48, -35, 0)
 	_sun.shadow_enabled = true
 	_sun.directional_shadow_max_distance = 60.0
@@ -94,7 +95,7 @@ func _terrain() -> void:
 	var plane := PlaneMesh.new()
 	plane.size = Vector2(400, 400)
 	ground.mesh = plane
-	var gm := Models.material(Color(0.74, 0.38, 0.22))
+	var gm := Models.material(Color(0.52, 0.25, 0.15))
 	gm.roughness = 1.0
 	ground.material_override = gm
 	ground.position.y = -0.03
@@ -193,7 +194,7 @@ func _tiles(piece: String, cells: Array[Vector2i], offset: Vector3) -> void:
 	for i in cells.size():
 		var p := GameData.cell_to_world(cells[i]) + offset
 		mm.set_instance_transform(i, Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * GameData.CELL / 2.0), p))
-		var v := 0.94 if (cells[i].x + cells[i].y) % 2 == 0 else 1.0
+		var v := 0.72 if (cells[i].x + cells[i].y) % 2 == 0 else 0.78
 		mm.set_instance_color(i, Color(v, v, v))
 	var mmi := MultiMeshInstance3D.new()
 	mmi.multimesh = mm
@@ -439,7 +440,7 @@ func _events(delta: float) -> void:
 		if storm_left <= 0.0:
 			state.storm = false
 			hud.banner("The dust storm has passed", Color("8ff2a2"))
-	var target_fog := 0.045 if state.storm else 0.008
+	var target_fog := 0.05 if state.storm else 0.004
 	_env.fog_density = lerpf(_env.fog_density, target_fog, clampf(delta, 0.0, 1.0))
 	_env.fog_light_color = _env.fog_light_color.lerp(Color(0.8, 0.45, 0.28) if state.storm else Color(0.9, 0.55, 0.4), clampf(delta, 0.0, 1.0))
 
@@ -466,7 +467,7 @@ func spawn_meteor(target_cell: Vector2i = Vector2i(-1, -1)) -> void:
 		else:
 			cell = Vector2i(_rng.randi_range(0, GameData.COLS - 1), _rng.randi_range(0, GameData.ROWS - 1))
 	var target := GameData.cell_to_world(cell)
-	var start := target + Vector3(_rng.randf_range(6, 10), 24.0, _rng.randf_range(-10, -6))
+	var start := target + Vector3(_rng.randf_range(4, 7), 14.0, _rng.randf_range(-6, -3))
 	var root := Node3D.new()
 	add_child(root)
 	root.position = start
@@ -598,7 +599,7 @@ func _on_lander() -> void:
 	var target := GameData.cell_to_world(pad["cell"]) + Vector3(0, 0.5, 0) if not pad.is_empty() else Vector3(_rng.randf_range(-6, 6), 0, 11.5)
 	var ship := Models.base("lander_A")
 	add_child(ship)
-	ship.position = target + Vector3(0, 28, 0)
+	ship.position = target + Vector3(0, 14, 0)
 	ship.scale = Vector3.ONE * 1.3
 	var flame := CPUParticles3D.new()
 	flame.amount = 24
