@@ -63,9 +63,9 @@ func _palette() -> Dictionary:
 		"dusk":
 			return {"ground": Color(0.32, 0.5, 0.36), "sky_top": Color(0.18, 0.15, 0.38), "horizon": Color(1.0, 0.55, 0.42), "sun": Color(1.0, 0.65, 0.5), "energy": 0.9, "ambient": 0.5}
 		"lava":
-			return {"ground": Color(0.32, 0.26, 0.24), "sky_top": Color(0.25, 0.12, 0.12), "horizon": Color(0.95, 0.45, 0.25), "sun": Color(1.0, 0.6, 0.4), "energy": 0.95, "ambient": 0.55}
+			return {"ground": Color(0.3, 0.24, 0.22), "sky_top": Color(0.22, 0.12, 0.14), "horizon": Color(0.8, 0.42, 0.3), "sun": Color(1.0, 0.65, 0.45), "energy": 0.95, "ambient": 0.4}
 		_:
-			return {"ground": Color(0.45, 0.72, 0.36), "sky_top": Color(0.28, 0.55, 0.92), "horizon": Color(0.82, 0.92, 1.0), "sun": Color(1, 0.95, 0.85), "energy": 1.05, "ambient": 0.55}
+			return {"ground": Color(0.3, 0.58, 0.26), "sky_top": Color(0.25, 0.5, 0.9), "horizon": Color(0.78, 0.88, 0.98), "sun": Color(1, 0.95, 0.85), "energy": 1.05, "ambient": 0.4}
 
 
 func _environment() -> void:
@@ -239,13 +239,13 @@ func _far_spot(seed_value: int, min_dist: float) -> Vector3:
 func _scenery() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(info["id"])
-	var trees: Array = ["trees_A_large", "trees_B_large", "tree_single_A", "tree_single_B", "hills_A_trees"]
+	var trees: Array = ["trees_A_large", "trees_B_large", "tree_single_A", "tree_single_B"]
 	if theme == "desert":
 		trees = ["rock_single_A", "rock_single_C", "mountain_B_grass", "rock_single_C"]
 	elif theme == "lava":
 		trees = ["rock_single_C", "mountain_B_grass", "rock_single_A"]
 	for k in 140:
-		var q := _far_spot(rng.randi(), WIDTH / 2 + 6.0)
+		var q := _far_spot(rng.randi(), WIDTH / 2 + 12.0)
 		var node := Models.prop("res://assets/decor/%s.gltf" % trees[rng.randi() % trees.size()])
 		add_child(node)
 		node.position = q

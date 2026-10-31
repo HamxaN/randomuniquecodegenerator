@@ -41,8 +41,8 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_t += delta
 	_stand.rotation.y += delta * 0.5
-	_camera.position = Vector3(sin(_t * 0.15) * 0.4, 3.0, 8.5)
-	_camera.look_at(Vector3(0, 0.8, 0))
+	_camera.position = Vector3(sin(_t * 0.15) * 0.5, 3.6, 12.0)
+	_camera.look_at(Vector3(0, 1.4, 0))
 
 
 func _build_stage() -> void:

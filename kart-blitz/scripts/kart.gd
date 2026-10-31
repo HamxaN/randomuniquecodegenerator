@@ -219,14 +219,14 @@ func _ai(delta: float) -> void:
 	_lane_t -= delta
 	if _lane_t <= 0.0:
 		_lane_t = randf_range(2.0, 5.0)
-		lane = clampf(lane + randf_range(-2.5, 2.5), -4.0, 4.0)
-	var look := 7 + int(speed * 0.25)
+		lane = 0.0 if is_player else clampf(lane + randf_range(-2.5, 2.5), -3.5, 3.5)
+	var look := 9 + int(speed * 0.3)
 	var ti := (index + look) % n
 	var target := tr.samples[ti] + tr.side(ti) * lane
 	var to := target - position
 	var want := atan2(-to.x, -to.z)
 	var diff := wrapf(want - heading, -PI, PI)
-	steer = clampf(-diff * 2.4, -1.0, 1.0)
+	steer = clampf(-diff * 1.7, -1.0, 1.0)
 	# Drift through long bends, like a player would.
 	var bend := absf(wrapf(atan2(-tr.tangents[(index + 18) % n].x, -tr.tangents[(index + 18) % n].z) - atan2(-tr.tangents[index].x, -tr.tangents[index].z), -PI, PI))
 	drift_held = bend > 0.55 and speed > 18.0
