@@ -10,10 +10,10 @@ const HEROES := [
 		"hp": 180, "attack": 20, "speed": 4.8, "range": 2.4, "rate": 1.1, "ranged": false, "armor": 0.05,
 		"skill": "slam", "skill_name": "Ground Slam", "skill_desc": "Leap and smash the ground", "cost": 2500, "color": Color("e05a3a")},
 	{"id": "rogue", "name": "Vex", "class": "Ranger", "model": "Rogue_Hooded", "keep": ["2H_Crossbow"],
-		"hp": 110, "attack": 11, "speed": 5.6, "range": 9.0, "rate": 1.8, "ranged": true, "armor": 0.0,
+		"hp": 125, "attack": 11, "speed": 5.6, "range": 9.0, "rate": 1.8, "ranged": true, "armor": 0.0,
 		"skill": "volley", "skill_name": "Volley", "skill_desc": "Fire a fan of seven bolts", "cost": 4000, "color": Color("5cc46a")},
 	{"id": "mage", "name": "Ilyra", "class": "Sorceress", "model": "Mage", "keep": ["2H_Staff"],
-		"hp": 100, "attack": 16, "speed": 5.2, "range": 8.0, "rate": 1.2, "ranged": true, "armor": 0.0,
+		"hp": 120, "attack": 16, "speed": 5.2, "range": 8.0, "rate": 1.2, "ranged": true, "armor": 0.0,
 		"skill": "nova", "skill_name": "Frost Nova", "skill_desc": "Blast and freeze nearby foes", "cost": 6000, "color": Color("a86bff")},
 ]
 
@@ -26,10 +26,10 @@ const ENEMIES := {
 		"damage": 17.0, "reach": 2.0, "cooldown": 1.5, "ranged": false, "gold": 7, "xp": 18, "scale": 1.15},
 	"mage": {"name": "Necromancer", "model": "Skeleton_Mage", "gear": "Skeleton_Staff", "hp": 55.0, "speed": 2.8,
 		"damage": 14.0, "reach": 8.5, "cooldown": 2.6, "ranged": true, "gold": 6, "xp": 15, "scale": 1.0},
-	"boss": {"name": "The Bone King", "model": "Skeleton_Warrior", "gear": "Skeleton_Axe", "hp": 900.0, "speed": 2.6,
-		"damage": 30.0, "reach": 3.4, "cooldown": 2.2, "ranged": false, "gold": 80, "xp": 150, "scale": 2.1},
-	"lich": {"name": "The Lich", "model": "Skeleton_Mage", "gear": "Skeleton_Staff", "hp": 700.0, "speed": 2.4,
-		"damage": 22.0, "reach": 9.0, "cooldown": 1.6, "ranged": true, "gold": 80, "xp": 150, "scale": 2.0},
+	"boss": {"name": "The Bone King", "model": "Skeleton_Warrior", "gear": "Skeleton_Axe", "hp": 560.0, "speed": 2.5,
+		"damage": 22.0, "reach": 3.4, "cooldown": 2.2, "ranged": false, "gold": 80, "xp": 150, "scale": 2.1},
+	"lich": {"name": "The Lich", "model": "Skeleton_Mage", "gear": "Skeleton_Staff", "hp": 460.0, "speed": 2.4,
+		"damage": 17.0, "reach": 9.0, "cooldown": 1.6, "ranged": true, "gold": 80, "xp": 150, "scale": 2.0},
 }
 
 const SLOTS := ["weapon", "armor", "amulet"]

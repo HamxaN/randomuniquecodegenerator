@@ -53,6 +53,10 @@ func _run() -> void:
 	main.camp().close_panel()
 	main.start_run()
 	var d: Dungeon = main.dungeon()
+	# A well-geared demo hero, so the run reaches the boss and beyond.
+	d.attack_mult *= 2.2
+	d.hero.max_hp *= 3.0
+	d.hero.hp = d.hero.max_hp
 	await _wait(1.0, 30)
 	await _shot("dungeonraiders-04-start-room")
 	await _until(func() -> bool: return d.state == "fight", 40.0)
@@ -64,12 +68,15 @@ func _run() -> void:
 	d.use_skill()
 	await _wait(0.4, 4)
 	await _shot("dungeonraiders-06-skill")
-	d._drop_item(d.hero.global_position + Vector3(2.5, 0, 0), {"slot": "weapon", "rarity": "epic", "name": "Storm Reaver", "power": 30})
+	d.autopilot = false
+	d.input_move = Vector3.ZERO
+	d._drop_item(d.hero.global_position + Vector3(3.0, 0, 0), {"slot": "weapon", "rarity": "epic", "name": "Storm Reaver", "power": 30})
 	await _wait(0.8, 6)
 	await _shot("dungeonraiders-07-loot")
-	d.hero.global_position += Vector3(2.5, 0, 0)
+	d.hero.global_position += Vector3(3.0, 0, 0)
 	await _wait(0.6, 6)
 	await _shot("dungeonraiders-08-equipped")
+	d.autopilot = true
 	d.hud.show_boons(GameData.boon_choices(3))
 	await _wait(0.5)
 	await _shot("dungeonraiders-09-levelup")
@@ -89,6 +96,9 @@ func _run() -> void:
 		d.exit_requested.emit(true)
 		await _wait(1.2, 30)
 		d = main.dungeon()
+		d.attack_mult *= 2.2
+		d.hero.max_hp *= 3.0
+		d.hero.hp = d.hero.max_hp
 		await _until(func() -> bool: return d.state == "fight", 40.0)
 		await _wait(2.0, 12)
 		await _shot("dungeonraiders-13-floor2")

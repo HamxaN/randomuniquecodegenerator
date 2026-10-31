@@ -490,6 +490,7 @@ func _room_cleared() -> void:
 	_cleared[current_room] = true
 	state = "explore"
 	_set_gates(current_room, false)
+	hero.heal(hero.max_hp * 0.2)
 	Sfx.play("door", 1.2)
 	if rooms[current_room]["kind"] == "boss":
 		_open_portal(DungeonGen.center(rooms[current_room]["cell"]))
