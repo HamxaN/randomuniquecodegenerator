@@ -94,6 +94,10 @@ func from_dict(d: Dictionary) -> void:
 
 
 func store() -> void:
+	# Only the game's own profile is written to disk (not copies made by tests).
+	if not is_inside_tree():
+		changed.emit()
+		return
 	var f := FileAccess.open(PATH, FileAccess.WRITE)
 	if f != null:
 		f.store_string(JSON.stringify(to_dict()))

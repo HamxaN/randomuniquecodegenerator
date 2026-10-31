@@ -197,7 +197,7 @@ func _place_boxes() -> void:
 	for spot in track.box_spots:
 		var i := track.nearest(spot, 0, track.samples.size())
 		for lane in [-4.5, -1.5, 1.5, 4.5]:
-			var p := track.samples[i] + track.side(i) * lane + Vector3(0, 1.0, 0)
+			var p: Vector3 = track.samples[i] + track.side(i) * lane + Vector3(0, 1.0, 0)
 			var box := MeshInstance3D.new()
 			var bm := BoxMesh.new()
 			bm.size = Vector3(1.1, 1.1, 1.1)
