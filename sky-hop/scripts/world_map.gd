@@ -28,8 +28,8 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
-	_camera.position = Vector3(sin(_t * 0.15) * 9.0, 5.0, cos(_t * 0.15) * 9.0)
-	_camera.look_at(Vector3(0, 0.6, 0))
+	_camera.position = Vector3(sin(_t * 0.15) * 2.5, 3.4, 7.2)
+	_camera.look_at(Vector3(0, 1.3, 0))
 	if _hero != null:
 		_hero.position.y = 0.55 + absf(sin(_t * 3.0)) * 0.5
 
@@ -40,6 +40,8 @@ func _build_scene() -> void:
 	var sm := ProceduralSkyMaterial.new()
 	sm.sky_top_color = Color(0.3, 0.6, 0.95)
 	sm.sky_horizon_color = Color(0.85, 0.93, 1.0)
+	sm.ground_horizon_color = Color(0.85, 0.93, 1.0)
+	sm.ground_bottom_color = Color(0.55, 0.75, 0.95)
 	sky.sky_material = sm
 	env.sky = sky
 	env.background_mode = Environment.BG_SKY
@@ -74,7 +76,7 @@ func _build_scene() -> void:
 	add_child(flag)
 	var coin := Models.kit("coin")
 	coin.scale = Vector3.ONE * 2.0
-	coin.position = Vector3(0.8, 2.0, 1.4)
+	coin.position = Vector3(2.2, 3.2, -0.6)
 	add_child(coin)
 	_hero = Models.kit("character")
 	_hero.scale = Vector3.ONE * 1.8
@@ -87,9 +89,8 @@ func _build_scene() -> void:
 	for i in 14:
 		var c := Models.kit("cloud")
 		add_child(c)
-		c.position = Vector3(rng.randf_range(-16, 16), rng.randf_range(-6, 6), rng.randf_range(-16, 16))
-		if c.position.length() < 6.0:
-			c.position = c.position.normalized() * 8.0
+		# Far behind and below the island, never between it and the camera.
+		c.position = Vector3(rng.randf_range(-22, 22), rng.randf_range(-9, -3) if i % 2 == 0 else rng.randf_range(2, 7), rng.randf_range(-26, -10))
 		c.scale = Vector3.ONE * rng.randf_range(2.0, 4.0)
 
 

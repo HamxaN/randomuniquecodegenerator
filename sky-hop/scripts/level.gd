@@ -77,7 +77,7 @@ func _ready() -> void:
 	camera.far = 300.0
 	add_child(camera)
 	camera.current = true
-	_cam_pos = player.global_position + Vector3(0, 4.5, 7.0)
+	_cam_pos = player.global_position + Vector3(0, 3.3, 5.6)
 	var layer := CanvasLayer.new()
 	add_child(layer)
 	hud = HopHud.new()
@@ -123,8 +123,12 @@ func _environment() -> void:
 	for i in int(length / 3.0):
 		var cloud := Models.kit("cloud")
 		add_child(cloud)
-		cloud.position = Vector3(rng.randf_range(-22, 22), rng.randf_range(-12, -3) if rng.randf() < 0.7 else rng.randf_range(4, 10), -rng.randf() * length + 10)
-		cloud.scale = Vector3.ONE * rng.randf_range(2.5, 6.0)
+		# Well off to the sides or far below, so they never block the view.
+		var side := 1.0 if rng.randf() < 0.5 else -1.0
+		var below := rng.randf() < 0.6
+		cloud.position = Vector3(side * rng.randf_range(10, 26) if not below else rng.randf_range(-20, 20),
+			rng.randf_range(-16, -9) if below else rng.randf_range(-4, 6), -rng.randf() * length + 4)
+		cloud.scale = Vector3.ONE * rng.randf_range(2.0, 4.5)
 		for m in cloud.find_children("*", "MeshInstance3D", true, false):
 			(m as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
@@ -173,10 +177,11 @@ func _build_piece(p: Dictionary) -> void:
 			var g := Models.kit("grass" if i % 2 == 0 else "grass-small")
 			body.add_child(g)
 			g.position = Vector3(rng.randf_range(-1.8, 1.8), b.end.y - 0.02, rng.randf_range(-1.8, 1.8))
-		if rng.randf() < 0.6:
+		# Trees stand at the back corners so they never hide the hopper.
+		if rng.randf() < 0.6 and pos != Vector3.ZERO:
 			var tree := Models.prop("res://assets/decor/%s.gltf" % ["tree_single_A", "tree_single_B"][rng.randi() % 2])
 			body.add_child(tree)
-			tree.position = Vector3(rng.randf_range(-1.8, 1.8) * (1.0 if rng.randf() < 0.5 else -1.0), b.end.y, rng.randf_range(-1.5, 1.5))
+			tree.position = Vector3(rng.randf_range(1.5, 1.9) * (1.0 if rng.randf() < 0.5 else -1.0), b.end.y, rng.randf_range(-1.7, -1.1))
 			tree.scale = Vector3.ONE * 1.8
 
 
@@ -368,10 +373,10 @@ func puff(at: Vector3, amount: int) -> void:
 
 
 func _update_camera(delta: float) -> void:
-	var goal := player.global_position + Vector3(0, 4.2, 7.2)
+	var goal := player.global_position + Vector3(0, 3.3, 5.6)
 	_cam_pos = _cam_pos.lerp(goal, clampf(delta * 4.0, 0, 1))
 	camera.position = _cam_pos
-	camera.look_at(_cam_pos - Vector3(0, 3.6, 7.2) + Vector3(0, 0, -2.5), Vector3.UP)
+	camera.look_at(_cam_pos - Vector3(0, 2.7, 5.6) + Vector3(0, 0, -2.5), Vector3.UP)
 
 
 func _finish() -> void:
