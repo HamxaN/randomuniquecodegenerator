@@ -467,13 +467,13 @@ func spawn_meteor(target_cell: Vector2i = Vector2i(-1, -1)) -> void:
 		else:
 			cell = Vector2i(_rng.randi_range(0, GameData.COLS - 1), _rng.randi_range(0, GameData.ROWS - 1))
 	var target := GameData.cell_to_world(cell)
-	var start := target + Vector3(_rng.randf_range(4, 7), 14.0, _rng.randf_range(-6, -3))
+	var start := target + Vector3(_rng.randf_range(3, 5), 9.0, _rng.randf_range(-4, -2))
 	var root := Node3D.new()
 	add_child(root)
 	root.position = start
-	var rock := Models.sphere(0.55, Color(0.45, 0.3, 0.25))
+	var rock := Models.sphere(0.8, Color(0.45, 0.3, 0.25))
 	root.add_child(rock)
-	var core := Models.sphere(0.4, Color(1.0, 0.55, 0.15), 3.0)
+	var core := Models.sphere(0.6, Color(1.0, 0.55, 0.15), 3.0)
 	core.position = Vector3(0.12, 0.1, 0.12)
 	root.add_child(core)
 	var trail := CPUParticles3D.new()
@@ -599,8 +599,8 @@ func _on_lander() -> void:
 	var target := GameData.cell_to_world(pad["cell"]) + Vector3(0, 0.5, 0) if not pad.is_empty() else Vector3(_rng.randf_range(-6, 6), 0, 11.5)
 	var ship := Models.base("lander_A")
 	add_child(ship)
-	ship.position = target + Vector3(0, 14, 0)
-	ship.scale = Vector3.ONE * 1.3
+	ship.position = target + Vector3(0, 9, 0)
+	ship.scale = Vector3.ONE * 2.2
 	var flame := CPUParticles3D.new()
 	flame.amount = 24
 	flame.lifetime = 0.4
