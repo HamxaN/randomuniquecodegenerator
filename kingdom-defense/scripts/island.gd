@@ -2,7 +2,7 @@ class_name Island
 ## Builds the hex island a level is fought on: themed ground with a dirt road,
 ## a ring of hills, forest and mountains, then sea, with sun and sky.
 
-const GROUND := {"grass": Color(0.62, 0.8, 0.46), "sand": Color(0.95, 0.82, 0.55), "snow": Color(0.92, 0.95, 1.0), "ash": Color(0.55, 0.5, 0.48)}
+const GROUND := {"grass": Color(0.62, 0.8, 0.46), "sand": Color(0.93, 0.8, 0.55), "snow": Color(0.92, 0.95, 1.0), "ash": Color(0.42, 0.38, 0.37)}
 
 
 ## [param road] holds the cells of the dirt road (as keys).
@@ -19,9 +19,9 @@ static func build(root: Node3D, seed_value: int, theme: String, road: Dictionary
 	var sea: Array[Vector2i] = []
 	for r in range(Hex.LAND_RADIUS + 1, Hex.WATER_RADIUS + 1):
 		sea.append_array(Hex.ring(r))
-	_tiles(root, Models.hex("hex_grass"), land, GROUND.get(theme, GROUND["grass"]))
+	_tiles(root, Models.hex("hex_grass"), land, GROUND.get(theme, GROUND["grass"]), 0.0, theme != "grass")
 	if dirt.size() > 0:
-		_tiles(root, Models.hex("hex_grass"), dirt, Color(0.62, 0.44, 0.28), -0.06)
+		_tiles(root, Models.hex("hex_grass"), dirt, Color(0.66, 0.48, 0.3), -0.06, true)
 	_tiles(root, Models.hex("hex_water"), sea, Color(0.55, 0.78, 0.92))
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
@@ -80,7 +80,8 @@ static func _environment(root: Node3D, enemy: bool) -> void:
 	root.add_child(sun)
 
 
-static func _tiles(root: Node3D, path: String, cells: Array[Vector2i], tint: Color, drop: float = 0.0) -> void:
+## With [param flat] the grass texture is dropped so the tint shows true (snow, sand, ash, road).
+static func _tiles(root: Node3D, path: String, cells: Array[Vector2i], tint: Color, drop: float = 0.0, flat: bool = false) -> void:
 	var mesh := Models.first_mesh(path)
 	if mesh == null:
 		return
@@ -90,6 +91,10 @@ static func _tiles(root: Node3D, path: String, cells: Array[Vector2i], tint: Col
 		if mat is StandardMaterial3D:
 			var m := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
 			m.vertex_color_use_as_albedo = true
+			if flat:
+				m.albedo_texture = null
+				m.albedo_color = Color.WHITE
+				m.roughness = 0.95
 			copy.surface_set_material(s, m)
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
