@@ -118,7 +118,7 @@ func _environment() -> void:
 	env.ambient_light_color = Color(1.0, 0.94, 0.86)
 	env.ambient_light_energy = loc["ambient"]
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_exposure = 1.0
+	env.tonemap_exposure = 0.9
 	env.glow_enabled = true
 	env.glow_intensity = 0.35
 	env.glow_hdr_threshold = 1.2
@@ -200,8 +200,8 @@ func _room() -> void:
 		add_child(pillar)
 		pillar.position = p
 	# A striped awning sign over the back wall.
-	var sign_board := Models.box(Vector3(5.2, 0.9, 0.12), Color("e6463a"))
-	sign_board.position = Vector3(0, 3.35, -5.7)
+	var sign_board := Models.box(Vector3(4.6, 0.9, 0.12), Color("e6463a"))
+	sign_board.position = Vector3(2.4, 3.35, -5.7)
 	add_child(sign_board)
 	var title := Label3D.new()
 	title.text = "BURGER RUSH"
@@ -211,7 +211,7 @@ func _room() -> void:
 	title.outline_modulate = Color(0.25, 0.08, 0.02)
 	title.modulate = Color("ffd23a")
 	title.pixel_size = 0.0062
-	title.position = Vector3(0, 3.36, -5.62)
+	title.position = Vector3(2.4, 3.36, -5.62)
 	add_child(title)
 
 

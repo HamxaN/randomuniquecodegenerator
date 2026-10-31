@@ -18,13 +18,13 @@ const TIP_SHARE := 0.35
 
 const LOCATIONS := [
 	{"name": "Main Street Diner", "floor_a": Color(0.96, 0.94, 0.88), "floor_b": Color(0.82, 0.22, 0.2),
-		"outside": Color(0.55, 0.78, 0.98), "sun": Color(1.0, 0.95, 0.86), "energy": 1.1, "ambient": 0.55,
+		"outside": Color(0.55, 0.78, 0.98), "sun": Color(1.0, 0.95, 0.86), "energy": 0.95, "ambient": 0.42,
 		"lamp": Color(1.0, 0.85, 0.6), "skeletons": 0.08},
 	{"name": "Sunny Beach Shack", "floor_a": Color(0.98, 0.9, 0.7), "floor_b": Color(0.18, 0.62, 0.72),
-		"outside": Color(0.45, 0.82, 0.95), "sun": Color(1.0, 0.92, 0.75), "energy": 1.2, "ambient": 0.6,
+		"outside": Color(0.45, 0.82, 0.95), "sun": Color(1.0, 0.92, 0.75), "energy": 1.0, "ambient": 0.45,
 		"lamp": Color(1.0, 0.8, 0.55), "skeletons": 0.15},
 	{"name": "Spooky Night Grill", "floor_a": Color(0.36, 0.32, 0.46), "floor_b": Color(0.16, 0.13, 0.22),
-		"outside": Color(0.08, 0.07, 0.18), "sun": Color(0.6, 0.65, 1.0), "energy": 0.55, "ambient": 0.45,
+		"outside": Color(0.08, 0.07, 0.18), "sun": Color(0.6, 0.65, 1.0), "energy": 0.5, "ambient": 0.4,
 		"lamp": Color(1.0, 0.6, 0.3), "skeletons": 0.7},
 ]
 const DAYS_PER_LOCATION := 10
