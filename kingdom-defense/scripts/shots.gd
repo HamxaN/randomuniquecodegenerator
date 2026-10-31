@@ -72,8 +72,8 @@ func _run() -> void:
 	d.rig.distance = 19.0
 	d.rig.focus = Vector3(0, 0, 1)
 	d.gold = 4000
-	await _until(func() -> bool: return d.wave >= d.waves or d.state == "done", 220.0)
-	await _until(func() -> bool: return d.state == "done", 120.0)
+	await _until(func() -> bool: return d.wave >= d.waves or d.state == "done", 150.0)
+	await _until(func() -> bool: return d.state == "done", 50.0)
 	if d.state != "done":
 		d._win()
 	await _wait(1.0, 12)
@@ -82,14 +82,14 @@ func _run() -> void:
 	d = main.defense()
 	d.gold = 3000
 	d.speed = 2.0
-	await _until(func() -> bool: return d._alive() >= 6, 60.0)
+	await _until(func() -> bool: return d._alive() >= 4, 30.0)
 	await _wait(2.0, 12)
 	await _shot("kingdomdefense-08-snow")
 	main.start_level(11)
 	d = main.defense()
 	d.gold = 3000
 	d.speed = 2.0
-	await _until(func() -> bool: return d._alive() >= 6, 60.0)
+	await _until(func() -> bool: return d._alive() >= 4, 30.0)
 	await _wait(2.0, 12)
 	await _shot("kingdomdefense-09-ash")
 	print("SHOTS DONE")
