@@ -1,0 +1,79 @@
+name: Burger Rush CI
+
+on:
+  push:
+    branches: ['**']
+    paths: ['burger-rush/**', '.github/workflows/burger-rush-ci.yml', '.github/scripts/godot-*.sh']
+  pull_request:
+    paths: ['burger-rush/**', '.github/workflows/burger-rush-ci.yml', '.github/scripts/godot-*.sh']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: burger-rush-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: '4.6.3'
+  PROJECT: burger-rush
+
+jobs:
+  build:
+    name: Test, play-test and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Cache Godot
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/godot
+            ~/.local/share/godot/export_templates
+          key: godot-${{ env.GODOT_VERSION }}-android-v1
+
+      - name: Install Godot
+        run: .github/scripts/godot-install.sh "$GODOT_VERSION"
+
+      - name: Import assets
+        run: .github/scripts/godot-import.sh "$PROJECT"
+
+      - name: Unit tests (game rules)
+        run: godot --headless --path "$PROJECT" -s res://tests/run_tests.gd
+
+      - name: Play-test and capture screenshots
+        run: .github/scripts/godot-shots.sh "$PROJECT" "$PWD/shots" 1600x720
+
+      - name: Add the AdMob plugin (Google test ads)
+        run: .github/scripts/godot-add-admob.sh "$PROJECT"
+
+      - name: Build debug APK
+        # Debug key and Google's test ad IDs; release builds use the real ones.
+        run: .github/scripts/godot-export-android.sh "$PROJECT" debug "$PWD/build/burger-rush-debug.apk"
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: burger-rush-debug-apk
+          path: build/burger-rush-debug.apk
+          retention-days: 14
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: burger-rush-screenshots
+          path: shots/
+          retention-days: 14
+
+      - name: Publish screenshots to a branch
+        if: github.event_name == 'push'
+        run: .github/scripts/godot-publish-shots.sh shots "screenshots-$PROJECT" "${{ github.token }}"
