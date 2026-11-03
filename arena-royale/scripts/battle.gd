@@ -47,8 +47,8 @@ func _ready() -> void:
 	camera.fov = 44.0
 	add_child(camera)
 	camera.current = true
-	camera.position = Vector3(0, 23.5, 14.0)
-	camera.look_at(Vector3(0, 0, 1.2), Vector3.UP)
+	camera.position = Vector3(0, 22.0, 16.0)
+	camera.look_at(Vector3(0, 0, 3.2), Vector3.UP)
 	hud = BattleHud.new()
 	hud.battle = self
 	add_child(hud)
@@ -120,17 +120,17 @@ func _field() -> void:
 		end.position = Vector3(side * (w / 2.0 + 0.25), 0.2, 0)
 		add_child(end)
 	# The river and its bridges.
-	var water := Models.box(Vector3(GameData.RIVER * 2.0, 0.1, d), arena["water"])
+	var water := Models.box(Vector3(GameData.RIVER * 2.0, 0.06, d), arena["water"])
 	water.material_override = Models.material(arena["water"], 0.4)
-	water.position.y = -0.02
+	water.position.y = 0.0
 	add_child(water)
 	for bx in GameData.BRIDGES:
 		var bridge := Models.box(Vector3(GameData.RIVER * 2.0 + 1.2, 0.18, GameData.BRIDGE_HALF * 2.0), Color(0.55, 0.38, 0.22))
-		bridge.position = Vector3(0, 0.06, float(bx))
+		bridge.position = Vector3(0, 0.1, float(bx))
 		add_child(bridge)
 		for s in [-1.0, 1.0]:
 			var rail := Models.box(Vector3(GameData.RIVER * 2.0 + 1.2, 0.3, 0.12), Color(0.4, 0.26, 0.14))
-			rail.position = Vector3(0, 0.25, float(bx) + s * GameData.BRIDGE_HALF)
+			rail.position = Vector3(0, 0.3, float(bx) + s * GameData.BRIDGE_HALF)
 			add_child(rail)
 	# Scenery around the walls.
 	var rng := RandomNumberGenerator.new()
@@ -192,7 +192,8 @@ func _spawn(e: Dictionary) -> void:
 		var c := GameData.card(e["card"])
 		var model_name: String = c["blue"] if team == "blue" else c["red"]
 		var model := Models.character(model_name, CardArt.keep(e["card"]))
-		model.scale = Vector3.ONE * float(c["scale"])
+		# Troops are drawn a bit larger than life so they read well on a phone.
+		model.scale = Vector3.ONE * float(c["scale"]) * 1.5
 		root.add_child(model)
 		if team == "blue" and model_name.begins_with("Skeleton"):
 			# Your skeletons wear blue.
@@ -472,9 +473,9 @@ func bars() -> Array:
 		var full := float(e["hp"]) >= float(e["max"]) - 0.5
 		if full and not e["tower"]:
 			continue
-		var h := 4.6 if e["kind"] == "keep" else (3.8 if e["tower"] else 2.4)
+		var h := 4.6 if e["kind"] == "keep" else (3.8 if e["tower"] else 3.2)
 		if e["card"] == "golem":
-			h = 4.2
+			h = 5.6
 		var top := (n["root"] as Node3D).position + Vector3(0, h, 0)
 		out.append({"pos": camera.unproject_position(top), "frac": clampf(float(e["hp"]) / float(e["max"]), 0.0, 1.0),
 			"side": int(e["side"]), "tower": e["tower"], "hp": int(ceil(float(e["hp"])))})
