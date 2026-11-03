@@ -126,13 +126,15 @@ func _ground() -> void:
 	plane.mesh = pm
 	plane.material_override = mat
 	add_child(plane)
-	# Dirt patches and paths.
-	for i in 40:
-		var d := Models.yard("floor_dirt" if i % 3 else "floor_dirt_grave")
+	# A few open graves in the earth.
+	for i in 24:
+		var d := Models.yard("floor_dirt_grave")
 		add_child(d)
 		d.position = Vector3(rng.randf_range(-ARENA, ARENA), 0.01, rng.randf_range(-ARENA, ARENA))
 		d.rotation.y = rng.randf() * TAU
-		d.scale = Vector3.ONE * rng.randf_range(1.5, 3.0)
+		d.scale = Vector3.ONE * 1.2
+		for m in d.find_children("*", "MeshInstance3D", true, false):
+			(m as MeshInstance3D).material_overlay = Models.material(Color(0.1, 0.08, 0.06, 0.5))
 
 
 func _props() -> void:
@@ -165,9 +167,9 @@ func _props() -> void:
 		n.rotation.y = rng.randf() * TAU
 		var sc := 1.4
 		if piece.begins_with("tree"):
-			sc = rng.randf_range(2.0, 3.2)
+			sc = rng.randf_range(1.5, 2.2)
 		elif piece == "crypt":
-			sc = 1.6
+			sc = 1.3
 		n.scale = Vector3.ONE * sc
 		if lights < 10 and (piece.contains("lantern") or piece.contains("candle") or piece.contains("jackolantern")):
 			lights += 1
