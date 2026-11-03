@@ -185,8 +185,8 @@ func _cobweb() -> Node3D:
 ## Dust fades and the room brightens as more of it is restored.
 func _freshen(done: int, total: int) -> void:
 	var k := float(done) / maxf(total, 1)
-	_env.ambient_light_energy = lerpf(0.32, 0.6, k)
-	_sun.light_energy = lerpf(0.5, 1.0, k)
+	_env.ambient_light_energy = lerpf(0.3, 0.5, k)
+	_sun.light_energy = lerpf(0.45, 0.8, k)
 	var r: Dictionary = GameData.ROOMS[mini(room_index, GameData.ROOMS.size() - 1)]
 	var dusty := (r["wall"] as Color).darkened(0.35).lerp(Color(0.5, 0.48, 0.45), 0.4)
 	for w in _walls:

@@ -79,7 +79,7 @@ func _process(_delta: float) -> void:
 	var b := Models.bounds(m)
 	var center := b.get_center()
 	var ext := maxf(b.size.x, maxf(b.size.y, b.size.z))
-	_cam.size = ext * 1.35
+	_cam.size = ext * 1.02
 	var dir := Vector3(0.75, 0.6, 1.0).normalized()
 	if b.size.z < 0.3:
 		# Wall pictures face forwards: look at them straight on.

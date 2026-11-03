@@ -135,7 +135,7 @@ func _draw_item(id: String, r: Rect2) -> void:
 		return
 	var tex := thumbs.texture(GameData.model(id))
 	if tex != null:
-		draw_texture_rect(tex, r.grow(-4), false)
+		draw_texture_rect(tex, r.grow(-1), false)
 	else:
 		draw_circle(r.get_center(), r.size.x * 0.3, GameData.CHAINS[GameData.chain_of(id)]["color"])
 	var lv := GameData.level_of(id)
