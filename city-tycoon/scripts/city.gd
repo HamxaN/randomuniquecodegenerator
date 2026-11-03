@@ -69,11 +69,12 @@ func _environment() -> void:
 	_env.ambient_light_color = Color(0.8, 0.85, 0.95)
 	_env.ambient_light_energy = 0.55
 	_env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	_env.tonemap_exposure = 0.85
 	_env.glow_enabled = true
-	_env.glow_intensity = 0.5
+	_env.glow_intensity = 0.25
 	_env.fog_enabled = true
 	_env.fog_light_color = Color(0.8, 0.88, 1.0)
-	_env.fog_density = 0.004
+	_env.fog_density = 0.0015
 	var we := WorldEnvironment.new()
 	we.environment = _env
 	add_child(we)
@@ -86,7 +87,7 @@ func _environment() -> void:
 
 
 func _ground() -> void:
-	var grass := Models.box(Vector3(GameData.COLS * GameData.CELL + 40, 0.2, GameData.ROWS * GameData.CELL + 40), Color(0.42, 0.66, 0.32))
+	var grass := Models.box(Vector3(GameData.COLS * GameData.CELL + 40, 0.2, GameData.ROWS * GameData.CELL + 40), Color(0.36, 0.6, 0.28))
 	grass.position.y = -0.11
 	add_child(grass)
 	# Countryside around the city limits.
@@ -263,9 +264,9 @@ func _apply_time() -> void:
 	var n := night()
 	var sun_angle := (_time - 0.25) * TAU
 	_sun.rotation = Vector3(-maxf(sin(sun_angle), 0.15) * 1.0 - 0.25, 0.6, 0)
-	_sun.light_energy = lerpf(1.05, 0.15, n)
+	_sun.light_energy = lerpf(0.9, 0.15, n)
 	_sun.light_color = Color(1.0, 0.92, 0.8).lerp(Color(0.5, 0.6, 1.0), n)
-	_env.ambient_light_energy = lerpf(0.55, 0.25, n)
+	_env.ambient_light_energy = lerpf(0.38, 0.25, n)
 	_env.ambient_light_color = Color(0.8, 0.85, 0.95).lerp(Color(0.35, 0.4, 0.7), n)
 	var sm := _env.sky.sky_material as ProceduralSkyMaterial
 	sm.sky_top_color = Color(0.35, 0.6, 0.95).lerp(Color(0.04, 0.05, 0.15), n)
