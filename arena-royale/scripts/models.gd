@@ -97,3 +97,12 @@ static func material(color: Color, emission: float = 0.0, unshaded: bool = false
 	if color.a < 1.0:
 		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	return m
+
+
+static func box(size: Vector3, color: Color) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	var b := BoxMesh.new()
+	b.size = size
+	mi.mesh = b
+	mi.material_override = material(color)
+	return mi
