@@ -19,7 +19,7 @@ val keystorePath = secret("KEYSTORE_PATH")
 
 android {
     namespace = "com.hamxanadeem.washitclean"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.hamxanadeem.washitclean"
