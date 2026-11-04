@@ -1,8 +1,6 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
+    // AGP 9 compiles Kotlin itself, so the separate Kotlin Android plugin is no longer applied.
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
 }
 
 /** Reads a value from `-Pname=...`, `~/.gradle/gradle.properties` or an environment variable. */
@@ -21,7 +19,7 @@ val keystorePath = secret("KEYSTORE_PATH")
 
 android {
     namespace = "com.hamxanadeem.washitclean"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.hamxanadeem.washitclean"
@@ -78,12 +76,6 @@ android {
         checkReleaseBuilds = true
         // Dependency updates are handled by Dependabot rather than failing the build.
         disable += setOf("GradleDependency", "AndroidGradlePluginVersion", "NewerVersionAvailable")
-    }
-}
-
-kotlin {
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_17)
     }
 }
 
