@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SnapDoc Scanner</string>
+    <string name="scan">Scan</string>
+    <string name="search_hint">Search documents and their text</string>
+    <string name="empty_title">No documents yet</string>
+    <string name="empty_body">Tap Scan to capture a document with your camera, or import photos from your gallery. Edges are found automatically.</string>
+    <string name="no_results">No documents match your search</string>
+    <string name="pages_count">%1$d pages · %2$s</string>
+    <string name="page_count_one">1 page · %1$s</string>
+    <string name="add_pages">Add pages</string>
+    <string name="share_pdf">Share PDF</string>
+    <string name="save_pdf">Save PDF</string>
+    <string name="extract_text">Text</string>
+    <string name="rename">Rename</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="copy">Copy</string>
+    <string name="share">Share</string>
+    <string name="rotate_left">Rotate left</string>
+    <string name="rotate_right">Rotate right</string>
+    <string name="delete_page">Delete page</string>
+    <string name="page_of">Page %1$d of %2$d</string>
+    <string name="rename_title">Rename document</string>
+    <string name="delete_title">Delete \"%1$s\"?</string>
+    <string name="delete_body">The document and all its pages will be removed from this device.</string>
+    <string name="delete_page_title">Delete this page?</string>
+    <string name="last_page">A document needs at least one page. Delete the whole document instead.</string>
+    <string name="scanner_unavailable">The scanner needs Google Play services. Please update Google Play services and try again.</string>
+    <string name="scan_failed">Scanning didn\'t finish: %1$s</string>
+    <string name="saving">Saving…</string>
+    <string name="making_pdf">Making PDF…</string>
+    <string name="pdf_saved">PDF saved</string>
+    <string name="pdf_failed">Couldn\'t create the PDF</string>
+    <string name="reading_text">Reading text…</string>
+    <string name="text_title">Recognised text</string>
+    <string name="text_none">No text was found on these pages.</string>
+    <string name="text_copied">Text copied</string>
+    <string name="text_failed">Text recognition failed: %1$s</string>
+    <string name="privacy_options">Privacy options</string>
+    <string name="drag_hint">Long-press and drag pages to reorder them</string>
+    <string name="page_image">Scanned page</string>
+    <string name="document_thumbnail">Document preview</string>
+    <string name="back">Back</string>
+    <string name="more">More options</string>
+</resources>
