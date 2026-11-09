@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:navigationContentDescription="@string/back"
+        app:navigationIcon="@drawable/ic_back"
+        app:title="@string/settings" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="24dp">
+
+            <TextView
+                style="@style/SectionTitle"
+                android:layout_marginStart="20dp"
+                android:text="@string/section_money"
+                android:textColor="@color/brand" />
+            <LinearLayout
+                android:id="@+id/row_currency"
+                style="@style/SettingsRow">
+
+                <TextView
+                    style="@style/RowTitle"
+                    android:text="@string/currency" />
+
+                <TextView
+                    android:id="@+id/currency_value"
+                    style="@style/RowValue" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/row_categories"
+                style="@style/SettingsRow">
+
+                <TextView
+                    style="@style/RowTitle"
+                    android:text="@string/categories" />
+
+                <TextView
+                    android:id="@+id/categories_value"
+                    style="@style/RowValue" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/row_recurring"
+                style="@style/SettingsRow">
+
+                <TextView
+                    style="@style/RowTitle"
+                    android:text="@string/recurring" />
+
+                <TextView
+                    android:id="@+id/recurring_value"
+                    style="@style/RowValue" />
+            </LinearLayout>
+            <TextView
+                style="@style/SectionTitle"
+                android:layout_marginStart="20dp"
+                android:text="@string/section_privacy"
+                android:textColor="@color/brand" />
+            <LinearLayout
+                android:id="@+id/row_lock"
+                style="@style/SettingsRow"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/RowTitle"
+                        android:text="@string/lock_title" />
+
+                    <TextView
+                        style="@style/RowValue"
+                        android:text="@string/lock_sub" />
+                </LinearLayout>
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/lock"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/lock_title" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/row_alerts"
+                style="@style/SettingsRow"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/RowTitle"
+                        android:text="@string/alerts_title" />
+
+                    <TextView
+                        style="@style/RowValue"
+                        android:text="@string/alerts_sub" />
+                </LinearLayout>
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/alerts"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/alerts_title" />
+            </LinearLayout>
+            <TextView
+                style="@style/SectionTitle"
+                android:layout_marginStart="20dp"
+                android:text="@string/section_data"
+                android:textColor="@color/brand" />
+            <LinearLayout
+                android:id="@+id/row_export"
+                style="@style/SettingsRow">
+
+                <TextView
+                    style="@style/RowTitle"
+                    android:text="@string/export_csv" />
+
+                <TextView
+                    android:id="@+id/export_value"
+                    style="@style/RowValue" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/row_backup"
+                style="@style/SettingsRow">
+
+                <TextView
+                    style="@style/RowTitle"
+                    android:text="@string/backup" />
+
+                <TextView
+                    android:id="@+id/backup_value"
+                    style="@style/RowValue"
+                    android:text="@string/backup_sub" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/row_restore"
+                style="@style/SettingsRow">
+
+                <TextView
+                    style="@style/RowTitle"
+                    android:text="@string/restore" />
+
+                <TextView
+                    android:id="@+id/restore_value"
+                    style="@style/RowValue"
+                    android:text="@string/restore_sub" />
+            </LinearLayout>
+
+            <TextView
+                style="@style/Note"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginEnd="20dp"
+                android:text="@string/privacy_note" />
+
+            <TextView
+                android:id="@+id/version"
+                style="@style/Note"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
