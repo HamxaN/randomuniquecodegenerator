@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="24dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="24dp">
+
+    <EditText
+        android:id="@+id/amount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:autofillHints=""
+        android:digits="0123456789.,"
+        android:hint="@string/budget_hint"
+        android:inputType="numberDecimal"
+        android:minHeight="48dp" />
+
+    <TextView
+        android:id="@+id/suggestion"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="40dp"
+        android:gravity="center_vertical"
+        android:textColor="@color/brand"
+        android:textSize="13sp" />
+
+    <com.google.android.material.materialswitch.MaterialSwitch
+        android:id="@+id/rollover"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/rollover" />
+
+    <TextView
+        style="@style/Note"
+        android:layout_marginTop="0dp"
+        android:text="@string/rollover_note" />
+</LinearLayout>

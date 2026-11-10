@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+: back up the ledger and settings to the Google account, and copy
+     them when moving to a new phone. Caches (exports, receipt photos) are left out. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="file" path="ledger.txt" />
+        <include domain="sharedpref" path="spendwise.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="file" path="ledger.txt" />
+        <include domain="sharedpref" path="spendwise.xml" />
+    </device-transfer>
+</data-extraction-rules>

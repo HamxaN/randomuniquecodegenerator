@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 and older: back up the ledger and settings to the Google account. -->
+<full-backup-content>
+    <include domain="file" path="ledger.txt" />
+    <include domain="sharedpref" path="spendwise.xml" />
+</full-backup-content>

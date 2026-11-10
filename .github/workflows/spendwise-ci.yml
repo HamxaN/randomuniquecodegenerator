@@ -1,0 +1,54 @@
+name: Spendwise CI
+
+on:
+  push:
+    branches: ['**']
+    paths: ['spendwise/**', 'gradle/wrapper/**', '.github/workflows/spendwise-ci.yml']
+  pull_request:
+    paths: ['spendwise/**', 'gradle/wrapper/**', '.github/workflows/spendwise-ci.yml']
+
+concurrency:
+  group: spendwise-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Test, lint and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Unit tests (money logic)
+        run: ./gradlew -p spendwise coreTest --stacktrace
+
+      - name: Android lint
+        run: ./gradlew -p spendwise :app:lintDebug --stacktrace
+
+      - name: Build debug APK and release bundle
+        # Unsigned; real releases use spendwise-release.yml.
+        run: ./gradlew -p spendwise :app:assembleDebug :app:bundleRelease --stacktrace
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: spendwise-debug-apk
+          path: spendwise/app/build/outputs/apk/debug/*.apk
+          retention-days: 14
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spendwise-reports
+          path: |
+            spendwise/core/build/reports/
+            spendwise/app/build/reports/
+          retention-days: 7
