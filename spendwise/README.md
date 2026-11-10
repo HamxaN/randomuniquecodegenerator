@@ -21,7 +21,7 @@ data stays on the phone.
 | **Charts** | A category donut, daily bars against your budget pace, and six months of income against spending. |
 | **Budget alerts** | An optional notification when a budget passes 80% or runs out. |
 | **App lock** | Fingerprint, face or screen lock. While it's on, the app is hidden in the recent-apps view. |
-| **Your data** | CSV export (spreadsheet-safe), plus a backup and restore file you keep yourself. App data is excluded from cloud backup. |
+| **Your data** | Android backs it up to your Google account and restores it on reinstall or a new phone. There is also CSV export (spreadsheet-safe) and a backup file you can save anywhere. |
 | **Any currency** | Uses your locale's currency by default. Amounts are stored as whole minor units, so there are no rounding errors. |
 
 Light and dark themes follow the system.
@@ -64,4 +64,17 @@ it by hand and choose the track. Add these repository secrets:
 
 The first upload of a new app has to be done by hand in Play Console. After
 that, the workflow can publish. In the Play data-safety form you can state that
-no data is collected or shared.
+no data is collected or shared (Android's own Google backup doesn't count as collection).
+
+## Google backup
+
+Android's Auto Backup saves the ledger and settings (`files/ledger.txt` and
+`shared_prefs/spendwise.xml`) to the user's Google account about once a day,
+when the phone is idle, charging and on Wi-Fi. They are restored when the app
+is reinstalled or set up on a new phone with the same account. The rules are in
+`app/src/main/res/xml/backup_rules.xml` (Android 11 and older) and
+`data_extraction_rules.xml` (Android 12+). Caches (exports, receipt photos)
+are never backed up.
+
+To test it: `adb shell bmgr backupnow com.hamxanadeem.spendwise.debug`, uninstall,
+reinstall, and the data is back.

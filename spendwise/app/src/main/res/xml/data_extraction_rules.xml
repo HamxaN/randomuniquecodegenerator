@@ -1,19 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Money data stays on this phone: no cloud backup and no device-to-device copy.
-     Use Settings > Back up to keep your own copy. -->
+<!-- Android 12+: back up the ledger and settings to the Google account, and copy
+     them when moving to a new phone. Caches (exports, receipt photos) are left out. -->
 <data-extraction-rules>
     <cloud-backup>
-        <exclude domain="root" />
-        <exclude domain="file" />
-        <exclude domain="database" />
-        <exclude domain="sharedpref" />
-        <exclude domain="external" />
+        <include domain="file" path="ledger.txt" />
+        <include domain="sharedpref" path="spendwise.xml" />
     </cloud-backup>
     <device-transfer>
-        <exclude domain="root" />
-        <exclude domain="file" />
-        <exclude domain="database" />
-        <exclude domain="sharedpref" />
-        <exclude domain="external" />
+        <include domain="file" path="ledger.txt" />
+        <include domain="sharedpref" path="spendwise.xml" />
     </device-transfer>
 </data-extraction-rules>

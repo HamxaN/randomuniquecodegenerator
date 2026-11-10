@@ -15,7 +15,7 @@
 
     <!-- Welcome -->
     <string name="welcome_title">Welcome to Spendwise</string>
-    <string name="welcome_body">Track spending in seconds and let the app do the thinking.\n\n• Type things like “coffee 4.50” or “uber 12 yesterday” and it fills in the rest.\n• It learns your categories from what you pick.\n• Set budgets, see safe-to-spend per day, and get a nudge before you overspend.\n• It spots subscriptions and unusual payments for you.\n\nNo ads, no account, no tracking. Everything stays on this phone.</string>
+    <string name="welcome_body">Track spending in seconds and let the app do the thinking.\n\n• Type things like “coffee 4.50” or “uber 12 yesterday” and it fills in the rest.\n• It learns your categories from what you pick.\n• Set budgets, see safe-to-spend per day, and get a nudge before you overspend.\n• It spots subscriptions and unusual payments for you.\n\nNo ads, no sign-up, no tracking. Your data stays on this phone and in your phone’s Google backup.</string>
     <string name="welcome_go">Let’s go</string>
 
     <!-- Home -->
@@ -193,7 +193,7 @@
     <string name="restore_body">Everything in Spendwise now is replaced with the backup.</string>
     <string name="restore_done">Restored</string>
     <string name="restore_invalid">That isn’t a Spendwise backup</string>
-    <string name="privacy_note">Spendwise has no ads, no account and no analytics. Your transactions are stored only on this phone and are left out of cloud backups. Receipts are read on the device.</string>
+    <string name="privacy_note">Spendwise has no ads, no account and no analytics. Your transactions are stored on this phone and, if Google backup is on, in your phone’s backup in your Google account. Receipts are read on the device.</string>
     <string name="version_line">Spendwise %1$s</string>
 
     <!-- Lock and alerts -->
