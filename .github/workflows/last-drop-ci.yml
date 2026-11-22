@@ -1,0 +1,121 @@
+name: Last Drop CI
+
+on:
+  push:
+    branches: ['**']
+    paths: ['last-drop/**', '.github/workflows/last-drop-ci.yml', '.github/scripts/godot-*.sh']
+  pull_request:
+    paths: ['last-drop/**', '.github/workflows/last-drop-ci.yml', '.github/scripts/godot-*.sh']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: last-drop-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: '4.6.3'
+  PROJECT: last-drop
+
+jobs:
+  build:
+    name: Test, play-test, online test and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Cache Godot
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/godot
+            ~/.local/share/godot/export_templates
+          key: godot-${{ env.GODOT_VERSION }}-android-v1
+
+      - name: Install Godot
+        run: .github/scripts/godot-install.sh "$GODOT_VERSION"
+
+      - name: Import assets
+        run: .github/scripts/godot-import.sh "$PROJECT"
+
+      - name: Unit tests (game rules)
+        run: godot --headless --path "$PROJECT" -s res://tests/run_tests.gd
+
+      - name: Online test (dedicated server + client)
+        run: |
+          stdbuf -oL -eL godot --headless --path "$PROJECT" -- --server --countdown=3 > server.log 2>&1 &
+          server=$!
+          sleep 5
+          set +e
+          timeout 240 godot --headless --path "$PROJECT" -- --nettest=127.0.0.1 2>&1 | tee client.log
+          code=${PIPESTATUS[0]}
+          set -e
+          sleep 1
+          kill $server || true
+          echo "--- server log"
+          grep -vE "leaked|still in use|Pages in use" server.log || true
+          if grep -nE "SCRIPT ERROR|Parse Error" server.log client.log; then
+            echo "::error::script errors during the online test"
+            exit 1
+          fi
+          grep -q "NET TEST OK" client.log || { echo "::error::client test failed"; exit 1; }
+          grep -q "first shot from a client" server.log || { echo "::error::server never got the client's shot"; exit 1; }
+          exit $code
+
+      - name: Play-test and capture screenshots
+        run: .github/scripts/godot-shots.sh "$PROJECT" "$PWD/shots" 1600x720
+
+      - name: Build debug APK
+        run: .github/scripts/godot-export-android.sh "$PROJECT" debug "$PWD/build/last-drop-debug.apk"
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: last-drop-debug-apk
+          path: build/last-drop-debug.apk
+          retention-days: 14
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: last-drop-screenshots
+          path: shots/
+          retention-days: 14
+
+      - name: Publish screenshots to a branch
+        if: github.event_name == 'push'
+        run: .github/scripts/godot-publish-shots.sh shots "screenshots-$PROJECT" "${{ github.token }}"
+
+  server-image:
+    name: Dedicated server image
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the server image
+        run: docker build -f last-drop/server/Dockerfile -t last-drop-server last-drop
+
+      - name: Check the server starts
+        run: |
+          docker run -d --name ld -p 7777:7777/udp last-drop-server
+          for i in $(seq 1 30); do
+            if docker logs ld 2>&1 | grep -q "server listening"; then
+              docker logs ld
+              docker rm -f ld
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs ld
+          echo "::error::server didn't start"
+          exit 1
