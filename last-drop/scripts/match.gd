@@ -48,6 +48,9 @@ var _snap_t := 0.0
 var _state_t := 0.0
 var _zone_tick := 0.0
 var _grenades: Array = []
+var smokes: Array = []   # {pos, t, node}
+var fires: Array = []    # {pos, t, owner, node}
+var time_of_day := ""
 var _tracers: Array = []
 var _tracer_i := 0
 var _last_phase := 0
@@ -292,31 +295,39 @@ func _build_world_visuals() -> void:
 	for lid in loot:
 		var e: Dictionary = loot[lid]
 		e["node"] = _loot_visual(e["item"], e["pos"])
+	# Each match gets a time of day from its seed.
+	var presets := [
+		{"name": "Midday", "top": "4f8fd6", "horizon": "bcd9ee", "sun": Color(1.0, 0.96, 0.88), "energy": 1.0, "angle": Vector3(-52, 38, 0), "amb": 0.55},
+		{"name": "Golden hour", "top": "3c5f9e", "horizon": "f2b27a", "sun": Color(1.0, 0.78, 0.55), "energy": 1.15, "angle": Vector3(-18, 70, 0), "amb": 0.5},
+		{"name": "Overcast", "top": "7f8c99", "horizon": "c5ccd3", "sun": Color(0.9, 0.93, 1.0), "energy": 0.55, "angle": Vector3(-60, 20, 0), "amb": 0.8},
+	]
+	var tod: Dictionary = presets[seed_value % presets.size()]
+	time_of_day = String(tod["name"])
 	var env := WorldEnvironment.new()
 	var e2 := Environment.new()
 	e2.background_mode = Environment.BG_SKY
 	var sky := Sky.new()
 	var sm := ProceduralSkyMaterial.new()
-	sm.sky_top_color = Color("4f8fd6")
-	sm.sky_horizon_color = Color("bcd9ee")
-	sm.ground_horizon_color = Color("bcd9ee")
+	sm.sky_top_color = Color(String(tod["top"]))
+	sm.sky_horizon_color = Color(String(tod["horizon"]))
+	sm.ground_horizon_color = Color(String(tod["horizon"]))
 	sm.ground_bottom_color = Color("2c6f86")
 	sky.sky_material = sm
 	e2.sky = sky
 	e2.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	e2.ambient_light_energy = 0.55
+	e2.ambient_light_energy = float(tod["amb"])
 	e2.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	e2.tonemap_exposure = 0.9
 	e2.fog_enabled = true
-	e2.fog_light_color = Color("bcd9ee")
+	e2.fog_light_color = Color(String(tod["horizon"]))
 	e2.fog_density = 0.0006
 	e2.fog_sky_affect = 0.0
 	env.environment = e2
 	add_child(env)
 	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-52, 38, 0)
-	sun.light_energy = 1.0
-	sun.light_color = Color(1.0, 0.96, 0.88)
+	sun.rotation_degrees = tod["angle"]
+	sun.light_energy = float(tod["energy"])
+	sun.light_color = tod["sun"]
 	sun.shadow_enabled = Save.quality >= 1
 	sun.directional_shadow_max_distance = 70.0
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
@@ -533,12 +544,21 @@ func alive_teams() -> Array:
 
 
 func line_of_sight(from: Vector3, to: Vector3, a: Node, b: Node) -> bool:
+	for sm in smokes:
+		if _segment_hits_sphere(from, to, sm["pos"] + Vector3(0, 1.5, 0), GameData.SMOKE_RADIUS):
+			return false
 	var q := PhysicsRayQueryParameters3D.create(from, to, 1 | 2 | 4)
 	var ex: Array[RID] = [a.get_rid()]
 	if b != null:
 		ex.append(b.get_rid())
 	q.exclude = ex
 	return get_world_3d().direct_space_state.intersect_ray(q).is_empty()
+
+
+func _segment_hits_sphere(a: Vector3, b: Vector3, c: Vector3, r: float) -> bool:
+	var ab := b - a
+	var t := clampf((c - a).dot(ab) / maxf(ab.length_squared(), 0.0001), 0.0, 1.0)
+	return (a + ab * t).distance_to(c) < r
 
 
 # --- Authority ------------------------------------------------------------------------
@@ -689,11 +709,14 @@ func handle(f: Fighter, action: String, arg) -> void:
 				t.revived_by = f
 				_event_all("revive", [f.id, t.id, REVIVE_TIME])
 		"grenade":
-			if f.inv.grenades > 0 and f.state == "ground":
-				f.inv.grenades -= 1
-				var a: Array = arg
-				throw_grenade(f, a[0], a[1])
+			var a: Array = arg
+			var kind := String(a[2]) if a.size() > 2 else "frag"
+			if f.state == "ground" and f.inv.use_throwable(kind):
+				throw_grenade(f, a[0], a[1], kind)
 				_sync_inv(f)
+		"cycle_throwable":
+			f.inv.cycle_throwable()
+			_sync_inv(f)
 
 
 func _do_jump(f: Fighter) -> void:
@@ -1051,21 +1074,30 @@ func explode(pos: Vector3, dmg: float, radius: float, attacker_id: int, cause: S
 
 # --- Grenades ----------------------------------------------------------------------------
 
-func throw_grenade(f: Fighter, origin: Vector3, vel: Vector3) -> void:
-	_grenades.append({"pos": origin, "vel": vel, "t": 2.6, "owner": f.id, "node": null})
+func throw_grenade(f: Fighter, origin: Vector3, vel: Vector3, kind: String = "frag") -> void:
+	_grenades.append({"pos": origin, "vel": vel, "t": 2.6 if kind != "molotov" else 4.0, "owner": f.id if f != null else -1,
+		"node": null, "kind": kind, "bounced": false})
 	if visuals:
-		_grenades[_grenades.size() - 1]["node"] = _nade_visual()
+		_grenades[_grenades.size() - 1]["node"] = _nade_visual(kind)
 	if networked and authority:
-		Net.broadcast_event("nade", [f.id, origin, vel])
+		Net.broadcast_event("nade", [f.id if f != null else -1, origin, vel, kind])
 
 
-func _nade_visual() -> Node3D:
+func _nade_visual(kind: String) -> Node3D:
 	var mi := MeshInstance3D.new()
-	var sm := SphereMesh.new()
-	sm.radius = 0.1
-	sm.height = 0.2
-	mi.mesh = sm
-	mi.material_override = Models.material(Color("4b5d2a"))
+	if kind == "molotov":
+		var cm := CylinderMesh.new()
+		cm.top_radius = 0.04
+		cm.bottom_radius = 0.08
+		cm.height = 0.26
+		mi.mesh = cm
+		mi.material_override = Models.material(Color("4a8f3a", 0.85), 0.3)
+	else:
+		var sm := SphereMesh.new()
+		sm.radius = 0.1
+		sm.height = 0.2 if kind == "frag" else 0.3
+		mi.mesh = sm
+		mi.material_override = Models.material(GameData.THROWABLES[kind]["color"].darkened(0.3))
 	add_child(mi)
 	return mi
 
@@ -1079,20 +1111,118 @@ func _grenade_tick(delta: float) -> void:
 		var np := p + vel * delta
 		var q := PhysicsRayQueryParameters3D.create(p, np, 1 | 4)
 		var hit := get_world_3d().direct_space_state.intersect_ray(q)
+		var done := float(g["t"]) <= 0.0
 		if not hit.is_empty():
 			var n: Vector3 = hit["normal"]
 			vel = vel.bounce(n) * 0.45
 			np = (hit["position"] as Vector3) + n * 0.05
+			if g["kind"] == "molotov":
+				done = true
+		if np.y < Island.SEA_LEVEL - 1.0 and g["kind"] != "frag":
+			done = true
 		g["vel"] = vel
 		g["pos"] = np
 		if g["node"] != null:
 			(g["node"] as Node3D).global_position = np
-		if float(g["t"]) <= 0.0:
+		if done:
 			_grenades.erase(g)
 			if g["node"] != null:
 				(g["node"] as Node).queue_free()
-			if authority:
-				explode(np, GameData.GRENADE_DAMAGE, GameData.GRENADE_RADIUS, int(g["owner"]), "grenade")
+			match String(g["kind"]):
+				"smoke":
+					_add_smoke(np)
+				"molotov":
+					if np.y > Island.SEA_LEVEL - 0.8:
+						_add_fire(np, int(g["owner"]))
+				_:
+					if authority:
+						explode(np, GameData.GRENADE_DAMAGE, GameData.GRENADE_RADIUS, int(g["owner"]), "grenade")
+	for sm in smokes.duplicate():
+		sm["t"] = float(sm["t"]) - delta
+		if float(sm["t"]) <= 0.0:
+			smokes.erase(sm)
+			if sm["node"] != null:
+				(sm["node"] as Node).queue_free()
+	for fr in fires.duplicate():
+		fr["t"] = float(fr["t"]) - delta
+		fr["tick"] = float(fr.get("tick", 0.0)) - delta
+		if authority and float(fr["tick"]) <= 0.0:
+			fr["tick"] = 0.5
+			for o in fighters:
+				if o.alive() and o.state in ["ground", "knocked"] and o.global_position.distance_to(fr["pos"]) < GameData.FIRE_RADIUS:
+					apply_damage(o, GameData.FIRE_DPS * 0.5, int(fr["owner"]), false, "molotov", Vector3.ZERO)
+		if float(fr["t"]) <= 0.0:
+			fires.erase(fr)
+			if fr["node"] != null:
+				(fr["node"] as Node).queue_free()
+
+
+func _add_smoke(pos: Vector3) -> void:
+	var e := {"pos": pos, "t": GameData.SMOKE_TIME, "node": null}
+	if visuals:
+		var p := CPUParticles3D.new()
+		p.amount = 40
+		p.lifetime = 5.0
+		p.preprocess = 2.0
+		p.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+		p.emission_sphere_radius = GameData.SMOKE_RADIUS * 0.6
+		p.direction = Vector3.UP
+		p.spread = 60.0
+		p.initial_velocity_min = 0.2
+		p.initial_velocity_max = 0.8
+		p.gravity = Vector3(0, 0.05, 0)
+		p.scale_amount_min = 2.5
+		p.scale_amount_max = 4.0
+		var sm := SphereMesh.new()
+		sm.radius = 0.5
+		sm.height = 1.0
+		sm.radial_segments = 8
+		sm.rings = 4
+		p.mesh = sm
+		var mat := Models.material(Color(0.86, 0.88, 0.9, 0.55))
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		p.material_override = mat
+		p.position = pos + Vector3(0, 1.5, 0)
+		add_child(p)
+		e["node"] = p
+	smokes.append(e)
+
+
+func _add_fire(pos: Vector3, owner_id: int) -> void:
+	var e := {"pos": pos, "t": GameData.FIRE_TIME, "owner": owner_id, "node": null, "tick": 0.0}
+	if visuals:
+		var root := Node3D.new()
+		var p := CPUParticles3D.new()
+		p.amount = 48
+		p.lifetime = 0.9
+		p.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+		p.emission_sphere_radius = GameData.FIRE_RADIUS * 0.8
+		p.direction = Vector3.UP
+		p.spread = 10.0
+		p.initial_velocity_min = 1.5
+		p.initial_velocity_max = 3.0
+		p.gravity = Vector3(0, 1.0, 0)
+		p.scale_amount_min = 0.4
+		p.scale_amount_max = 0.9
+		var sm := SphereMesh.new()
+		sm.radius = 0.5
+		sm.height = 1.0
+		sm.radial_segments = 6
+		sm.rings = 3
+		p.mesh = sm
+		p.material_override = Models.material(Color(1.0, 0.45, 0.1, 0.85), 3.0, true)
+		root.add_child(p)
+		var light := OmniLight3D.new()
+		light.light_color = Color(1.0, 0.5, 0.2)
+		light.light_energy = 2.0
+		light.omni_range = 7.0
+		light.position.y = 1.0
+		root.add_child(light)
+		root.position = pos
+		add_child(root)
+		e["node"] = root
+		Sfx.play_at("crash", pos, 1.4)
+	fires.append(e)
 
 
 # --- Airdrop ---------------------------------------------------------------------------
@@ -1123,6 +1253,7 @@ func _airdrop_tick(_delta: float) -> void:
 				GameData.item("vest", "3"), GameData.item("helmet", "3"), {"kind": "attach", "id": "scope8", "n": 1},
 				{"kind": "heal", "id": "medkit", "n": 2}]
 			items[0]["att"] = {"muzzle": "silencer"}
+			items[0]["rar"] = 3
 			drop_items(items, ground + Vector3(0, 0, 2.0))
 
 
@@ -1327,7 +1458,7 @@ func on_event(kind: String, data) -> void:
 			if not authority:
 				var who: Fighter = by_id.get(int(data[0]), null)
 				if who != local:
-					throw_grenade(who if who != null else local, data[1], data[2])
+					throw_grenade(who, data[1], data[2], String(data[3]) if data.size() > 3 else "frag")
 		"boom":
 			if not authority:
 				boom_fx(data)
@@ -1563,17 +1694,18 @@ func interact() -> void:
 
 func throw_local_grenade() -> void:
 	var f := local
-	if f == null or f.inv.grenades <= 0 or f.state != "ground":
+	var kind := f.inv.throw_sel if f != null else "frag"
+	if f == null or f.inv.throw_count(kind) <= 0 or f.state != "ground":
 		return
 	var dir := rig.aim_dir()
 	var origin := f.eye() + dir * 0.6
 	var vel := dir * 17.0 + Vector3(0, 4.0, 0)
 	f.one_shot("Throw", 1.6)
 	if authority:
-		handle(f, "grenade", [origin, vel])
+		handle(f, "grenade", [origin, vel, kind])
 	else:
-		f.inv.grenades -= 1
-		throw_grenade(f, origin, vel)
-		Net.send_action("grenade", [origin, vel])
+		f.inv.use_throwable(kind)
+		throw_grenade(f, origin, vel, kind)
+		Net.send_action("grenade", [origin, vel, kind])
 	if hud != null:
 		hud.refresh_inventory()

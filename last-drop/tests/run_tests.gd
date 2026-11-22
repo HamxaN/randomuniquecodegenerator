@@ -19,6 +19,7 @@ func _init() -> void:
 	_damage()
 	_zone()
 	_loot()
+	_arsenal()
 	_island()
 	print("%d checks, %d failed" % [_count, _fails])
 	if _fails == 0:
@@ -53,12 +54,13 @@ func _inventory() -> void:
 	_check(inv.vest == 3 and out.size() == 1 and int(out[0]["lvl"]) == 2, "old vest is dropped on upgrade")
 	# Heals cap.
 	inv.take({"kind": "heal", "id": "medkit", "n": 5})
+	inv.take(GameData.item("grenade", "frag"))
 	_check(int(inv.heals["medkit"]) == 3, "medkits cap at 3")
 	_check(inv.use_heal("medkit") and int(inv.heals["medkit"]) == 2, "using a heal spends it")
 	# Round trip through the network format.
 	var copy := Inventory.new()
 	copy.from_dict(inv.to_dict())
-	_check(copy.vest == 3 and String(copy.weapons[1]["id"]) == "dmr" and int(copy.ammo["rifle"]) == 215, "inventory survives to_dict/from_dict")
+	_check(copy.vest == 3 and String(copy.weapons[1]["id"]) == "dmr" and int(copy.ammo["rifle"]) == 215 and copy.throw_count("frag") == 1, "inventory survives to_dict/from_dict")
 	# Drops.
 	var drops := inv.drop_all()
 	var kinds := {}
@@ -122,6 +124,59 @@ func _loot() -> void:
 		seen[it["kind"]] = true
 		_check(GameData.item_name(it) != "", "every item has a name")
 	_check(seen.size() >= 7, "every kind of loot shows up")
+
+
+func _arsenal() -> void:
+	_check(GameData.WEAPONS.size() >= 14, "at least 14 guns")
+	var classes := {}
+	for id in GameData.WEAPONS:
+		var d: Dictionary = GameData.WEAPONS[id]
+		classes[d["class"]] = true
+		for key in ["name", "ammo", "dmg", "rpm", "mag", "hip", "ads", "recoil", "range", "reload", "move", "desc", "slots"]:
+			_check(d.has(key), "%s has %s" % [id, key])
+		_check(GameData.AMMO.has(d["ammo"]), "%s uses a real ammo type" % id)
+		var w := GameData.item("weapon", id)
+		_check(GameData.weapon_score(w) > 0.0, "%s scores above zero" % id)
+	_check(classes.size() == 7, "seven weapon classes")
+	# Rarity.
+	var common := GameData.stats({"id": "ar", "mag": 30, "att": {}, "rar": 0})
+	var legend := GameData.stats({"id": "ar", "mag": 30, "att": {}, "rar": 3})
+	_check(float(legend["dmg"]) > float(common["dmg"]) * 1.1, "legendary guns hit harder")
+	_check(int(GameData.stats({"id": "burst", "att": {}})["burst"]) == 3, "the burst rifle fires bursts of 3")
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	var seen_rar := {}
+	var fitted_ok := true
+	for i in 2000:
+		var it := GameData.roll_loot(rng)
+		if it["kind"] == "weapon":
+			seen_rar[int(it["rar"])] = true
+			if (it["att"] as Dictionary).size() > int(it["rar"]):
+				fitted_ok = false
+			for slot in it["att"]:
+				if not GameData.fits(String(it["id"]), String(it["att"][slot])):
+					fitted_ok = false
+			if int(it["mag"]) != int(GameData.stats(it)["mag"]):
+				fitted_ok = false
+	_check(seen_rar.size() == 4, "all four rarities drop")
+	_check(fitted_ok, "rarity attachments fit and mags are full")
+	var inv := Inventory.new()
+	inv.take({"kind": "weapon", "id": "talon", "n": 1, "mag": 30, "att": {}, "rar": 2})
+	_check(int(inv.current()["rar"]) == 2, "rarity is kept when picked up")
+	var dropped := inv.drop_all()
+	_check(int(dropped[0]["rar"]) == 2, "rarity is kept when dropped")
+	_check(GameData.weapon_score(GameData.item("weapon", "pistol")) < GameData.weapon_score(GameData.item("weapon", "ar")), "rifles outrank pistols")
+	# Throwables.
+	var t := Inventory.new()
+	t.take(GameData.item("grenade", "smoke"))
+	t.take(GameData.item("grenade", "molotov"))
+	t.take({"kind": "grenade", "id": "frag", "n": 5})
+	_check(t.throw_count("frag") == 3 and t.throw_count("smoke") == 1 and t.throw_count() == 5, "throwables stack per kind")
+	_check(t.throw_sel == "smoke", "the first throwable picked up is selected")
+	t.cycle_throwable()
+	_check(t.throw_sel == "molotov", "cycling picks the next kind you have")
+	_check(t.use_throwable("molotov") and t.throw_count("molotov") == 0 and t.throw_sel != "molotov", "using the last one moves the selection on")
+	_check(GameData.camo("gold")["price"] > 0 and GameData.camo("nope")["id"] == "none", "camos look up safely")
 
 
 func _island() -> void:

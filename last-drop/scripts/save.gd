@@ -8,6 +8,8 @@ const PATH := "user://profile.json"
 var player_name := ""
 var skin := "rogue"
 var owned_skins: Array = ["rogue", "knight"]
+var camo := "none"
+var owned_camos: Array = ["none"]
 var coins := 0
 var xp := 0
 var matches := 0
@@ -69,6 +71,17 @@ func record(place: int, match_kills: int, players: int) -> Dictionary:
 	return {"coins": c, "xp": x}
 
 
+func buy_camo(id: String) -> bool:
+	var c := GameData.camo(id)
+	if owned_camos.has(id) or coins < int(c["price"]):
+		return false
+	coins -= int(c["price"])
+	owned_camos.append(id)
+	camo = id
+	store()
+	return true
+
+
 func store() -> void:
 	var f := FileAccess.open(PATH, FileAccess.WRITE)
 	if f == null:
@@ -77,7 +90,7 @@ func store() -> void:
 		"name": player_name, "skin": skin, "owned": owned_skins, "coins": coins, "xp": xp, "matches": matches,
 		"wins": wins, "kills": kills, "top5": top5, "best_kills": best_kills, "mode": mode, "server": server,
 		"sound": sound, "vibrate": vibrate, "sens": sensitivity, "assist": aim_assist, "quality": quality,
-		"tutorial": tutorial_done,
+		"tutorial": tutorial_done, "camo": camo, "camos": owned_camos,
 	}))
 	changed.emit()
 
@@ -109,3 +122,5 @@ func load_profile() -> void:
 	aim_assist = bool(d.get("assist", true))
 	quality = int(d.get("quality", 1))
 	tutorial_done = bool(d.get("tutorial", false))
+	camo = String(d.get("camo", "none"))
+	owned_camos = d.get("camos", ["none"])

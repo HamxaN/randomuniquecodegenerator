@@ -9,7 +9,8 @@ var ammo := {"light": 0, "rifle": 0, "shells": 0, "heavy": 0}
 var vest := 0
 var helmet := 0
 var heals := {"bandage": 0, "medkit": 0, "drink": 0}
-var grenades := 0
+var throwables := {"frag": 0, "smoke": 0, "molotov": 0}
+var throw_sel := "frag"
 ## Attachments that don't fit a carried weapon yet; fitted automatically later.
 var spare: Array = []
 
@@ -37,7 +38,7 @@ func wants(it: Dictionary) -> bool:
 		"heal":
 			return int(heals.get(id, 0)) < int(GameData.HEALS[id]["max"])
 		"grenade":
-			return grenades < GameData.MAX_GRENADES
+			return int(throwables.get(id, 0)) < GameData.MAX_GRENADES
 		"vest":
 			return int(it.get("lvl", 0)) > vest
 		"helmet":
@@ -70,10 +71,13 @@ func take(it: Dictionary, slot: int = -1) -> Array:
 			if n - got > 0:
 				out.append({"kind": "heal", "id": id, "n": n - got})
 		"grenade":
-			var got := mini(GameData.MAX_GRENADES - grenades, n)
-			grenades += got
+			var kind := id if throwables.has(id) else "frag"
+			var got := mini(GameData.MAX_GRENADES - int(throwables[kind]), n)
+			throwables[kind] = int(throwables[kind]) + got
+			if throw_count(throw_sel) == 0:
+				throw_sel = kind
 			if n - got > 0:
-				out.append({"kind": "grenade", "id": "frag", "n": n - got})
+				out.append({"kind": "grenade", "id": kind, "n": n - got})
 		"vest":
 			if vest > 0:
 				out.append(GameData.item("vest", str(vest)))
@@ -95,7 +99,7 @@ func take(it: Dictionary, slot: int = -1) -> Array:
 			else:
 				_stash(id, out)
 		"weapon":
-			var w := {"id": id, "mag": int(it.get("mag", 0)), "att": (it.get("att", {}) as Dictionary).duplicate()}
+			var w := {"id": id, "mag": int(it.get("mag", 0)), "att": (it.get("att", {}) as Dictionary).duplicate(), "rar": int(it.get("rar", 0))}
 			var s := slot
 			if s < 0 or s > 1:
 				s = 0 if weapons[0].is_empty() else (1 if weapons[1].is_empty() else maxi(active, 0))
@@ -152,7 +156,7 @@ func _clamp_mag(w: Dictionary) -> void:
 
 
 func _as_item(w: Dictionary) -> Dictionary:
-	return {"kind": "weapon", "id": w["id"], "n": 1, "mag": int(w["mag"]), "att": (w["att"] as Dictionary).duplicate()}
+	return {"kind": "weapon", "id": w["id"], "n": 1, "mag": int(w["mag"]), "att": (w["att"] as Dictionary).duplicate(), "rar": int(w.get("rar", 0))}
 
 
 ## Rounds the active weapon can load from the bag right now.
@@ -211,8 +215,9 @@ func drop_all() -> Array:
 	for k in heals:
 		if int(heals[k]) > 0:
 			out.append({"kind": "heal", "id": k, "n": int(heals[k])})
-	if grenades > 0:
-		out.append({"kind": "grenade", "id": "frag", "n": grenades})
+	for k in throwables:
+		if int(throwables[k]) > 0:
+			out.append({"kind": "grenade", "id": k, "n": int(throwables[k])})
 	if vest > 0:
 		out.append(GameData.item("vest", str(vest)))
 	if helmet > 0:
@@ -224,7 +229,7 @@ func drop_all() -> Array:
 
 func to_dict() -> Dictionary:
 	return {"w": weapons.duplicate(true), "a": active, "am": ammo.duplicate(), "v": vest, "h": helmet,
-		"he": heals.duplicate(), "g": grenades, "sp": spare.duplicate()}
+		"he": heals.duplicate(), "t": throwables.duplicate(), "ts": throw_sel, "sp": spare.duplicate()}
 
 
 func from_dict(d: Dictionary) -> void:
@@ -234,7 +239,8 @@ func from_dict(d: Dictionary) -> void:
 	vest = int(d.get("v", 0))
 	helmet = int(d.get("h", 0))
 	heals = (d.get("he", heals) as Dictionary).duplicate()
-	grenades = int(d.get("g", 0))
+	throwables = (d.get("t", throwables) as Dictionary).duplicate()
+	throw_sel = String(d.get("ts", "frag"))
 	spare = (d.get("sp", []) as Array).duplicate()
 
 
@@ -246,3 +252,32 @@ func power() -> float:
 			var s := GameData.stats(w)
 			p += float(s["dmg"]) * float(s["pellets"]) * float(s["rpm"]) / 600.0
 	return p
+
+
+func throw_count(kind: String = "") -> int:
+	if kind == "":
+		var n := 0
+		for k in throwables:
+			n += int(throwables[k])
+		return n
+	return int(throwables.get(kind, 0))
+
+
+## Picks the next throwable type you have.
+func cycle_throwable() -> void:
+	var keys := throwables.keys()
+	var i := keys.find(throw_sel)
+	for step in range(1, keys.size() + 1):
+		var k: String = keys[(i + step) % keys.size()]
+		if int(throwables[k]) > 0:
+			throw_sel = k
+			return
+
+
+func use_throwable(kind: String) -> bool:
+	if int(throwables.get(kind, 0)) <= 0:
+		return false
+	throwables[kind] = int(throwables[kind]) - 1
+	if int(throwables[kind]) == 0:
+		cycle_throwable()
+	return true

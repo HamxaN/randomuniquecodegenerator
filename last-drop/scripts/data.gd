@@ -17,27 +17,100 @@ const AMMO := {
 }
 
 ## dmg per bullet, rpm, mag size, spread (degrees, hip / aimed), recoil (degrees of
-## kick per shot), range (full damage up to here), reload seconds, zoom when aimed.
+## kick per shot), range (full damage up to here), reload seconds, zoom when aimed,
+## move (speed multiplier while holding it), burst (rounds per trigger pull, 0 = none).
 const WEAPONS := {
-	"pistol": {"name": "P9 Pistol", "ammo": "light", "dmg": 24.0, "rpm": 380.0, "mag": 12, "hip": 2.6, "ads": 1.1,
-		"recoil": 1.1, "range": 45.0, "reload": 1.4, "auto": false, "pellets": 1, "head": 1.8, "zoom": 1.15,
-		"slots": ["mag", "muzzle"], "sound": "pistol", "len": 0.32, "color": Color("3b4048")},
-	"smg": {"name": "Vex SMG", "ammo": "light", "dmg": 17.0, "rpm": 820.0, "mag": 30, "hip": 3.2, "ads": 1.6,
-		"recoil": 0.7, "range": 55.0, "reload": 1.9, "auto": true, "pellets": 1, "head": 1.6, "zoom": 1.2,
-		"slots": ["scope", "mag", "grip", "muzzle"], "sound": "smg", "len": 0.55, "color": Color("2f3a46")},
-	"ar": {"name": "KR-7 Rifle", "ammo": "rifle", "dmg": 25.0, "rpm": 610.0, "mag": 30, "hip": 2.8, "ads": 0.9,
-		"recoil": 1.0, "range": 110.0, "reload": 2.2, "auto": true, "pellets": 1, "head": 1.8, "zoom": 1.3,
-		"slots": ["scope", "mag", "grip", "muzzle"], "sound": "rifle", "len": 0.8, "color": Color("4a4436")},
-	"shotgun": {"name": "Breaker 12", "ammo": "shells", "dmg": 13.0, "rpm": 72.0, "mag": 5, "hip": 5.5, "ads": 4.2,
-		"recoil": 4.0, "range": 18.0, "reload": 3.0, "auto": false, "pellets": 9, "head": 1.4, "zoom": 1.1,
-		"slots": ["scope", "muzzle"], "sound": "shotgun", "len": 0.75, "color": Color("5a3b2a")},
-	"dmr": {"name": "Ranger DMR", "ammo": "rifle", "dmg": 46.0, "rpm": 210.0, "mag": 10, "hip": 3.5, "ads": 0.35,
-		"recoil": 2.2, "range": 190.0, "reload": 2.6, "auto": false, "pellets": 1, "head": 2.0, "zoom": 1.5,
-		"slots": ["scope", "mag", "muzzle"], "sound": "dmr", "len": 0.95, "color": Color("394a3a")},
-	"sniper": {"name": "Longbow", "ammo": "heavy", "dmg": 92.0, "rpm": 42.0, "mag": 5, "hip": 6.0, "ads": 0.1,
-		"recoil": 5.0, "range": 320.0, "reload": 3.2, "auto": false, "pellets": 1, "head": 2.6, "zoom": 1.6,
-		"slots": ["scope", "mag", "muzzle"], "sound": "sniper", "len": 1.15, "color": Color("2a2f35")},
+	"pistol": {"name": "P9 Pistol", "class": "pistol", "ammo": "light", "dmg": 24.0, "rpm": 380.0, "mag": 12, "hip": 2.6, "ads": 1.1,
+		"recoil": 1.1, "range": 45.0, "reload": 1.4, "auto": false, "pellets": 1, "head": 1.8, "zoom": 1.15, "move": 1.08,
+		"slots": ["mag", "muzzle"], "sound": "pistol", "len": 0.32, "color": Color("3b4048"),
+		"desc": "Quick, accurate sidearm. Better than nothing."},
+	"revolver": {"name": "Magnum .44", "class": "pistol", "ammo": "light", "dmg": 54.0, "rpm": 140.0, "mag": 6, "hip": 2.8, "ads": 0.7,
+		"recoil": 3.0, "range": 55.0, "reload": 2.4, "auto": false, "pellets": 1, "head": 1.9, "zoom": 1.2, "move": 1.06,
+		"slots": ["scope", "muzzle"], "sound": "dmr", "len": 0.38, "color": Color("8a8f96"),
+		"desc": "Six huge rounds. Two to the head ends most fights."},
+	"smg": {"name": "Vex SMG", "class": "smg", "ammo": "light", "dmg": 17.0, "rpm": 820.0, "mag": 30, "hip": 3.2, "ads": 1.6,
+		"recoil": 0.7, "range": 55.0, "reload": 1.9, "auto": true, "pellets": 1, "head": 1.6, "zoom": 1.2, "move": 1.05,
+		"slots": ["scope", "mag", "grip", "muzzle"], "sound": "smg", "len": 0.55, "color": Color("2f3a46"),
+		"desc": "Fast and steady up close. Great for clearing towns."},
+	"stinger": {"name": "Stinger", "class": "smg", "ammo": "light", "dmg": 13.0, "rpm": 1060.0, "mag": 25, "hip": 3.6, "ads": 2.0,
+		"recoil": 0.55, "range": 38.0, "reload": 1.6, "auto": true, "pellets": 1, "head": 1.5, "zoom": 1.15, "move": 1.08,
+		"slots": ["scope", "mag", "grip", "muzzle"], "sound": "smg", "len": 0.45, "color": Color("6a3a7a"),
+		"desc": "Absurd fire rate, tiny range. Shreds in a doorway."},
+	"ar": {"name": "KR-7 Rifle", "class": "ar", "ammo": "rifle", "dmg": 25.0, "rpm": 610.0, "mag": 30, "hip": 2.8, "ads": 0.9,
+		"recoil": 1.0, "range": 110.0, "reload": 2.2, "auto": true, "pellets": 1, "head": 1.8, "zoom": 1.3, "move": 1.0,
+		"slots": ["scope", "mag", "grip", "muzzle"], "sound": "rifle", "len": 0.8, "color": Color("4a4436"),
+		"desc": "The all-rounder. Good at every range with a scope."},
+	"talon": {"name": "M-Talon", "class": "ar", "ammo": "rifle", "dmg": 31.0, "rpm": 500.0, "mag": 30, "hip": 3.0, "ads": 0.8,
+		"recoil": 1.45, "range": 125.0, "reload": 2.4, "auto": true, "pellets": 1, "head": 1.8, "zoom": 1.3, "move": 0.98,
+		"slots": ["scope", "mag", "grip", "muzzle"], "sound": "rifle", "len": 0.88, "color": Color("2e3b2c"),
+		"desc": "Hits harder, kicks harder. Fit a grip and win long fights."},
+	"burst": {"name": "Tri-Burst", "class": "ar", "ammo": "rifle", "dmg": 27.0, "rpm": 330.0, "mag": 30, "hip": 2.6, "ads": 0.55,
+		"recoil": 0.85, "range": 120.0, "reload": 2.3, "auto": true, "pellets": 1, "head": 1.9, "zoom": 1.3, "move": 1.0, "burst": 3,
+		"slots": ["scope", "mag", "grip", "muzzle"], "sound": "rifle", "len": 0.82, "color": Color("394a5e"),
+		"desc": "Three-round bursts with pinpoint accuracy."},
+	"lmg": {"name": "Havoc LMG", "class": "lmg", "ammo": "rifle", "dmg": 23.0, "rpm": 700.0, "mag": 75, "hip": 3.8, "ads": 1.3,
+		"recoil": 0.95, "range": 100.0, "reload": 4.2, "auto": true, "pellets": 1, "head": 1.6, "zoom": 1.25, "move": 0.88,
+		"slots": ["scope", "mag", "grip", "muzzle"], "sound": "rifle", "len": 0.95, "color": Color("3d3a33"),
+		"desc": "A huge belt of ammo. Slow to move with, slower to reload."},
+	"shotgun": {"name": "Breaker 12", "class": "shotgun", "ammo": "shells", "dmg": 13.0, "rpm": 72.0, "mag": 5, "hip": 5.5, "ads": 4.2,
+		"recoil": 4.0, "range": 18.0, "reload": 3.0, "auto": false, "pellets": 9, "head": 1.4, "zoom": 1.1, "move": 1.0,
+		"slots": ["scope", "muzzle"], "sound": "shotgun", "len": 0.75, "color": Color("5a3b2a"),
+		"desc": "Pump-action. One clean shot up close is all it takes."},
+	"riot": {"name": "Riot Auto", "class": "shotgun", "ammo": "shells", "dmg": 9.0, "rpm": 220.0, "mag": 8, "hip": 5.0, "ads": 4.0,
+		"recoil": 2.6, "range": 14.0, "reload": 3.2, "auto": true, "pellets": 8, "head": 1.3, "zoom": 1.1, "move": 0.98,
+		"slots": ["scope", "mag", "muzzle"], "sound": "shotgun", "len": 0.7, "color": Color("2a2a2e"),
+		"desc": "Semi-auto shotgun. Keep pulling the trigger."},
+	"dmr": {"name": "Ranger DMR", "class": "dmr", "ammo": "rifle", "dmg": 46.0, "rpm": 210.0, "mag": 10, "hip": 3.5, "ads": 0.35,
+		"recoil": 2.2, "range": 190.0, "reload": 2.6, "auto": false, "pellets": 1, "head": 2.0, "zoom": 1.5, "move": 0.96,
+		"slots": ["scope", "mag", "muzzle"], "sound": "dmr", "len": 0.95, "color": Color("394a3a"),
+		"desc": "Hard-hitting semi-auto for picking people off."},
+	"hunter": {"name": "Hunter SR", "class": "dmr", "ammo": "rifle", "dmg": 38.0, "rpm": 300.0, "mag": 15, "hip": 3.2, "ads": 0.45,
+		"recoil": 1.6, "range": 160.0, "reload": 2.4, "auto": false, "pellets": 1, "head": 2.0, "zoom": 1.5, "move": 0.97,
+		"slots": ["scope", "mag", "grip", "muzzle"], "sound": "dmr", "len": 0.9, "color": Color("6b4a2e"),
+		"desc": "Lighter marksman rifle. Fast follow-up shots."},
+	"kestrel": {"name": "Kestrel Bolt", "class": "sniper", "ammo": "heavy", "dmg": 78.0, "rpm": 50.0, "mag": 5, "hip": 6.0, "ads": 0.12,
+		"recoil": 4.4, "range": 280.0, "reload": 3.0, "auto": false, "pellets": 1, "head": 2.4, "zoom": 1.6, "move": 0.93,
+		"slots": ["scope", "mag", "muzzle"], "sound": "sniper", "len": 1.08, "color": Color("40352a"),
+		"desc": "Bolt-action sniper. A headshot through a level 2 helmet knocks."},
+	"sniper": {"name": "Longbow", "class": "sniper", "ammo": "heavy", "dmg": 92.0, "rpm": 42.0, "mag": 5, "hip": 6.0, "ads": 0.1,
+		"recoil": 5.0, "range": 320.0, "reload": 3.2, "auto": false, "pellets": 1, "head": 2.6, "zoom": 1.6, "move": 0.92,
+		"slots": ["scope", "mag", "muzzle"], "sound": "sniper", "len": 1.15, "color": Color("2a2f35"),
+		"desc": "Airdrop only. One headshot, one elimination."},
 }
+const CLASS_NAMES := {"pistol": "Pistols", "smg": "SMGs", "ar": "Assault rifles", "lmg": "Machine guns",
+	"shotgun": "Shotguns", "dmr": "Marksman rifles", "sniper": "Sniper rifles"}
+
+## Weapon rarity: damage bonus and how many attachments come fitted.
+const RARITY := [
+	{"name": "Common", "color": Color("b8c0c8"), "dmg": 1.0},
+	{"name": "Rare", "color": Color("3aa4ff"), "dmg": 1.05},
+	{"name": "Epic", "color": Color("b06bff"), "dmg": 1.1},
+	{"name": "Legendary", "color": Color("ffc21a"), "dmg": 1.15},
+]
+const RARITY_WEIGHTS := [62.0, 25.0, 9.5, 3.5]
+
+## Throwables.
+const THROWABLES := {
+	"frag": {"name": "Frag Grenade", "short": "FRAG", "color": Color("6b8f3a")},
+	"smoke": {"name": "Smoke Grenade", "short": "SMOKE", "color": Color("c8ccd0")},
+	"molotov": {"name": "Molotov", "short": "MOLLY", "color": Color("ff7a1a")},
+}
+const SMOKE_RADIUS := 6.0
+const SMOKE_TIME := 16.0
+const FIRE_RADIUS := 4.2
+const FIRE_TIME := 8.0
+const FIRE_DPS := 14.0
+
+## Weapon camos you can buy; applied to every gun you carry.
+const CAMOS := [
+	{"id": "none", "name": "Factory", "price": 0, "color": Color(0, 0, 0, 0)},
+	{"id": "urban", "name": "Urban", "price": 600, "color": Color("6d7580")},
+	{"id": "desert", "name": "Desert", "price": 600, "color": Color("c2a06a")},
+	{"id": "jungle", "name": "Jungle", "price": 600, "color": Color("4f6b3a")},
+	{"id": "arctic", "name": "Arctic", "price": 1000, "color": Color("dfe8ee")},
+	{"id": "neon", "name": "Neon", "price": 2000, "color": Color("ff3fb4"), "glow": true},
+	{"id": "gold", "name": "Gold", "price": 5000, "color": Color("e8b83a"), "metal": true},
+]
 
 ## Attachments. "slot" is where they go; the rest change the weapon's numbers.
 const ATTACH := {
@@ -59,18 +132,21 @@ const HEALS := {
 	"medkit": {"name": "Medkit", "time": 6.0, "heal": 100.0, "cap": 100.0, "max": 3, "boost": 0.0},
 	"drink": {"name": "Energy Drink", "time": 3.0, "heal": 0.0, "cap": 100.0, "max": 5, "boost": 40.0},
 }
-const MAX_GRENADES := 3
+const MAX_GRENADES := 3  # of each kind
 const GRENADE_DAMAGE := 110.0
 const GRENADE_RADIUS := 6.5
 
 ## Ground loot odds: kind, id, weight. Weapons come with some ammo nearby.
 const LOOT_TABLE := [
-	["weapon", "pistol", 7], ["weapon", "smg", 9], ["weapon", "ar", 10], ["weapon", "shotgun", 8], ["weapon", "dmr", 4],
-	["ammo", "light", 12], ["ammo", "rifle", 12], ["ammo", "shells", 6], ["ammo", "heavy", 2],
-	["attach", "red_dot", 4], ["attach", "scope2", 3], ["attach", "scope4", 1.5], ["attach", "ext_mag", 4], ["attach", "grip", 4],
-	["attach", "comp", 3], ["attach", "silencer", 1.5],
+	["weapon", "pistol", 6], ["weapon", "revolver", 3], ["weapon", "smg", 7], ["weapon", "stinger", 5],
+	["weapon", "ar", 8], ["weapon", "talon", 5], ["weapon", "burst", 4], ["weapon", "lmg", 2.5],
+	["weapon", "shotgun", 6], ["weapon", "riot", 3], ["weapon", "dmr", 3.5], ["weapon", "hunter", 3], ["weapon", "kestrel", 1.2],
+	["ammo", "light", 12], ["ammo", "rifle", 13], ["ammo", "shells", 6], ["ammo", "heavy", 3],
+	["attach", "red_dot", 4], ["attach", "scope2", 3], ["attach", "scope4", 1.5], ["attach", "scope8", 0.4], ["attach", "ext_mag", 4],
+	["attach", "grip", 4], ["attach", "comp", 3], ["attach", "silencer", 1.5],
 	["vest", "1", 5], ["vest", "2", 2.5], ["vest", "3", 0.6], ["helmet", "1", 5], ["helmet", "2", 2.5], ["helmet", "3", 0.6],
-	["heal", "bandage", 10], ["heal", "medkit", 3], ["heal", "drink", 4], ["grenade", "frag", 4],
+	["heal", "bandage", 10], ["heal", "medkit", 3], ["heal", "drink", 4],
+	["grenade", "frag", 3.5], ["grenade", "smoke", 2.5], ["grenade", "molotov", 2.5],
 ]
 
 ## Playable characters (KayKit adventurers) with their accent colours.
@@ -120,6 +196,8 @@ static func stats(w: Dictionary) -> Dictionary:
 	var s := base.duplicate()
 	var att: Dictionary = w.get("att", {})
 	s["quiet"] = false
+	s["dmg"] = float(s["dmg"]) * float(RARITY[clampi(int(w.get("rar", 0)), 0, 3)]["dmg"])
+	s["burst"] = int(base.get("burst", 0))
 	for slot in att:
 		var a: Dictionary = ATTACH.get(String(att[slot]), {})
 		if a.is_empty():
@@ -165,15 +243,63 @@ static func roll_loot(rng: RandomNumberGenerator) -> Dictionary:
 	for e in LOOT_TABLE:
 		r -= float(e[2])
 		if r <= 0.0:
-			return item(String(e[0]), String(e[1]))
+			var it := item(String(e[0]), String(e[1]))
+			if it["kind"] == "weapon":
+				_roll_rarity(it, rng)
+			return it
 	return item("ammo", "light")
+
+
+## Gives a ground weapon a rarity, with one fitted attachment per tier.
+static func _roll_rarity(it: Dictionary, rng: RandomNumberGenerator) -> void:
+	var total := 0.0
+	for w in RARITY_WEIGHTS:
+		total += w
+	var r := rng.randf() * total
+	var rar := 0
+	for i in RARITY_WEIGHTS.size():
+		r -= RARITY_WEIGHTS[i]
+		if r <= 0.0:
+			rar = i
+			break
+	it["rar"] = rar
+	var options: Array = []
+	for aid in ATTACH:
+		if fits(String(it["id"]), aid) and not (ATTACH[aid].has("only") and rar < 2):
+			options.append(aid)
+	var att := {}
+	for k in rar:
+		if options.is_empty():
+			break
+		var pick: String = options[rng.randi() % options.size()]
+		att[ATTACH[pick]["slot"]] = pick
+		var keep: Array = []
+		for o in options:
+			if ATTACH[o]["slot"] != ATTACH[pick]["slot"]:
+				keep.append(o)
+		options = keep
+	it["att"] = att
+	it["mag"] = int(stats(it)["mag"])
+
+
+static func rarity_of(w: Dictionary) -> Dictionary:
+	return RARITY[clampi(int(w.get("rar", 0)), 0, 3)]
+
+
+## How good a weapon is overall (bots use it to choose what to carry).
+static func weapon_score(w: Dictionary) -> float:
+	if w.is_empty():
+		return 0.0
+	var s := stats(w)
+	var dps := float(s["dmg"]) * float(s["pellets"]) * float(s["rpm"]) / 60.0
+	return dps * (0.6 + minf(float(s["range"]), 200.0) / 120.0) * (1.0 if s["class"] != "pistol" else 0.6)
 
 
 ## Builds an item dictionary. Weapons come loaded, other stacks get a sensible count.
 static func item(kind: String, id: String) -> Dictionary:
 	match kind:
 		"weapon":
-			return {"kind": "weapon", "id": id, "n": 1, "mag": int(weapon(id)["mag"]), "att": {}}
+			return {"kind": "weapon", "id": id, "n": 1, "mag": int(weapon(id)["mag"]), "att": {}, "rar": 0}
 		"ammo":
 			return {"kind": "ammo", "id": id, "n": int(AMMO[id]["pack"])}
 		"vest", "helmet":
@@ -181,7 +307,7 @@ static func item(kind: String, id: String) -> Dictionary:
 		"heal":
 			return {"kind": "heal", "id": id, "n": 2 if id == "bandage" else 1}
 		"grenade":
-			return {"kind": "grenade", "id": "frag", "n": 1}
+			return {"kind": "grenade", "id": id if THROWABLES.has(id) else "frag", "n": 1}
 		_:
 			return {"kind": kind, "id": id, "n": 1}
 
@@ -190,7 +316,8 @@ static func item_name(it: Dictionary) -> String:
 	var id := String(it.get("id", ""))
 	match String(it.get("kind", "")):
 		"weapon":
-			return String(weapon(id)["name"])
+			var rar := int(it.get("rar", 0))
+			return (String(RARITY[rar]["name"]) + " " if rar > 0 else "") + String(weapon(id)["name"])
 		"ammo":
 			return "%s x%d" % [AMMO[id]["name"], int(it.get("n", 1))]
 		"attach":
@@ -203,7 +330,7 @@ static func item_name(it: Dictionary) -> String:
 			var n := int(it.get("n", 1))
 			return String(HEALS[id]["name"]) + (" x%d" % n if n > 1 else "")
 		"grenade":
-			return "Frag Grenade"
+			return String(THROWABLES.get(id, THROWABLES["frag"])["name"])
 	return id
 
 
@@ -211,7 +338,7 @@ static func item_color(it: Dictionary) -> Color:
 	var id := String(it.get("id", ""))
 	match String(it.get("kind", "")):
 		"weapon":
-			return Color("ffc21a")
+			return RARITY[clampi(int(it.get("rar", 0)), 0, 3)]["color"]
 		"ammo":
 			return AMMO[id]["color"]
 		"attach":
@@ -221,8 +348,15 @@ static func item_color(it: Dictionary) -> Color:
 		"heal":
 			return Color("ec4a3c")
 		"grenade":
-			return Color("6b8f3a")
+			return THROWABLES.get(id, THROWABLES["frag"])["color"]
 	return Color.WHITE
+
+
+static func camo(id: String) -> Dictionary:
+	for c in CAMOS:
+		if c["id"] == id:
+			return c
+	return CAMOS[0]
 
 
 static func skin(id: String) -> Dictionary:

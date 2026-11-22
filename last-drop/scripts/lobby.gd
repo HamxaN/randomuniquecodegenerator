@@ -25,6 +25,9 @@ var _room_status: Label
 var _room_start: Button
 var _status_label: Label
 var _t := 0.0
+var _hand: Node3D
+var _gun: GunModel
+var _gun_id := "ar"
 
 
 func _ready() -> void:
@@ -115,12 +118,20 @@ func _show_skin(skin_id: String) -> void:
 	_ap = Models.animation_player(_model)
 	if _ap != null:
 		_ap.play("Idle")
-	var hand := Models.hand_slot(_model)
-	var g := GunModel.make({"id": "ar", "att": {"scope": "scope2", "grip": "grip"}})
-	if hand != null:
-		hand.add_child(g)
-		g.rotation = Vector3(0, PI, 0)
+	_hand = Models.hand_slot(_model)
+	_show_gun(_gun_id)
 	_model.rotation.y = 0.35
+
+
+func _show_gun(id: String) -> void:
+	_gun_id = id
+	if _gun != null and is_instance_valid(_gun):
+		_gun.queue_free()
+	_gun = GunModel.make({"id": id, "att": {"scope": "scope2", "grip": "grip"} if GameData.fits(id, "scope2") else {},
+		"camo": Save.camo, "rar": 2})
+	if _hand != null:
+		_hand.add_child(_gun)
+		_gun.rotation = Vector3(0, PI, 0)
 
 
 func _process(delta: float) -> void:
@@ -174,8 +185,8 @@ func _build_ui() -> void:
 	online.pressed.connect(_open_online)
 	col.add_child(online)
 	var row := UI.hbox(10)
-	for pair in [["LOCKER", _open_locker], ["STATS", _open_stats], ["SETTINGS", _open_settings]]:
-		var b := UI.ghost(pair[0], Vector2(130, 50), 24)
+	for pair in [["ARMORY", _open_armory], ["LOCKER", _open_locker], ["STATS", _open_stats], ["SETTINGS", _open_settings]]:
+		var b := UI.ghost(pair[0], Vector2(116, 50), 22)
 		b.pressed.connect(pair[1])
 		row.add_child(b)
 	col.add_child(row)
@@ -479,5 +490,101 @@ func open(which: String) -> void:
 			_open_settings()
 		"stats":
 			_open_stats()
+		"armory":
+			_open_armory()
 		_:
 			_close_panel()
+
+# --- Armory ---------------------------------------------------------------------------
+
+func _open_armory(selected: String = "ar") -> void:
+	var v := _modal("ARMORY", 980)
+	var h := UI.hbox(18)
+	v.add_child(h)
+	# Weapon list by class.
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(330, 380)
+	var list := UI.vbox(4)
+	scroll.add_child(list)
+	h.add_child(scroll)
+	var by_class := {}
+	for id in GameData.WEAPONS:
+		var c := String(GameData.WEAPONS[id]["class"])
+		if not by_class.has(c):
+			by_class[c] = []
+		(by_class[c] as Array).append(id)
+	for c in ["ar", "smg", "lmg", "shotgun", "dmr", "sniper", "pistol"]:
+		if not by_class.has(c):
+			continue
+		list.add_child(UI.label(String(GameData.CLASS_NAMES[c]).to_upper(), 20, UI.MUTED))
+		for id in by_class[c]:
+			var b := UI.ghost(String(GameData.WEAPONS[id]["name"]).to_upper(), Vector2(300, 42), 22)
+			if id == selected:
+				b.add_theme_color_override("font_color", UI.ACCENT)
+			b.pressed.connect(func() -> void:
+				_show_gun(id)
+				_open_armory(id))
+			list.add_child(b)
+	# Details.
+	var d: Dictionary = GameData.WEAPONS[selected]
+	var info := UI.vbox(8)
+	info.custom_minimum_size = Vector2(560, 0)
+	info.add_child(UI.heading(String(d["name"]).to_upper(), 40, UI.ACCENT))
+	var mode := "Burst" if d.has("burst") else ("Full auto" if d["auto"] else "Semi auto")
+	info.add_child(UI.label("%s  ·  %s  ·  %s" % [String(GameData.CLASS_NAMES[d["class"]]).trim_suffix("s"),
+		String(GameData.AMMO[d["ammo"]]["name"]), mode], 24, UI.MUTED))
+	var desc := UI.label(String(d["desc"]), 24)
+	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc.custom_minimum_size.x = 540
+	info.add_child(desc)
+	var stats := [
+		["Damage", float(d["dmg"]) * float(d["pellets"]) / 120.0, "%d" % int(float(d["dmg"]) * float(d["pellets"]))],
+		["Fire rate", float(d["rpm"]) / 1100.0, "%d rpm" % int(d["rpm"])],
+		["Range", float(d["range"]) / 320.0, "%d m" % int(d["range"])],
+		["Accuracy", 1.0 - float(d["ads"]) / 4.5, ""],
+		["Mobility", (float(d["move"]) - 0.85) / 0.25, ""],
+		["Magazine", float(d["mag"]) / 75.0, "%d" % int(d["mag"])],
+	]
+	for st in stats:
+		var row := UI.hbox(10)
+		var l := UI.label(String(st[0]), 24, UI.MUTED)
+		l.custom_minimum_size.x = 130
+		row.add_child(l)
+		var bar := UI.bar(UI.ACCENT, Vector2(300, 14))
+		bar.max_value = 1.0
+		bar.step = 0.01
+		bar.value = clampf(float(st[1]), 0.04, 1.0)
+		bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(bar)
+		row.add_child(UI.label(String(st[2]), 22))
+		info.add_child(row)
+	var slots: Array = []
+	for sl in d["slots"]:
+		slots.append(String(sl).to_upper())
+	info.add_child(UI.label("Attachments: " + ", ".join(PackedStringArray(slots)), 22, UI.MUTED))
+	# Camos.
+	info.add_child(UI.label("CAMO  (applies to every gun you carry)", 22, UI.ACCENT))
+	var camos := UI.hbox(8)
+	for c in GameData.CAMOS:
+		var owned: bool = Save.owned_camos.has(c["id"])
+		var label := String(c["name"]).to_upper() if owned else UI.fmt(int(c["price"]))
+		var col: Color = c["color"] if c["id"] != "none" else Color(0.3, 0.33, 0.38)
+		var b := UI.button(label, col, Vector2(74, 44), 16)
+		if Save.camo == c["id"]:
+			b.add_theme_stylebox_override("normal", UI.box(col, 4, Color.WHITE, 3))
+		b.disabled = not owned and Save.coins < int(c["price"])
+		b.pressed.connect(func() -> void:
+			if Save.owned_camos.has(c["id"]):
+				Save.camo = c["id"]
+				Save.store()
+			else:
+				Save.buy_camo(c["id"])
+			_show_gun(selected)
+			_open_armory(selected))
+		camos.add_child(b)
+	info.add_child(camos)
+	h.add_child(info)
+	var foot := UI.label("Guns are found on the island: grey Common, blue Rare, purple Epic and gold Legendary, with more damage and attachments fitted.", 20, UI.MUTED)
+	foot.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	foot.custom_minimum_size.x = 900
+	v.add_child(foot)

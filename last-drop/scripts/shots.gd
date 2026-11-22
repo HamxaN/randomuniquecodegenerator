@@ -50,9 +50,12 @@ func _run() -> void:
 	main.lobby().open("locker")
 	await _wait(0.5)
 	await _shot("lastdrop-02-locker")
+	main.lobby().open("armory")
+	await _wait(0.6)
+	await _shot("lastdrop-03-armory")
 	main.lobby().open("online")
 	await _wait(0.5)
-	await _shot("lastdrop-03-online")
+	await _shot("lastdrop-03b-online")
 	main.lobby().open("")
 	var m: Match = main.start_offline("squad", true)
 	m.local.invulnerable = true
@@ -72,10 +75,13 @@ func _run() -> void:
 	# Gear up and meet an enemy squad.
 	var f := m.local
 	f.brain = null
-	f.inv.take(GameData.item("weapon", "ar"))
+	f.inv.take({"kind": "weapon", "id": "talon", "n": 1, "mag": 30, "att": {}, "rar": 3})
 	f.inv.take({"kind": "attach", "id": "red_dot", "n": 1})
 	f.inv.take({"kind": "attach", "id": "grip", "n": 1})
-	f.inv.take(GameData.item("weapon", "dmr"))
+	f.inv.take({"kind": "weapon", "id": "kestrel", "n": 1, "mag": 5, "att": {"scope": "scope8"}, "rar": 2})
+	f.inv.take({"kind": "ammo", "id": "heavy", "n": 20})
+	f.inv.take(GameData.item("grenade", "smoke"))
+	f.inv.take(GameData.item("grenade", "molotov"))
 	f.inv.take({"kind": "ammo", "id": "rifle", "n": 120})
 	f.inv.take(GameData.item("vest", "2"))
 	f.inv.take(GameData.item("helmet", "2"))
@@ -110,10 +116,28 @@ func _run() -> void:
 	await _shot("lastdrop-09-aim")
 	f.aiming = false
 	m.hud._ads_toggle = false
-	# Grenade.
+	# Grenade, smoke and a molotov.
+	f.inv.throw_sel = "frag"
 	m.throw_local_grenade()
 	await _wait(2.9, 14)
 	await _shot("lastdrop-10-grenade")
+	f.inv.throw_sel = "smoke"
+	m.throw_local_grenade()
+	await _wait(0.6, 6)
+	f.yaw += 0.5
+	f.inv.throw_sel = "molotov"
+	m.throw_local_grenade()
+	await _wait(2.2, 14)
+	await _shot("lastdrop-10b-smoke-molotov")
+	# The bolt sniper through its scope.
+	m.request(f, "switch", 1)
+	f.aiming = true
+	m.hud._ads_toggle = true
+	await _wait(0.7, 8)
+	await _shot("lastdrop-10c-sniper-scope")
+	f.aiming = false
+	m.hud._ads_toggle = false
+	m.request(f, "switch", 0)
 	# Find a car and drive it.
 	var v: Vehicle = m.vehicles[0]
 	var best := 1e9

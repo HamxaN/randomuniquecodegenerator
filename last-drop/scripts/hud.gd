@@ -33,6 +33,10 @@ var heal_menu: HBoxContainer
 var spectate_bar: HBoxContainer
 var results_panel: Control
 var menu_btn: Button
+var nade_cycle: TouchButton
+var banner: Label
+var _streak := 0
+var _streak_t := 0.0
 
 var _look_acc := Vector2.ZERO
 var _ads_toggle := false
@@ -78,6 +82,11 @@ func _ready() -> void:
 			game.local.start_reload())
 	nade_btn = _btn("", 64, "grenade")
 	nade_btn.pressed.connect(func() -> void: game.throw_local_grenade())
+	nade_cycle = _btn("", 44, "", Color(0.1, 0.1, 0.12, 0.7))
+	nade_cycle.pressed.connect(func() -> void:
+		if game.local != null:
+			game.local.inv.cycle_throwable()
+			refresh_inventory())
 	heal_btn = _btn("", 64, "heal")
 	heal_btn.pressed.connect(_toggle_heal_menu)
 	act_btn = _btn("", 92, "hand", Color(0.95, 0.75, 0.1, 0.55))
@@ -115,6 +124,10 @@ func _ready() -> void:
 	center_label = UI.heading("", 38)
 	center_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	root.add_child(center_label)
+	banner = UI.heading("", 46, UI.ACCENT)
+	banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	banner.modulate.a = 0.0
+	root.add_child(banner)
 	toast_label = UI.label("", 28)
 	toast_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	toast_label.modulate.a = 0.0
@@ -175,6 +188,9 @@ func _layout() -> void:
 	jump_btn.position = Vector2(s.x - 120, s.y - 330)
 	reload_btn.position = Vector2(s.x - 240, s.y - 260)
 	nade_btn.position = Vector2(s.x - 330, s.y - 250)
+	nade_cycle.position = Vector2(s.x - 352, s.y - 280)
+	banner.position = Vector2(s.x * 0.5 - 400, s.y * 0.36)
+	banner.size = Vector2(800, 60)
 	heal_btn.position = Vector2(s.x * 0.5 + 200, s.y - 76)
 	act_btn.position = Vector2(s.x * 0.5 + 120, s.y * 0.5 - 20)
 	heal_menu.position = Vector2(s.x * 0.5 - 40, s.y - 200)
@@ -279,8 +295,11 @@ func _process(delta: float) -> void:
 		return
 	var st := f.state
 	var combat := st == "ground" and f.alive()
-	for b in [fire_r, fire_l, ads_btn, reload_btn, nade_btn]:
+	for b in [fire_r, fire_l, ads_btn, reload_btn, nade_btn, nade_cycle]:
 		(b as Control).visible = combat
+	_streak_t = maxf(0.0, _streak_t - delta)
+	if _streak_t <= 0.0:
+		_streak = 0
 	heal_btn.visible = combat
 	if not combat:
 		heal_menu.visible = false
@@ -421,13 +440,23 @@ func refresh_inventory() -> void:
 			b.text = "%s  %d/%d" % [String(GameData.weapon(String(w["id"]))["name"]).to_upper(), int(w["mag"]), int(f.inv.ammo[kind])]
 			b.modulate = Color.WHITE
 		var active := i == f.inv.active
-		b.add_theme_stylebox_override("normal", UI.box(Color(0.95, 0.75, 0.1, 0.85) if active else Color(0, 0, 0, 0.5), 6, Color(1, 1, 1, 0.3), 1))
+		var rcol: Color = GameData.rarity_of(w)["color"] if not w.is_empty() else Color(1, 1, 1, 0.3)
+		var sb := UI.box(Color(0.95, 0.75, 0.1, 0.85) if active else Color(0, 0, 0, 0.5), 6, rcol, 2)
+		sb.border_width_bottom = 5
+		b.add_theme_stylebox_override("normal", sb)
 		b.add_theme_stylebox_override("hover", b.get_theme_stylebox("normal"))
 		b.add_theme_stylebox_override("pressed", b.get_theme_stylebox("normal"))
 		for c in ["font_color", "font_hover_color", "font_pressed_color"]:
 			b.add_theme_color_override(c, Color("111418") if active else UI.TEXT)
-	nade_btn.badge = str(f.inv.grenades) if f.inv.grenades > 0 else ""
-	nade_btn.modulate.a = 1.0 if f.inv.grenades > 0 else 0.4
+	var sel := f.inv.throw_sel
+	var n_sel := f.inv.throw_count(sel)
+	nade_btn.badge = str(n_sel) if n_sel > 0 else ""
+	nade_btn.modulate.a = 1.0 if n_sel > 0 else 0.4
+	nade_btn.text = String(GameData.THROWABLES[sel]["short"])
+	nade_btn.color = Color(GameData.THROWABLES[sel]["color"], 0.45)
+	nade_cycle.text = "⇄"
+	nade_cycle.visible = nade_cycle.visible and f.inv.throw_count() > n_sel
+	nade_cycle.queue_redraw()
 	var heals := int(f.inv.heals["bandage"]) + int(f.inv.heals["medkit"]) + int(f.inv.heals["drink"])
 	heal_btn.badge = str(heals) if heals > 0 else ""
 	heal_btn.modulate.a = 1.0 if heals > 0 else 0.4
@@ -460,6 +489,10 @@ func hit_marker(dmg: float, head: bool, outcome: String) -> void:
 		Sfx.play("kill")
 		toast("ELIMINATED", UI.RED)
 		Sfx.vibrate(40)
+		_streak = _streak + 1 if _streak_t > 0.0 else 1
+		_streak_t = 6.0
+		if _streak >= 2:
+			show_banner(["", "", "DOUBLE KILL", "TRIPLE KILL", "QUAD KILL", "RAMPAGE"][mini(_streak, 5)])
 	elif outcome == "knock":
 		Sfx.play("knock")
 		toast("KNOCKED DOWN", UI.ORANGE)
@@ -508,8 +541,21 @@ func feed(data: Array) -> void:
 	tw.tween_callback(row.queue_free)
 
 
+func show_banner(text: String, color: Color = UI.ACCENT) -> void:
+	banner.text = text
+	banner.add_theme_color_override("font_color", color)
+	banner.modulate.a = 1.0
+	banner.scale = Vector2(1.3, 1.3)
+	banner.pivot_offset = banner.size / 2
+	var tw := banner.create_tween()
+	tw.tween_property(banner, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_interval(1.6)
+	tw.tween_property(banner, "modulate:a", 0.0, 0.5)
+	Sfx.play("levelup", 1.2)
+
+
 func team_out(place: int) -> void:
-	center_label.text = "SQUAD ELIMINATED  ·  #%d" % place
+	show_banner("SQUAD ELIMINATED  ·  #%d" % place, UI.RED)
 
 
 func revive_started(by_id: int, target_id: int, t: float) -> void:

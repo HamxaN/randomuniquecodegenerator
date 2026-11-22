@@ -253,6 +253,12 @@ func _fight(delta: float) -> void:
 	if detour_t > 0.0:
 		detour_t -= delta
 		f.move.x = strafe
+	# Now and then, lob a grenade at someone in mid range.
+	if d > 9.0 and d < 32.0 and f.inv.throw_count("frag") > 0 and randf() < delta * 0.12 * skill:
+		var t := clampf(d / 16.0, 0.4, 2.0)
+		var origin := f.eye() + Vector3(0, 0.2, 0)
+		var vel := (enemy.global_position - origin) / t + Vector3(0, 0.5 * 18.0 * t, 0)
+		game.request(f, "grenade", [origin, vel.limit_length(26.0), "frag"])
 	if react <= 0.0 and absf(angle_difference(f.yaw, want_yaw)) < 0.25 and d < float(s["range"]) * 2.2:
 		if int(held["mag"]) > 0:
 			# Burst fire for autos, paced for single shots.
@@ -296,7 +302,7 @@ func _find_loot(radius: float) -> int:
 		var e: Dictionary = game.loot[lid]
 		var it: Dictionary = e["item"]
 		if not f.inv.wants(it):
-			if not (it["kind"] == "weapon" and _better_gun(String(it["id"]))):
+			if not (it["kind"] == "weapon" and _better_gun(it)):
 				continue
 		var d: float = f.global_position.distance_to(e["pos"])
 		if it["kind"] == "weapon" and not f.inv.has_weapon():
@@ -309,14 +315,14 @@ func _find_loot(radius: float) -> int:
 	return best
 
 
-func _better_gun(id: String) -> bool:
-	var rank := ["pistol", "shotgun", "smg", "dmr", "ar", "sniper"]
+## Worth swapping for: clearly better than the weaker gun we carry.
+func _better_gun(it: Dictionary) -> bool:
+	var worst := 1e9
 	for w in f.inv.weapons:
 		if (w as Dictionary).is_empty():
 			return true
-		if rank.find(String(w["id"])) < rank.find(id) and w["id"] == "pistol":
-			return true
-	return false
+		worst = minf(worst, GameData.weapon_score(w))
+	return GameData.weapon_score(it) > worst * 1.25
 
 
 func _heal_choice() -> String:

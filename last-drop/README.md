@@ -11,9 +11,11 @@ zone until one player or squad is left. Play **offline against bots** or
 |---|---|
 | **The drop** | A plane crosses the island on a random line. Jump when you like, dive in freefall (push forward to fall faster), then open your parachute and steer to land. AI squadmates jump with you. |
 | **The island** | Generated from the match seed: hills, beaches and sea, 7 named towns, forests, rocks, about 300 loot spots and 12+ parked vehicles. Every match is different, and every device builds the same island from the same seed. |
-| **Weapons** | Pistol, SMG, assault rifle, shotgun, marksman rifle and a sniper (airdrop only). Each has its own damage, fire rate, spread, recoil, range falloff and headshot multiplier. |
+| **14 weapons in 7 classes** | P9 Pistol and Magnum .44; Vex SMG and Stinger; KR-7, M-Talon and the 3-round Tri-Burst assault rifles; Havoc LMG; Breaker 12 pump and Riot Auto shotguns; Ranger DMR and Hunter SR; Kestrel Bolt and the airdrop-only Longbow snipers. Each has its own damage, fire rate, burst or auto mode, spread, recoil, range falloff, headshot multiplier, magazine, reload time and movement speed. |
+| **Rarity** | Ground guns drop as Common, Rare, Epic or Legendary. Higher tiers hit harder and come with attachments fitted, and Legendary guns are gold. |
+| **Armory and camos** | Browse every gun with stat bars in the menu. Buy camos (Urban, Desert, Jungle, Arctic, Neon, Gold) that show on every gun you carry. |
 | **Attachments** | Red dot, 2x, 4x and 8x scopes, extended mags, grips, compensators and suppressors. They show on the 3D gun, change its numbers, and are fitted automatically. Spares move to your next gun. |
-| **Gear** | Level 1–3 vests and helmets, bandages, medkits, energy drinks (heal over time), frag grenades, and four ammo types. Ammo, heals and upgrades are picked up as you walk over them. |
+| **Gear** | Level 1–3 vests and helmets, bandages, medkits, energy drinks (heal over time), four ammo types, and three throwables: frag grenades, smoke (blocks sight) and molotovs (burning ground). Ammo, heals and upgrades are picked up as you walk over them. |
 | **Vehicles** | Sedans, taxis, wagons, police cars, trucks and motorbikes with arcade handling. Drive, ride as a passenger, run enemies over, and wreck them with gunfire. Your squad hops in when you drive. |
 | **Squads** | Squads of 4 or solo. When you're knocked down you can crawl, and teammates can revive you. AI teammates follow you, fight, loot and revive you. |
 | **The zone** | Six shrinking circles with rising damage, and a striped wall you can see from a distance. |
@@ -21,7 +23,8 @@ zone until one player or squad is left. Play **offline against bots** or
 | **Bots** | Pick a landing spot, loot, fight with skill-based aim and reaction time, strafe, heal, run from the zone, and revive teammates. |
 | **Controls** | Twin-stick touch: a floating joystick, drag anywhere on the right to look, and two fire buttons you can drag to aim. Also an aim (scope) button, gentle aim assist, jump/parachute, reload, grenade, a quick-heal menu, and a context button (pick up / drive / revive / get out). |
 | **HUD** | Minimap and full map, zone timer, alive and kill counts, compass, kill feed, squad health, hit markers, damage numbers, damage-direction arrows, a scope overlay, and heal and revive progress. |
-| **Progress** | Coins and XP per match, 5 characters to unlock, and career stats. |
+| **Progress** | Coins and XP per match, 5 characters and 6 camos to unlock, kill-streak banners, and career stats. |
+| **Atmosphere** | Each match has its own time of day: midday, golden hour or overcast. |
 
 ## Online play
 

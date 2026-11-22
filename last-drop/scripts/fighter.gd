@@ -61,6 +61,9 @@ var last_attacker := 0
 var fired_t := 0.0
 var brain  # Bot brain, on the authority only
 var invulnerable := false  # only for the screenshot tour
+var burst_left := 0
+var _burst_gap := 0.0
+var _burst_target := Vector3.ZERO
 var flags_remote := 0
 var weapon_remote := -1
 var scope_remote := 0
@@ -255,11 +258,21 @@ func weapon_code() -> int:
 	return GameData.WEAPONS.keys().find(String(w["id"]))
 
 
+## Scope index plus 10 x rarity, so others see the right gun.
 func scope_code() -> int:
 	var w := inv.current()
 	if w.is_empty():
 		return 0
-	return ["", "red_dot", "scope2", "scope4", "scope8"].find(String((w["att"] as Dictionary).get("scope", "")))
+	return ["", "red_dot", "scope2", "scope4", "scope8"].find(String((w["att"] as Dictionary).get("scope", ""))) + 10 * int(w.get("rar", 0))
+
+
+func held_class() -> String:
+	if ctl == Ctl.REMOTE:
+		if weapon_remote < 0 or weapon_remote >= GameData.WEAPONS.size():
+			return ""
+		return String(GameData.WEAPONS.values()[weapon_remote]["class"])
+	var w := inv.current()
+	return "" if w.is_empty() else String(GameData.weapon(String(w["id"]))["class"])
 
 
 # --- Simulation ----------------------------------------------------------------
@@ -272,6 +285,18 @@ func _physics_process(delta: float) -> void:
 	fire_cd = maxf(0.0, fire_cd - delta)
 	fired_t = maxf(0.0, fired_t - delta)
 	bloom = maxf(0.0, bloom - delta * 2.2)
+	if burst_left > 0:
+		_burst_gap -= delta
+		if _burst_gap <= 0.0:
+			_burst_gap = 0.075
+			burst_left -= 1
+			if can_shoot() and int(inv.current().get("mag", 0)) > 0:
+				var t := _burst_target
+				if ctl == Ctl.LOCAL and game.rig != null:
+					t = game.rig.aim_point()
+				_fire_one(t)
+			else:
+				burst_left = 0
 	if reload_t > 0.0:
 		reload_t -= delta
 		if reload_t <= 0.0:
@@ -285,7 +310,10 @@ func _physics_process(delta: float) -> void:
 		"chute":
 			_sim_chute(delta)
 		"ground":
-			_sim_ground(delta, AIM_WALK if aiming else RUN)
+			var mv := 1.0
+			if inv.has_weapon():
+				mv = float(GameData.weapon(String(inv.current()["id"])).get("move", 1.0))
+			_sim_ground(delta, (AIM_WALK if aiming else RUN) * mv)
 		"knocked":
 			_sim_ground(delta, CRAWL)
 		"vehicle":
@@ -376,17 +404,29 @@ func _sim_ground(delta: float, speed: float) -> void:
 ## Fires the held weapon towards [param target] if it can. Used by the local
 ## player and bots; the match resolves hits on the authority.
 func try_fire(target: Vector3) -> bool:
-	if not can_shoot() or fire_cd > 0.0:
+	if not can_shoot() or fire_cd > 0.0 or burst_left > 0:
 		return false
 	var w := inv.current()
 	var s := GameData.stats(w)
 	if int(w["mag"]) <= 0:
 		start_reload()
 		return false
+	var burst := int(s["burst"])
+	fire_cd = 60.0 / float(s["rpm"]) + maxf(0, burst - 1) * 0.075
+	if burst > 1:
+		burst_left = burst - 1
+		_burst_gap = 0.075
+		_burst_target = target
+	_fire_one(target)
+	return true
+
+
+func _fire_one(target: Vector3) -> void:
+	var w := inv.current()
+	var s := GameData.stats(w)
 	inv.use_round()
 	if heal_t > 0.0:
 		game.request(self, "heal_cancel", null)
-	fire_cd = 60.0 / float(s["rpm"])
 	fired_t = 0.35
 	var origin := eye()
 	var base := (target - origin).normalized()
@@ -399,9 +439,8 @@ func try_fire(target: Vector3) -> bool:
 		dirs.append(_jitter(base, deg_to_rad(spread)))
 	bloom = minf(bloom + float(s["recoil"]) * 0.12, 1.6)
 	game.fire(self, origin, dirs)
-	if int(w["mag"]) <= 0 and inv.reload_amount() > 0:
+	if int(w["mag"]) <= 0 and inv.reload_amount() > 0 and burst_left <= 0:
 		start_reload()
-	return true
 
 
 func _jitter(dir: Vector3, angle: float) -> Vector3:
@@ -422,7 +461,7 @@ func start_reload() -> void:
 	reload_t = float(s["reload"])
 	if heal_t > 0.0:
 		game.request(self, "heal_cancel", null)
-	one_shot("1H_Ranged_Reload" if inv.current()["id"] == "pistol" else "2H_Ranged_Reload", 2.4 / maxf(reload_t, 0.5) * 0.9)
+	one_shot("1H_Ranged_Reload" if held_class() == "pistol" else "2H_Ranged_Reload", 2.4 / maxf(reload_t, 0.5) * 0.9)
 	if ctl == Ctl.LOCAL:
 		Sfx.play("reload")
 
@@ -445,7 +484,7 @@ func shot_fx(to: Vector3, weapon_id: String, quiet: bool) -> void:
 	else:
 		Sfx.play_at(key, global_position, 1.0)
 	if _anim != "2H_Ranged_Shoot" and _lock <= 0.0 and Vector2(velocity.x, velocity.z).length() < 0.5:
-		_play("2H_Ranged_Shooting" if weapon_id != "pistol" else "1H_Ranged_Shooting", 0.08)
+		_play("2H_Ranged_Shooting" if GameData.weapon(weapon_id)["class"] != "pistol" else "1H_Ranged_Shooting", 0.08)
 
 
 func muzzle_pos() -> Vector3:
@@ -542,12 +581,14 @@ func _update_gun() -> void:
 	if ctl == Ctl.REMOTE:
 		if weapon_remote >= 0 and weapon_remote < GameData.WEAPONS.size():
 			var wid: String = GameData.WEAPONS.keys()[weapon_remote]
-			var scope: String = ["", "red_dot", "scope2", "scope4", "scope8"][clampi(scope_remote, 0, 4)]
-			data = {"id": wid, "att": {"scope": scope} if scope != "" else {}}
-			key = wid + scope
+			var scope: String = ["", "red_dot", "scope2", "scope4", "scope8"][clampi(scope_remote % 10, 0, 4)]
+			data = {"id": wid, "att": {"scope": scope} if scope != "" else {}, "rar": scope_remote / 10}
+			key = wid + scope + str(scope_remote / 10)
 	elif not w.is_empty():
-		data = w
-		key = String(w["id"]) + str(w["att"])
+		data = w.duplicate()
+		if ctl == Ctl.LOCAL:
+			data["camo"] = Save.camo
+		key = String(w["id"]) + str(w["att"]) + str(w.get("rar", 0)) + String(data.get("camo", ""))
 	var show := key != "" and state == "ground" and not swimming
 	if key != _gun_key:
 		_gun_key = key
@@ -571,7 +612,7 @@ func _animate() -> void:
 	var flat := Vector3(v.x, 0, v.z)
 	var speed := flat.length()
 	var armed := (weapon_remote >= 0) if ctl == Ctl.REMOTE else inv.has_weapon()
-	var pistol := armed and ((ctl != Ctl.REMOTE and String(inv.current().get("id", "")) == "pistol") or (ctl == Ctl.REMOTE and weapon_remote == 0))
+	var pistol := armed and held_class() == "pistol"
 	match state:
 		"fall":
 			_play("Jump_Idle", 0.3)
