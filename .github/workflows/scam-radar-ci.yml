@@ -1,0 +1,54 @@
+name: Scam Radar CI
+
+on:
+  push:
+    branches: ['**']
+    paths: ['scam-radar/**', 'gradle/wrapper/**', '.github/workflows/scam-radar-ci.yml']
+  pull_request:
+    paths: ['scam-radar/**', 'gradle/wrapper/**', '.github/workflows/scam-radar-ci.yml']
+
+concurrency:
+  group: scam-radar-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Test, lint and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Unit tests (scam detection)
+        run: ./gradlew -p scam-radar coreTest --stacktrace
+
+      - name: Android lint
+        run: ./gradlew -p scam-radar :app:lintDebug --stacktrace
+
+      - name: Build debug APK and release bundle
+        # Unsigned; real releases use scam-radar-release.yml.
+        run: ./gradlew -p scam-radar :app:assembleDebug :app:bundleRelease --stacktrace
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: scam-radar-debug-apk
+          path: scam-radar/app/build/outputs/apk/debug/*.apk
+          retention-days: 14
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scam-radar-reports
+          path: |
+            scam-radar/core/build/reports/
+            scam-radar/app/build/reports/
+          retention-days: 7

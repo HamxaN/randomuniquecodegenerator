@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 and older: back up check history and settings to the Google account. -->
+<full-backup-content>
+    <include domain="file" path="history.txt" />
+    <include domain="sharedpref" path="scamradar.xml" />
+</full-backup-content>

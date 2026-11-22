@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="brand">#FF5B8DEF</color>
+    <color name="brand_dark">#FF2563EB</color>
+    <color name="brand_soft">#FF1E3A6E</color>
+    <color name="on_brand">#FF061226</color>
+    <color name="surface">#FF0F141B</color>
+    <color name="card">#FF1A212B</color>
+    <color name="ink">#FFE7ECF2</color>
+    <color name="ink_soft">#FF98A3B3</color>
+    <color name="track">#FF2A3340</color>
+</resources>
