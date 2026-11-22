@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+: back up check history and settings; share cards in the cache are left out. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="file" path="history.txt" />
+        <include domain="sharedpref" path="scamradar.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="file" path="history.txt" />
+        <include domain="sharedpref" path="scamradar.xml" />
+    </device-transfer>
+</data-extraction-rules>
