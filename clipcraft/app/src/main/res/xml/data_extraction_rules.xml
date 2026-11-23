@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Settings are backed up; speech models, transcripts and clips are not. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="sharedpref" path="clipcraft.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="sharedpref" path="clipcraft.xml" />
+    </device-transfer>
+</data-extraction-rules>
