@@ -19,7 +19,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.OverlayEffect
 import androidx.media3.effect.OverlaySettings
 import androidx.media3.effect.Presentation
-import androidx.media3.effect.StaticOverlaySettings
 import androidx.media3.effect.TextOverlay
 import androidx.media3.effect.TextureOverlay
 import androidx.media3.transformer.Composition
@@ -132,7 +131,7 @@ class ClipRenderer(private val context: Context) {
      */
     private class CaptionOverlay(private val captions: List<Caption>, private val highlight: Int) : TextOverlay() {
         private var firstUs = -1L
-        private val settings = StaticOverlaySettings.Builder().setBackgroundFrameAnchor(0f, -0.42f).build()
+        private val settings = OverlaySettings.Builder().setBackgroundFrameAnchor(0f, -0.42f).build()
 
         override fun getText(presentationTimeUs: Long): SpannableString {
             if (firstUs < 0) firstUs = presentationTimeUs
@@ -162,7 +161,7 @@ class ClipRenderer(private val context: Context) {
     /** The hook line at the top, for the whole clip. */
     private class HookOverlay(hook: String) : TextOverlay() {
         private val text: SpannableString
-        private val settings = StaticOverlaySettings.Builder().setBackgroundFrameAnchor(0f, 0.72f).build()
+        private val settings = OverlaySettings.Builder().setBackgroundFrameAnchor(0f, 0.72f).build()
 
         init {
             val line = " " + hook.trim().take(48) + " "
