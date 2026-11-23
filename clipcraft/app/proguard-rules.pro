@@ -20,3 +20,11 @@
 -dontwarn javax.annotation.**
 -dontwarn com.google.errorprone.annotations.**
 -dontwarn org.slf4j.**
+
+# Referenced only by code paths ClipCraft doesn't use on Android:
+# the SDK's class-to-JSON-schema helper (we pass a hand-written schema) and
+# OpenTelemetry's compile-time AutoValue annotation.
+-dontwarn java.lang.reflect.AnnotatedType
+-dontwarn java.lang.reflect.AnnotatedParameterizedType
+-dontwarn com.google.auto.value.AutoValue
+-dontwarn com.google.auto.value.**
