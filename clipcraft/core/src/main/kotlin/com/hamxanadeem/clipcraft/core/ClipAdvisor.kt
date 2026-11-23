@@ -43,6 +43,9 @@ class ClipAdvisor(apiKey: String, private val model: String = MODEL) {
             - score: 1-100, how likely it is to perform, judged strictly and relative to the other clips
             - reason: one sentence on why it works
 
+            Prefer moments carried by the speaker's own words. Gaps in the transcript are often music
+            or other people's audio, which risk copyright claims, so avoid clips built around them.
+
             Use the transcript's own timestamps (seconds) for start and end. Don't invent content that isn't there.
             Return the clips best first, without overlaps.
         """.trimIndent()

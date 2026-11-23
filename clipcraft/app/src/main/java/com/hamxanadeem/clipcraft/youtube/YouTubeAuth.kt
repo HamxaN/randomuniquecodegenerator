@@ -19,7 +19,10 @@ import com.google.android.gms.common.api.Scope
 object YouTubeAuth {
     const val SCOPE = "https://www.googleapis.com/auth/youtube.upload"
 
-    private fun request() = AuthorizationRequest.builder().setRequestedScopes(listOf(Scope(SCOPE))).build()
+    /** Read-only access lets the app check whether YouTube accepted the upload. */
+    const val READ_SCOPE = "https://www.googleapis.com/auth/youtube.readonly"
+
+    private fun request() = AuthorizationRequest.builder().setRequestedScopes(listOf(Scope(SCOPE), Scope(READ_SCOPE))).build()
 
     /** Calls [onToken] with a token, or launches the consent screen through [consent] first. */
     fun authorize(activity: Activity, consent: ActivityResultLauncher<IntentSenderRequest>, onToken: (String) -> Unit, onError: (String) -> Unit) {

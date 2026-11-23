@@ -1,5 +1,6 @@
 package com.hamxanadeem.clipcraft.youtube
 
+import com.hamxanadeem.clipcraft.core.Copyright
 import com.hamxanadeem.clipcraft.core.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -57,6 +58,20 @@ object Uploader {
             val id = Json.str(Json.obj(Json.parse(text))["id"])
             if (id.isEmpty()) throw IOException("Upload finished but YouTube returned no video id.")
             return id
+        }
+    }
+
+    /** YouTube's processing verdict for an uploaded video (blocks; call off the main thread). */
+    fun status(token: String, id: String): Copyright.UploadCheck {
+        val req = Request.Builder()
+            .url("https://www.googleapis.com/youtube/v3/videos?part=status&id=$id")
+            .header("Authorization", "Bearer $token")
+            .get()
+            .build()
+        http.newCall(req).execute().use { r ->
+            val text = r.body?.string().orEmpty()
+            if (!r.isSuccessful) throw IOException(error(r.code, text))
+            return Copyright.readStatus(text)
         }
     }
 

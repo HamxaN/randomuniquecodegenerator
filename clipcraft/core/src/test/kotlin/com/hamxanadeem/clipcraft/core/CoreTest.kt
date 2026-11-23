@@ -186,3 +186,63 @@ class AdvisorTest {
         assertTrue(e.message!!.contains("Not enough speech"))
     }
 }
+
+class CopyrightTest {
+    private val t = Talk.transcript()
+
+    /** Loudness matching the fake talk: speech level where words are, near silence between. */
+    private fun loudness(extraMusicFrom: Double = -1.0, extraMusicTo: Double = -1.0): FloatArray {
+        val n = (t.duration / Copyright.WINDOW).toInt() + 40
+        return FloatArray(n) { i ->
+            val s = i * Copyright.WINDOW
+            val speaking = t.words.any { it.start < s + Copyright.WINDOW && it.end > s }
+            when {
+                s >= extraMusicFrom && s < extraMusicTo -> 0.3f
+                speaking -> 0.25f
+                else -> 0.01f
+            }
+        }
+    }
+
+    @Test
+    fun `plain speech is low risk`() {
+        val r = Copyright.musicRisk(loudness(), t, 5.0, 40.0)
+        assertEquals(MusicRisk.Level.LOW, r.level)
+        assertNull(Copyright.warning(r))
+    }
+
+    @Test
+    fun `sound with nobody talking is flagged as music`() {
+        // Add 12 s of loud sound after the talk ends.
+        val end = t.duration
+        val loud = loudness(end + 1.0, end + 13.0)
+        val r = Copyright.musicRisk(loud, t, end - 10.0, end + 14.0)
+        assertEquals(MusicRisk.Level.HIGH, r.level)
+        assertTrue(r.musicSeconds >= 10.0)
+        assertTrue(Copyright.warning(r)!!.contains("music"))
+    }
+
+    @Test
+    fun `quiet room noise between sentences is not music`() {
+        val loud = loudness().map { if (it < 0.02f) 0.04f else it }.toFloatArray()
+        assertEquals(MusicRisk.Level.LOW, Copyright.musicRisk(loud, t, 5.0, 40.0).level)
+    }
+
+    @Test
+    fun `loudness round trips`() {
+        val a = floatArrayOf(0.1f, 0.25f, 0.0031f)
+        val b = Copyright.decode(Copyright.encode(a))
+        assertEquals(a.size, b.size)
+        assertTrue(kotlin.math.abs(a[2] - b[2]) < 0.0002f)
+    }
+
+    @Test
+    fun `reads youtube processing status`() {
+        assertFalse(Copyright.readStatus("""{"items":[]}""").done)
+        val ok = Copyright.readStatus("""{"items":[{"status":{"uploadStatus":"processed","privacyStatus":"private"}}]}""")
+        assertTrue(ok.done && ok.ok)
+        val claim = Copyright.readStatus("""{"items":[{"status":{"uploadStatus":"rejected","rejectionReason":"copyright"}}]}""")
+        assertTrue(claim.done && !claim.ok && claim.message.contains("copyright"))
+        assertFalse(Copyright.readStatus("""{"items":[{"status":{"uploadStatus":"uploaded"}}]}""").done)
+    }
+}

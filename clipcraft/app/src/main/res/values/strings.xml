@@ -63,5 +63,14 @@
     <string name="privacy_private">Private</string>
     <string name="privacy_unlisted">Unlisted</string>
     <string name="privacy_public">Public</string>
+    <string name="no_music_found">No background music detected in this clip.</string>
+    <string name="copyright_checklist">Before posting, confirm:</string>
+    <string name="check_own">I made this video, or I have permission to post it</string>
+    <string name="check_music">Any music in it is mine, licensed, or free to use</string>
+    <string name="copyright_note">ClipCraft can\'t check against YouTube\'s copyright database. YouTube does that with Content ID after upload, and ClipCraft will tell you if the video is rejected. Claims that keep the video up are shown only in YouTube Studio.</string>
+    <string name="checking_youtube">Checking with YouTube that the Short was accepted…</string>
+    <string name="still_processing">YouTube is still processing the Short. Check YouTube Studio in a few minutes.</string>
+    <string name="youtube_ok_title">Accepted by YouTube</string>
+    <string name="youtube_problem_title">Problem on YouTube</string>
     <string name="youtube_note">The first upload asks you to sign in with Google and allow uploads to your channel. Uploading private first lets you check a Short before making it public.</string>
 </resources>

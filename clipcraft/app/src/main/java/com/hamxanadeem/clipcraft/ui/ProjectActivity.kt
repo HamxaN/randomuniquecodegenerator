@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -33,6 +34,7 @@ import com.hamxanadeem.clipcraft.core.AdvisorException
 import com.hamxanadeem.clipcraft.core.Captions
 import com.hamxanadeem.clipcraft.core.ClipAdvisor
 import com.hamxanadeem.clipcraft.core.ClipPlan
+import com.hamxanadeem.clipcraft.core.Copyright
 import com.hamxanadeem.clipcraft.core.Heuristic
 import com.hamxanadeem.clipcraft.core.Transcript
 import com.hamxanadeem.clipcraft.core.YouTube
@@ -62,6 +64,7 @@ class ProjectActivity : AppCompatActivity() {
     private val io = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
     private var transcript: Transcript? = null
+    private var loudness: FloatArray = FloatArray(0)
     private var clips: List<ClipPlan> = emptyList()
     private val rendered = mutableMapOf<Int, File>()
     private val busy = mutableSetOf<Int>()
@@ -135,21 +138,28 @@ class ProjectActivity : AppCompatActivity() {
 
     private fun cacheFile(): File = File(cacheDir, "transcripts/${video.toString().hashCode()}_${Settings.language(this)}.json")
 
+    private fun loudnessFile(): File = File(cacheDir, "transcripts/${video.toString().hashCode()}.loud")
+
     /** Step 1: transcribe (downloading the speech model first if needed). */
     private fun start() {
         val model = Languages.get(Settings.language(this))
         io.execute {
             try {
                 var t = Speech.load(cacheFile())
-                if (t == null) {
+                var loud = Speech.loadLoudness(loudnessFile())
+                if (t == null || loud == null) {
                     if (!Speech.hasModel(this, model)) {
                         Speech.download(this, model) { p -> main.post { setStatus(getString(R.string.downloading_model, model.name, model.sizeMb), p) } }
                     }
                     main.post { setStatus(getString(R.string.transcribing), 0f) }
-                    t = Speech.transcribe(this, video, model) { p -> main.post { setStatus(getString(R.string.transcribing), p) } }
+                    val r = Speech.transcribe(this, video, model) { p -> main.post { setStatus(getString(R.string.transcribing), p) } }
+                    t = r.transcript
+                    loud = r.loudness
                     Speech.save(cacheFile(), t)
+                    Speech.saveLoudness(loudnessFile(), loud)
                 }
                 transcript = t
+                loudness = loud
                 main.post { findClips() }
             } catch (e: Exception) {
                 main.post { done(getString(R.string.transcribe_failed, e.message ?: "")) }
@@ -202,6 +212,11 @@ class ProjectActivity : AppCompatActivity() {
             Transcript.format(c.start), Transcript.format(c.end), c.length.toInt())
         v.findViewById<TextView>(R.id.reason).text = c.reason
         v.findViewById<TextView>(R.id.tags).text = c.hashtags.joinToString(" ")
+        val warn = musicWarning(c)
+        v.findViewById<TextView>(R.id.music).apply {
+            text = warn ?: ""
+            visibility = if (warn == null) View.GONE else View.VISIBLE
+        }
         val state = v.findViewById<TextView>(R.id.state)
         val file = rendered[i]
         state.text = clipProgress[i] ?: if (file != null) getString(R.string.ready) else ""
@@ -308,19 +323,39 @@ class ProjectActivity : AppCompatActivity() {
         startActivity(Intent.createChooser(send, getString(R.string.share)))
     }
 
-    /** Step 4: post it to the user's channel. */
+    private fun musicWarning(c: ClipPlan): String? {
+        val t = transcript ?: return null
+        return Copyright.warning(Copyright.musicRisk(loudness, t, c.start, c.end))
+    }
+
+    /** Step 4: post it to the user's channel, after a quick copyright checklist. */
     private fun startUpload(i: Int) {
         if (rendered[i] == null) return
         val c = clips[i]
-        MaterialAlertDialogBuilder(this)
+        val view = LayoutInflater.from(this).inflate(R.layout.dialog_upload, null as ViewGroup?)
+        view.findViewById<TextView>(R.id.upload_summary).text =
+            getString(R.string.upload_body, YouTube.title(c), getString(privacyLabel(Settings.privacy(this))))
+        val warn = musicWarning(c)
+        view.findViewById<TextView>(R.id.upload_music).apply {
+            text = warn ?: getString(R.string.no_music_found)
+            setTextColor(getColor(if (warn != null) R.color.brand else R.color.ink_soft))
+        }
+        val own = view.findViewById<CheckBox>(R.id.check_own)
+        val music = view.findViewById<CheckBox>(R.id.check_music)
+        val dialog = MaterialAlertDialogBuilder(this)
             .setTitle(R.string.upload_title)
-            .setMessage(getString(R.string.upload_body, YouTube.title(c), getString(privacyLabel(Settings.privacy(this)))))
+            .setView(view)
             .setPositiveButton(R.string.upload) { _, _ ->
                 pendingUpload = i
                 YouTubeAuth.authorize(this, consent, { token -> upload(i, token) }, { msg -> Ui.toast(this, msg) })
             }
             .setNegativeButton(R.string.cancel, null)
             .show()
+        val go = dialog.getButton(android.content.DialogInterface.BUTTON_POSITIVE)
+        val update = { go.isEnabled = own.isChecked && music.isChecked }
+        update()
+        own.setOnCheckedChangeListener { _, _ -> update() }
+        music.setOnCheckedChangeListener { _, _ -> update() }
     }
 
     private fun privacyLabel(p: String) = when (p) {
@@ -349,13 +384,13 @@ class ProjectActivity : AppCompatActivity() {
                 busy -= i
                 clipProgress.remove(i)
                 adapter.notifyItemChanged(i)
-                result.onSuccess { id -> uploaded(id) }
+                result.onSuccess { id -> uploaded(id, token) }
                     .onFailure { Ui.toast(this, it.message ?: getString(R.string.upload_failed)) }
             }
         }
     }
 
-    private fun uploaded(id: String) {
+    private fun uploaded(id: String, token: String) {
         val url = "https://youtube.com/shorts/$id"
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.uploaded_title)
@@ -363,5 +398,41 @@ class ProjectActivity : AppCompatActivity() {
             .setPositiveButton(R.string.open_youtube) { _, _ -> startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
             .setNegativeButton(R.string.close, null)
             .show()
+        watch(id, token, url)
+    }
+
+    /** Asks YouTube every 20 s (for up to 5 minutes) whether it accepted or rejected the video. */
+    private fun watch(id: String, token: String, url: String) {
+        setStatus(getString(R.string.checking_youtube))
+        io.execute {
+            var verdict: Copyright.UploadCheck? = null
+            for (attempt in 0 until 15) {
+                val check = runCatching { Uploader.status(token, id) }.getOrNull()
+                if (check != null && check.done) {
+                    verdict = check
+                    break
+                }
+                try {
+                    Thread.sleep(20_000)
+                } catch (_: InterruptedException) {
+                    return@execute
+                }
+            }
+            main.post {
+                if (isFinishing || isDestroyed) return@post
+                val v = verdict
+                if (v == null) {
+                    done(getString(R.string.still_processing))
+                    return@post
+                }
+                done(v.message)
+                MaterialAlertDialogBuilder(this)
+                    .setTitle(if (v.ok) R.string.youtube_ok_title else R.string.youtube_problem_title)
+                    .setMessage(v.message)
+                    .setPositiveButton(R.string.open_youtube) { _, _ -> startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
+                    .setNegativeButton(R.string.close, null)
+                    .show()
+            }
+        }
     }
 }

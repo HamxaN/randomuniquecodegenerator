@@ -29,12 +29,30 @@ posts them straight to your channel.
    * **Save** to the gallery (Movies/ClipCraft).
    * **Share** to TikTok, Instagram or WhatsApp.
    * **Upload to YouTube** as a Short. This uses Google sign-in with the
-     `youtube.upload` scope and the YouTube Data API's resumable upload. It
+     `youtube.upload` scope (and `youtube.readonly` to check processing status) and the YouTube Data API's resumable upload. It
      uploads as private, unlisted or public, with `#shorts` in the title and
      description.
 
 You can preview any clip in the player, and edit its title, hook and description
 before making it.
+
+## Copyright help
+
+ClipCraft can't check a video against YouTube's copyright database. Only YouTube
+can, with Content ID, after upload. What it does:
+
+* **Music warning.** While transcribing, it measures the soundtrack's loudness
+  every half second. A clip with loud sound where nobody is speaking, which is
+  usually background music, gets a "may contain music" warning on its card. Music
+  is the most common cause of Shorts copyright claims. Claude is also told to
+  prefer moments carried by the speaker's own words.
+* **Checklist before upload.** Upload stays disabled until you confirm that you
+  made the video (or have permission) and that any music is yours, licensed or
+  free to use.
+* **Status after upload.** The app checks YouTube's processing status for up to
+  5 minutes. It tells you if the video was rejected, for copyright, as a
+  duplicate or for a rules breach. Claims that leave the video up aren't exposed
+  in YouTube's public API, so check those in YouTube Studio.
 
 ## Costs and privacy
 
@@ -51,7 +69,7 @@ Google needs to know the app before it can upload for you:
 
 1. In [Google Cloud Console](https://console.cloud.google.com/), create a project
    and **enable the YouTube Data API v3**.
-2. Configure the **OAuth consent screen**: External, add the scope
+2. Configure the **OAuth consent screen**: External, add the scopes `.../auth/youtube.readonly` and
    `.../auth/youtube.upload`, and add yourself as a test user.
 3. Create an **OAuth client ID** of type **Android**:
    * package `com.hamxanadeem.clipcraft` (or `com.hamxanadeem.clipcraft.debug`
