@@ -1,13 +1,17 @@
 package com.hamxanadeem.clipcraft.ui
 
 import android.Manifest
+import android.content.ClipboardManager
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.PickVisualMediaRequest
@@ -19,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.hamxanadeem.clipcraft.R
+import com.hamxanadeem.clipcraft.core.Links
 import com.hamxanadeem.clipcraft.core.Project
 import com.hamxanadeem.clipcraft.data.ProjectStore
 import com.hamxanadeem.clipcraft.data.Settings
@@ -73,6 +78,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<View>(R.id.pick).setOnClickListener {
             pick.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
         }
+        findViewById<View>(R.id.link).setOnClickListener { askLink() }
         findViewById<View>(R.id.settings_hint).setOnClickListener { startActivity(Intent(this, AiActivity::class.java)) }
         if (Build.VERSION.SDK_INT >= 33) askNotify.launch(Manifest.permission.POST_NOTIFICATIONS)
         if (savedInstanceState == null) handle(intent)
@@ -86,7 +92,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun handle(intent: Intent?) {
         if (intent?.action == Intent.ACTION_SEND) {
-            IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)?.let { start(it) }
+            val stream = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
+            if (stream != null) {
+                start(stream)
+            } else {
+                // A link shared from the browser or another app.
+                intent.getStringExtra(Intent.EXTRA_TEXT)?.let { askLink(it) }
+            }
         }
         intent?.getStringExtra(EXTRA_PROJECT)?.let { open(it) }
     }
@@ -136,6 +148,46 @@ class MainActivity : AppCompatActivity() {
         val p = ProjectStore.create(this, uri, Settings.language(this))
         Engine.analyze(p.id)
         open(p.id)
+    }
+
+    /** Paste (or confirm a shared) link to a video file. */
+    private fun askLink(prefill: String? = null) {
+        val field = EditText(this).apply {
+            hint = getString(R.string.link_hint)
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
+            importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
+            minHeight = Ui.dp(this@MainActivity, 48)
+            val clip = getSystemService(ClipboardManager::class.java)?.primaryClip?.takeIf { it.itemCount > 0 }
+                ?.getItemAt(0)?.coerceToText(this@MainActivity)?.toString()
+            setText(prefill ?: clip?.let { Links.find(it) } ?: "")
+        }
+        val box = FrameLayout(this).apply {
+            val pad = Ui.dp(this@MainActivity, 20)
+            setPadding(pad, Ui.dp(this@MainActivity, 8), pad, 0)
+            addView(field)
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.link_title)
+            .setMessage(R.string.link_body)
+            .setView(box)
+            .setPositiveButton(R.string.link_go) { _, _ -> startLink(field.text.toString()) }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun startLink(text: String) {
+        when (val r = Links.resolve(text)) {
+            is Links.Result.Refused -> MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.link_refused_title)
+                .setMessage(r.reason)
+                .setPositiveButton(R.string.ok, null)
+                .show()
+            is Links.Result.Download -> {
+                val p = ProjectStore.create(this, Uri.parse(r.url), Settings.language(this), getString(R.string.link_project_name, r.name.take(40)))
+                Engine.analyze(p.id)
+                open(p.id)
+            }
+        }
     }
 
     private fun open(id: String) {

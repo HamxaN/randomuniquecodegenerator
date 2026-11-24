@@ -6,7 +6,17 @@ posts them straight to your channel.
 
 ## How it works
 
-1. **Pick a video** from your phone, or share one to ClipCraft from the gallery.
+1. **Pick a video** from your phone, share one to ClipCraft from the gallery, or
+   **add it from a link**. Links can be:
+   * Dropbox;
+   * Google Drive, shared with "Anyone with the link";
+   * a direct `.mp4` link.
+
+   You can paste the link or share it to the app. ClipCraft downloads the file
+   into the project first. YouTube, TikTok, Instagram and other platform links
+   are refused with an explanation. Those sites don't allow downloading, and
+   re-posting other people's videos gets channels copyright strikes. For your
+   own YouTube videos, download the original from YouTube Studio.
 2. **Transcribe on the phone.** The soundtrack is decoded and transcribed offline
    with word timings, using [Vosk](https://alphacephei.com/vosk/). The first time
    you use a language, its speech model (about 40 MB) downloads once. Languages:

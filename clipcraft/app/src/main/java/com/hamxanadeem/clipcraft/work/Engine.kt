@@ -32,6 +32,7 @@ import com.hamxanadeem.clipcraft.data.Languages
 import com.hamxanadeem.clipcraft.data.ProjectStore
 import com.hamxanadeem.clipcraft.data.Settings
 import com.hamxanadeem.clipcraft.media.ClipRenderer
+import com.hamxanadeem.clipcraft.media.Downloader
 import com.hamxanadeem.clipcraft.media.FaceTracker
 import com.hamxanadeem.clipcraft.media.Speech
 import com.hamxanadeem.clipcraft.media.Style
@@ -175,7 +176,12 @@ object Engine {
             post(app.getString(R.string.clips_ready_note, clips.size), id)
         } catch (e: Exception) {
             ProjectStore.update(app, id) {
-                it.copy(status = Project.ERROR, message = app.getString(R.string.transcribe_failed, e.message ?: e.javaClass.simpleName))
+                val why = e.message ?: e.javaClass.simpleName
+                it.copy(status = Project.ERROR, message = if (e is java.io.IOException && it.video.startsWith("http")) {
+                    app.getString(R.string.download_failed, why)
+                } else {
+                    app.getString(R.string.transcribe_failed, why)
+                })
             }
         }
     }
@@ -186,6 +192,12 @@ object Engine {
      */
     private fun readable(p: Project): Project {
         val uri = Uri.parse(p.video)
+        if (uri.scheme == "http" || uri.scheme == "https") {
+            set(pKey(p.id), app.getString(R.string.downloading_video, 0))
+            val f = File(ProjectStore.dir(app, p.id), "video.mp4")
+            Downloader.fetch(p.video, f) { x -> set(pKey(p.id), app.getString(R.string.downloading_video, (x * 100).toInt())) }
+            return ProjectStore.update(app, p.id) { it.copy(video = Uri.fromFile(f).toString()) } ?: p
+        }
         if (uri.scheme != "content" || ProjectStore.persisted(app, uri)) return p
         set(pKey(p.id), app.getString(R.string.copying_video))
         val f = File(ProjectStore.dir(app, p.id), "video.mp4")
