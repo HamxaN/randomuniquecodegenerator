@@ -1,6 +1,7 @@
 package com.hamxanadeem.clipcraft.ui
 
 import android.os.Bundle
+import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.EditText
@@ -10,14 +11,29 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.slider.Slider
 import com.hamxanadeem.clipcraft.R
+import com.hamxanadeem.clipcraft.core.Script
 import com.hamxanadeem.clipcraft.data.Languages
 import com.hamxanadeem.clipcraft.data.Settings
 
-/** API key, spoken language, number of clips, captions, YouTube privacy. */
+/** AI (own key or a ClipCraft server), language, clips, caption look, YouTube privacy. */
 class SettingsActivity : AppCompatActivity() {
 
-    private val privacies = listOf("private", "unlisted", "public")
-    private val privacyLabels = listOf(R.string.privacy_private, R.string.privacy_unlisted, R.string.privacy_public)
+    /** A dropdown backed by stored values and their labels. */
+    private class Choice(val view: AutoCompleteTextView, val values: List<String>, val labels: List<String>) {
+        fun show(value: String) = view.setText(labels[values.indexOf(value).coerceAtLeast(0)], false)
+        fun value(): String? = labels.indexOf(view.text.toString()).takeIf { it >= 0 }?.let { values[it] }
+    }
+
+    private lateinit var privacy: Choice
+    private lateinit var style: Choice
+    private lateinit var position: Choice
+    private lateinit var script: Choice
+
+    private fun choice(id: Int, values: List<String>, labels: List<String>): Choice {
+        val v = findViewById<AutoCompleteTextView>(id)
+        v.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, labels))
+        return Choice(v, values, labels)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -27,30 +43,52 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener { finish() }
         findViewById<EditText>(R.id.api_key).setText(Settings.apiKey(this))
         findViewById<EditText>(R.id.notes).setText(Settings.notes(this))
+        findViewById<EditText>(R.id.server_url).setText(Settings.serverUrl(this))
+        findViewById<EditText>(R.id.server_token).setText(Settings.serverToken(this))
+        val useServer = findViewById<MaterialSwitch>(R.id.use_server)
+        val serverBox = findViewById<View>(R.id.server_box)
+        useServer.isChecked = Settings.useServer(this)
+        serverBox.visibility = if (useServer.isChecked) View.VISIBLE else View.GONE
+        useServer.setOnCheckedChangeListener { _, on -> serverBox.visibility = if (on) View.VISIBLE else View.GONE }
+
         val lang = findViewById<AutoCompleteTextView>(R.id.language)
         lang.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, Languages.ALL.map { it.name }))
         lang.setText(Languages.get(Settings.language(this)).name, false)
-        val priv = findViewById<AutoCompleteTextView>(R.id.privacy)
-        val privLabels = privacyLabels.map { getString(it) }
-        priv.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, privLabels))
-        priv.setText(privLabels[privacies.indexOf(Settings.privacy(this)).coerceAtLeast(0)], false)
+        privacy = choice(R.id.privacy, listOf("private", "unlisted", "public"),
+            listOf(R.string.privacy_private, R.string.privacy_unlisted, R.string.privacy_public).map { getString(it) })
+        privacy.show(Settings.privacy(this))
+        style = choice(R.id.caption_style, listOf("karaoke", "boxed", "clean"),
+            listOf(R.string.style_karaoke, R.string.style_boxed, R.string.style_clean).map { getString(it) })
+        style.show(Settings.captionStyle(this))
+        position = choice(R.id.caption_position, listOf("low", "middle", "top"),
+            listOf(R.string.position_low, R.string.position_middle, R.string.position_top).map { getString(it) })
+        position.show(Settings.captionPosition(this))
+        script = choice(R.id.script, Script.entries.map { it.name }, Script.entries.map { it.label })
+        script.show(Settings.script(this))
+
         val count = findViewById<Slider>(R.id.count)
         count.value = Settings.clipCount(this).toFloat().coerceIn(1f, 10f)
         findViewById<MaterialSwitch>(R.id.captions).isChecked = Settings.captions(this)
         findViewById<MaterialSwitch>(R.id.hook).isChecked = Settings.hook(this)
+        findViewById<MaterialSwitch>(R.id.reframe).isChecked = Settings.reframe(this)
     }
 
     override fun onPause() {
         super.onPause()
         Settings.setApiKey(this, findViewById<EditText>(R.id.api_key).text.toString())
         Settings.setNotes(this, findViewById<EditText>(R.id.notes).text.toString())
+        Settings.setUseServer(this, findViewById<MaterialSwitch>(R.id.use_server).isChecked)
+        Settings.setServerUrl(this, findViewById<EditText>(R.id.server_url).text.toString())
+        Settings.setServerToken(this, findViewById<EditText>(R.id.server_token).text.toString())
         val langName = findViewById<AutoCompleteTextView>(R.id.language).text.toString()
         Languages.ALL.firstOrNull { it.name == langName }?.let { Settings.setLanguage(this, it.code) }
-        val privText = findViewById<AutoCompleteTextView>(R.id.privacy).text.toString()
-        val pi = privacyLabels.indexOfFirst { getString(it) == privText }
-        if (pi >= 0) Settings.setPrivacy(this, privacies[pi])
+        privacy.value()?.let { Settings.setPrivacy(this, it) }
+        style.value()?.let { Settings.setCaptionStyle(this, it) }
+        position.value()?.let { Settings.setCaptionPosition(this, it) }
+        script.value()?.let { Settings.setScript(this, it) }
         Settings.setClipCount(this, findViewById<Slider>(R.id.count).value.toInt())
         Settings.setCaptions(this, findViewById<MaterialSwitch>(R.id.captions).isChecked)
         Settings.setHook(this, findViewById<MaterialSwitch>(R.id.hook).isChecked)
+        Settings.setReframe(this, findViewById<MaterialSwitch>(R.id.reframe).isChecked)
     }
 }

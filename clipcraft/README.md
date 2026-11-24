@@ -33,8 +33,92 @@ posts them straight to your channel.
      uploads as private, unlisted or public, with `#shorts` in the title and
      description.
 
-You can preview any clip in the player, and edit its title, hook and description
-before making it.
+Before making a clip you can:
+
+* preview it in the player;
+* edit its title, hook and description;
+* **trim** it a second at a time at either end;
+* **fix the captions** word by word. If you change the number of words, the new
+  words share that caption's time evenly.
+
+## Projects and background work
+
+Every video becomes a **saved project** on the home screen. Its clips, edits,
+rendered Shorts and YouTube status are kept, so you can close the app and come
+back later. Videos picked in the app keep their read permission. Videos shared
+from another app are copied into the project, because shared permission ends
+when the app closes. Long-press a project to delete it.
+
+Transcribing, rendering and uploading run in a **foreground service** with a
+progress notification, so they keep going when you leave the app or lock the
+screen. Jobs run one at a time in order. If the phone restarts mid-job, the
+project picks up again the next time you open ClipCraft, and the finished
+transcript is reused.
+
+## Smarter Shorts
+
+* **Follow the speaker.** When the video is wider than 9:16, ClipCraft looks at
+  about one frame a second with ML Kit's on-device face detector. It then pans
+  the crop smoothly to keep the biggest face in frame. Small movements are
+  ignored so the shot doesn't wobble, and the crop never leaves the picture.
+  You can turn this off in Settings.
+* **Caption styles.**
+  * Styles: Karaoke (dark band, spoken word coloured), Boxed (spoken word in a
+    coloured box) or Clean (big words, no band).
+  * Positions: low, middle or top.
+* **Urdu and Roman Urdu captions.** Vosk's Hindi/Urdu model writes in Hindi
+  script. With a caption writing setting of *Urdu script* or *Roman Urdu*,
+  Claude rewrites each word and the timings stay the same. This needs the AI to
+  be set up.
+* **Sound cues.** Claude sees more than words:
+  * lines said noticeably louder than the speaker's normal level;
+  * gaps with sound but no speech (laughter, a reaction, music);
+  * plain pauses.
+
+  This helps it find punchlines and reactions.
+
+## Batch posting and scheduling
+
+From the project menu:
+
+* **Make all Shorts** renders every clip.
+* **Post all to YouTube** makes any missing clips and uploads them all, after
+  one copyright checklist for the whole batch.
+
+Turn on **Schedule** to pick the first post time and the hours between posts
+(for example tomorrow at 18:00, then one every 24 hours). Scheduled Shorts
+upload right away as private, with YouTube's `publishAt` time. YouTube makes
+each one public at its time, even if your phone is off.
+
+## Optional ClipCraft server
+
+By default each user pastes their own Anthropic API key. If you'd rather hold
+one key for everybody, run the small server in `server/`. It accepts only the
+app's two jobs, finding clips and converting caption script. It can require a
+shared app token, limits each device to a number of requests a day, and never
+sees the video, only the transcript.
+
+```bash
+# Run it directly
+ANTHROPIC_API_KEY=... APP_TOKEN=some-shared-secret DAILY_LIMIT=20 \
+  ./gradlew -p clipcraft/server run
+
+# Or with Docker (from the clipcraft folder)
+docker build -f server/Dockerfile -t clipcraft-server .
+docker run -p 8080:8080 -e ANTHROPIC_API_KEY=... -e APP_TOKEN=... clipcraft-server
+```
+
+Put it behind HTTPS on any host that runs containers: Cloud Run, Fly.io,
+Railway or a VPS with Caddy. Then, in the app's Settings, turn on **Use a
+ClipCraft server** and enter its address and token. The endpoints are:
+
+* `GET /health`
+* `POST /v1/clips`
+* `POST /v1/script`
+
+Errors come back as JSON with an `error` field. The app token stops casual
+abuse, but anyone who unpacks the APK can find it. For a public app, add real
+sign-in or Play Integrity checks before relying on it.
 
 ## Copyright help
 
@@ -78,27 +162,50 @@ Google needs to know the app before it can upload for you:
      (`keytool -list -v -keystore <keystore>`).
 
 There are no client secrets to put in the app. Google matches it by package and
-signature. The YouTube API's default quota allows about 6 uploads a day per
-project; request more in Cloud Console if you need it.
+signature.
+
+While the consent screen is in **Testing**, only the test users you list (up to
+100) can sign in. To let anyone use it, Google must verify the app; see
+[docs/google-verification.md](docs/google-verification.md). The YouTube API's
+default quota allows about 6 uploads a day for the whole project, shared by all
+users. To get more, see [docs/youtube-quota.md](docs/youtube-quota.md).
 
 ## Project layout
 
 ```
 clipcraft/
-  core/   Pure Kotlin, unit-tested: transcript parsing and sentence splitting,
-          caption grouping, clip tidying, the offline picker, YouTube metadata,
-          and ClipAdvisor (the Claude request via the official Anthropic Java SDK).
-  app/    The Android app: audio decoding, Vosk transcription, Media3 rendering,
-          the ExoPlayer preview, Google sign-in and upload, and the screens.
+  core/    Pure Kotlin, unit-tested. Covers:
+           - transcript parsing and sentence splitting;
+           - caption grouping and editing;
+           - clip tidying and trimming;
+           - the offline picker and sound cues;
+           - music detection;
+           - face-pan paths;
+           - saved projects;
+           - scheduling and YouTube metadata;
+           - ClipAdvisor (Claude via the official Anthropic Java SDK) and
+             ServerClipSource.
+  app/     The Android app:
+           - audio decoding and Vosk transcription;
+           - ML Kit face tracking and Media3 rendering;
+           - the background Engine and foreground service;
+           - Google sign-in and upload;
+           - the screens.
+  server/  Optional server that holds the Claude key, plus its Dockerfile.
+  docs/    Device test checklist, Google verification, YouTube quota.
 ```
 
 ## Build and test
 
 ```bash
 ./gradlew -p clipcraft coreTest
+./gradlew -p clipcraft/server test
 ./gradlew -p clipcraft :app:lintDebug :app:assembleDebug
 ```
 
-CI (`.github/workflows/clipcraft-ci.yml`) runs both and uploads the debug APK.
+CI (`.github/workflows/clipcraft-ci.yml`) runs all of these, builds the server's
+Docker image, and uploads the debug APK. Before a release, go through
+[docs/device-test-checklist.md](docs/device-test-checklist.md) on a real phone.
+Rendering, face tracking, speech and Google sign-in can't be tested in CI.
 To release to Play, push a tag such as `clipcraft-v1.0.0`; it needs the
 `CLIPCRAFT_*` signing secrets and `PLAY_SERVICE_ACCOUNT_JSON`.

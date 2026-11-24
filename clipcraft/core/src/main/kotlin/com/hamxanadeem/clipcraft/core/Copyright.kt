@@ -67,7 +67,7 @@ object Copyright {
         }
         if (speaking.isEmpty()) return loudness.sorted()[loudness.size / 2]
         speaking.sort()
-        return speaking[speaking.size / 2]
+        return speaking[(speaking.size - 1) / 2]
     }
 
     fun warning(r: MusicRisk): String? = when (r.level) {

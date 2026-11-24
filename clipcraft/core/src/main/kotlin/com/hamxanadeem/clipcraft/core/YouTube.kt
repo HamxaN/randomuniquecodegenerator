@@ -18,10 +18,17 @@ object YouTube {
 
     fun tags(p: ClipPlan): List<String> = (p.hashtags.map { it.trimStart('#') } + "shorts").distinctBy { it.lowercase() }.take(15)
 
-    /** The JSON body for videos.insert (snippet + status). */
-    fun metadata(p: ClipPlan, privacy: String, extra: String = ""): String {
+    /**
+     * The JSON body for videos.insert (snippet + status). With [publishAt] the video
+     * is uploaded private and YouTube makes it public at that time.
+     */
+    fun metadata(p: ClipPlan, privacy: String, extra: String = "", publishAt: String? = null): String {
         val tags = tags(p).joinToString(",") { Json.quote(it) }
-        return """{"snippet":{"title":${Json.quote(title(p))},"description":${Json.quote(description(p, extra))},"tags":[$tags],"categoryId":"22"},""" +
-            """"status":{"privacyStatus":${Json.quote(privacy)},"selfDeclaredMadeForKids":false}}"""
+        val status = if (publishAt != null) {
+            """"status":{"privacyStatus":"private","publishAt":${Json.quote(publishAt)},"selfDeclaredMadeForKids":false}"""
+        } else {
+            """"status":{"privacyStatus":${Json.quote(privacy)},"selfDeclaredMadeForKids":false}"""
+        }
+        return """{"snippet":{"title":${Json.quote(title(p))},"description":${Json.quote(description(p, extra))},"tags":[$tags],"categoryId":"22"},$status}"""
     }
 }

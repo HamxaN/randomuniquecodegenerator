@@ -41,11 +41,19 @@ class Transcript(words: List<Word>) {
 
     fun between(start: Double, end: Double): List<Word> = words.filter { it.end > start && it.start < end }
 
-    /** The transcript as timestamped lines for the model: "[12.4-18.9] text". */
-    fun forPrompt(maxChars: Int = 400_000): String {
+    /**
+     * The transcript as timestamped lines for the model: "[12.4-18.9] text". With
+     * [loudness], sound cues are added: loud lines, pauses, and sound without speech
+     * (music, laughter, reactions), which often mark the moments that go viral.
+     */
+    fun forPrompt(maxChars: Int = 400_000, loudness: FloatArray = FloatArray(0)): String {
         val sb = StringBuilder()
-        for (l in lines()) {
-            val row = "[%.1f-%.1f] %s\n".format(Locale.ROOT, l.start, l.end, l.text)
+        val ls = lines()
+        val cues = if (loudness.isEmpty()) null else SoundCues(this, loudness)
+        for ((i, l) in ls.withIndex()) {
+            if (cues != null && i > 0) cues.gap(ls[i - 1].end, l.start)?.let { sb.append(it).append('\n') }
+            val loud = if (cues != null && cues.loud(l)) " (said loudly)" else ""
+            val row = "[%.1f-%.1f] %s%s\n".format(Locale.ROOT, l.start, l.end, l.text, loud)
             if (sb.length + row.length > maxChars) break
             sb.append(row)
         }

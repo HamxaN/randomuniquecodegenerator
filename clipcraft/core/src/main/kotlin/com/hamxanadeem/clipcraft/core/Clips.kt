@@ -61,6 +61,16 @@ object Clips {
         return out
     }
 
+    /** Moves a clip's edges by the given seconds, keeping it 5-180 s long and inside the video. */
+    fun nudge(p: ClipPlan, startBy: Double, endBy: Double, duration: Double): ClipPlan {
+        var s = (p.start + startBy).coerceIn(0.0, maxOf(0.0, duration - 5.0))
+        var e = (p.end + endBy).coerceIn(s + 5.0, maxOf(s + 5.0, duration))
+        if (e - s > 180.0) {
+            if (startBy != 0.0) s = e - 180.0 else e = s + 180.0
+        }
+        return p.copy(start = s, end = e)
+    }
+
     fun hashtags(tags: List<String>): List<String> =
         tags.map { "#" + it.trim().trimStart('#').replace(Regex("[^\\p{L}\\p{N}_]"), "") }
             .filter { it.length > 1 }.distinctBy { it.lowercase() }.take(8)

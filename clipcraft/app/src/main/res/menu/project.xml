@@ -3,4 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item android:id="@+id/action_again" android:icon="@drawable/ic_refresh" android:title="@string/find_again"
         app:showAsAction="always" />
+    <item android:id="@+id/action_make_all" android:title="@string/make_all" app:showAsAction="never" />
+    <item android:id="@+id/action_upload_all" android:title="@string/upload_all" app:showAsAction="never" />
 </menu>

@@ -89,6 +89,7 @@ dependencies {
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)
     implementation(libs.play.services.auth)
+    implementation(libs.mlkit.face)
     implementation(libs.anthropic.java)
     implementation(libs.okhttp)
     implementation(libs.guava)

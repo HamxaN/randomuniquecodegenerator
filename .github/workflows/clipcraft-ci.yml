@@ -29,6 +29,12 @@ jobs:
       - name: Unit tests (clip planning)
         run: ./gradlew -p clipcraft coreTest --stacktrace
 
+      - name: Server tests
+        run: ./gradlew -p clipcraft/server test installDist --stacktrace
+
+      - name: Server Docker image builds
+        run: docker build -f clipcraft/server/Dockerfile -t clipcraft-server clipcraft
+
       - name: Android lint
         run: ./gradlew -p clipcraft :app:lintDebug --stacktrace
 
@@ -50,5 +56,6 @@ jobs:
           name: clipcraft-reports
           path: |
             clipcraft/core/build/reports/
+            clipcraft/server/build/reports/
             clipcraft/app/build/reports/
           retention-days: 7

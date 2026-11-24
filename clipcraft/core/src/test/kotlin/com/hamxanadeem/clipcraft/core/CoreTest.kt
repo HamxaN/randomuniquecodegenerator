@@ -181,7 +181,7 @@ class AdvisorTest {
     @Test
     fun `too little speech is refused before any request`() {
         val e = assertThrows(AdvisorException::class.java) {
-            ClipAdvisor("test-key").suggest(Transcript(listOf(Word("hi", 0.0, 0.5))))
+            ClipAdvisor("test-key").suggest(Transcript(listOf(Word("hi", 0.0, 0.5))), 5, "", FloatArray(0))
         }
         assertTrue(e.message!!.contains("Not enough speech"))
     }
