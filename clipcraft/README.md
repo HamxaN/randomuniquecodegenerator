@@ -41,6 +41,22 @@ Before making a clip you can:
 * **fix the captions** word by word. If you change the number of words, the new
   words share that caption's time evenly.
 
+## With or without Claude: the AI page
+
+Each user picks how clips are found on the **AI page**. Open it from the line
+under "Pick a video", or from Settings → AI clip finder. The choice is saved on
+that phone, so every user decides for themselves:
+
+| Mode | What happens |
+|---|---|
+| **Without Claude (offline)** | Nothing leaves the phone and it's free. Clips are scored by pace, questions, strong words and the opening line. Captions, editing, reframing and posting all still work. |
+| **Claude, with my own API key** | The transcript text (never the video) goes to Claude Haiku. You get smarter picks, titles, hooks and hashtags. |
+| **Claude, through a ClipCraft server** | The same as above, but the server holds the key (see below). |
+
+**Test Claude** sends a tiny sample transcript to check that the key or server
+works. If Claude can't be reached during real use, the app falls back to offline
+picks and says so. Urdu and Roman Urdu captions need Claude.
+
 ## Projects and background work
 
 Every video becomes a **saved project** on the home screen. Its clips, edits,
@@ -109,8 +125,8 @@ docker run -p 8080:8080 -e ANTHROPIC_API_KEY=... -e APP_TOKEN=... clipcraft-serv
 ```
 
 Put it behind HTTPS on any host that runs containers: Cloud Run, Fly.io,
-Railway or a VPS with Caddy. Then, in the app's Settings, turn on **Use a
-ClipCraft server** and enter its address and token. The endpoints are:
+Railway or a VPS with Caddy. Then, on the app's AI page, choose **Claude, through
+a ClipCraft server** and enter its address and token. The endpoints are:
 
 * `GET /health`
 * `POST /v1/clips`

@@ -57,6 +57,11 @@
             android:name="com.google.mlkit.vision.DEPENDENCIES"
             android:value="face" />
 
+        <activity
+            android:name=".ui.AiActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.files"

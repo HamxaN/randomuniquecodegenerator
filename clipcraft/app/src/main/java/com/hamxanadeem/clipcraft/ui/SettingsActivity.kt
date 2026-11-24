@@ -1,10 +1,10 @@
 package com.hamxanadeem.clipcraft.ui
 
+import android.content.Intent
 import android.os.Bundle
-import android.view.View
+import android.widget.Button
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
-import android.widget.EditText
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.appbar.MaterialToolbar
@@ -41,15 +41,7 @@ class SettingsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_settings)
         Ui.fitSystemBars(findViewById(R.id.root))
         findViewById<MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener { finish() }
-        findViewById<EditText>(R.id.api_key).setText(Settings.apiKey(this))
-        findViewById<EditText>(R.id.notes).setText(Settings.notes(this))
-        findViewById<EditText>(R.id.server_url).setText(Settings.serverUrl(this))
-        findViewById<EditText>(R.id.server_token).setText(Settings.serverToken(this))
-        val useServer = findViewById<MaterialSwitch>(R.id.use_server)
-        val serverBox = findViewById<View>(R.id.server_box)
-        useServer.isChecked = Settings.useServer(this)
-        serverBox.visibility = if (useServer.isChecked) View.VISIBLE else View.GONE
-        useServer.setOnCheckedChangeListener { _, on -> serverBox.visibility = if (on) View.VISIBLE else View.GONE }
+        findViewById<Button>(R.id.open_ai).setOnClickListener { startActivity(Intent(this, AiActivity::class.java)) }
 
         val lang = findViewById<AutoCompleteTextView>(R.id.language)
         lang.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, Languages.ALL.map { it.name }))
@@ -73,13 +65,17 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<MaterialSwitch>(R.id.reframe).isChecked = Settings.reframe(this)
     }
 
+    override fun onResume() {
+        super.onResume()
+        findViewById<Button>(R.id.open_ai).setText(when (Settings.aiMode(this)) {
+            Settings.AI_KEY -> if (Settings.aiReady(this)) R.string.ai_row_key else R.string.ai_row_incomplete
+            Settings.AI_SERVER -> if (Settings.aiReady(this)) R.string.ai_row_server else R.string.ai_row_incomplete
+            else -> R.string.ai_row_off
+        })
+    }
+
     override fun onPause() {
         super.onPause()
-        Settings.setApiKey(this, findViewById<EditText>(R.id.api_key).text.toString())
-        Settings.setNotes(this, findViewById<EditText>(R.id.notes).text.toString())
-        Settings.setUseServer(this, findViewById<MaterialSwitch>(R.id.use_server).isChecked)
-        Settings.setServerUrl(this, findViewById<EditText>(R.id.server_url).text.toString())
-        Settings.setServerToken(this, findViewById<EditText>(R.id.server_token).text.toString())
         val langName = findViewById<AutoCompleteTextView>(R.id.language).text.toString()
         Languages.ALL.firstOrNull { it.name == langName }?.let { Settings.setLanguage(this, it.code) }
         privacy.value()?.let { Settings.setPrivacy(this, it) }

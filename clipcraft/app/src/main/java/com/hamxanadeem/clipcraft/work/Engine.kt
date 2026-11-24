@@ -238,11 +238,13 @@ object Engine {
         transcripts.remove(id)
     }
 
-    /** Who to ask for AI help: the ClipCraft server, the user's own Claude key, or nobody (offline). */
-    fun source(): ClipSource? = when {
-        Settings.useServer(app) -> Settings.serverUrl(app).takeIf { it.isNotBlank() }
-            ?.let { ServerClipSource(it, Settings.serverToken(app), Settings.deviceId(app)) }
-        Settings.apiKey(app).isNotBlank() -> ClipAdvisor(Settings.apiKey(app))
+    /** Who to ask for AI help, per this user's choice on the AI page, or null for no Claude (offline). */
+    fun source(): ClipSource? = source(app)
+
+    fun source(c: Context): ClipSource? = when (Settings.aiMode(c)) {
+        Settings.AI_KEY -> Settings.apiKey(c).takeIf { it.isNotBlank() }?.let { ClipAdvisor(it) }
+        Settings.AI_SERVER -> Settings.serverUrl(c).takeIf { it.isNotBlank() }
+            ?.let { ServerClipSource(it, Settings.serverToken(c), Settings.deviceId(c)) }
         else -> null
     }
 

@@ -49,8 +49,24 @@ object Settings {
     fun reframe(c: Context): Boolean = p(c).getBoolean("reframe", true)
     fun setReframe(c: Context, v: Boolean) = p(c).edit { putBoolean("reframe", v) }
 
-    fun useServer(c: Context): Boolean = p(c).getBoolean("use_server", false)
-    fun setUseServer(c: Context, v: Boolean) = p(c).edit { putBoolean("use_server", v) }
+    const val AI_OFF = "off"
+    const val AI_KEY = "key"
+    const val AI_SERVER = "server"
+
+    /**
+     * How this user finds clips: [AI_KEY] (Claude with their own key), [AI_SERVER]
+     * (Claude through a ClipCraft server) or [AI_OFF] (no Claude, all on the phone).
+     * Each user (each phone) chooses for themselves.
+     */
+    fun aiMode(c: Context): String = p(c).getString("ai_mode", null)
+        ?: when {
+            // Older installs: keep whatever they had set up.
+            p(c).getBoolean("use_server", false) -> AI_SERVER
+            apiKey(c).isNotBlank() -> AI_KEY
+            else -> AI_OFF
+        }
+
+    fun setAiMode(c: Context, v: String) = p(c).edit { putString("ai_mode", v) }
 
     fun serverUrl(c: Context): String = p(c).getString("server_url", "") ?: ""
     fun setServerUrl(c: Context, v: String) = p(c).edit { putString("server_url", v.trim()) }
@@ -67,6 +83,10 @@ object Settings {
         return n
     }
 
-    /** True when there's a way to ask the AI: the user's own key or a ClipCraft server. */
-    fun aiReady(c: Context): Boolean = if (useServer(c)) serverUrl(c).isNotBlank() else apiKey(c).isNotBlank()
+    /** True when Claude is switched on and has what it needs. */
+    fun aiReady(c: Context): Boolean = when (aiMode(c)) {
+        AI_KEY -> apiKey(c).isNotBlank()
+        AI_SERVER -> serverUrl(c).isNotBlank()
+        else -> false
+    }
 }

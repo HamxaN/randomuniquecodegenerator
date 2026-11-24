@@ -73,7 +73,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<View>(R.id.pick).setOnClickListener {
             pick.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
         }
-        findViewById<View>(R.id.settings_hint).setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
+        findViewById<View>(R.id.settings_hint).setOnClickListener { startActivity(Intent(this, AiActivity::class.java)) }
         if (Build.VERSION.SDK_INT >= 33) askNotify.launch(Manifest.permission.POST_NOTIFICATIONS)
         if (savedInstanceState == null) handle(intent)
         resumeUnfinished()
@@ -102,7 +102,11 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         Engine.listen(refresh)
         reload()
-        findViewById<TextView>(R.id.settings_hint).setText(if (Settings.aiReady(this)) R.string.ai_ready else R.string.ai_missing)
+        findViewById<TextView>(R.id.settings_hint).setText(when {
+            Settings.aiReady(this) -> R.string.ai_ready
+            Settings.aiMode(this) == Settings.AI_OFF -> R.string.ai_off_hint
+            else -> R.string.ai_missing
+        })
     }
 
     override fun onPause() {
