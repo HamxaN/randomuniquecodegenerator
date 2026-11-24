@@ -20,6 +20,10 @@ class ProjectTest {
         val back = ProjectCodec.decode(ProjectCodec.encode(p))
         assertEquals(p, back)
         assertNull(ProjectCodec.decode("not json"))
+        val fromYouTube = p.copy(origin = "YouTube")
+        assertEquals(fromYouTube, ProjectCodec.decode(ProjectCodec.encode(fromYouTube)))
+        assertTrue(p.postable)
+        assertFalse(fromYouTube.postable)
     }
 }
 

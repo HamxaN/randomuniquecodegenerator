@@ -13,6 +13,7 @@ playServicesAuth = "21.2.0"
 okhttp = "4.12.0"
 guava = "33.3.1-android"
 mlkitFace = "17.1.0"
+ytdl = "0.18.1"
 junitJupiter = "5.11.4"
 
 [libraries]
@@ -31,6 +32,8 @@ jna = { group = "net.java.dev.jna", name = "jna", version.ref = "jna" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }
 mlkit-face = { group = "com.google.android.gms", name = "play-services-mlkit-face-detection", version.ref = "mlkitFace" }
+ytdl-library = { group = "io.github.junkfood02.youtubedl-android", name = "library", version.ref = "ytdl" }
+ytdl-ffmpeg = { group = "io.github.junkfood02.youtubedl-android", name = "ffmpeg", version.ref = "ytdl" }
 play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
 junit-bom = { group = "org.junit", name = "junit-bom", version.ref = "junitJupiter" }
 junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter" }

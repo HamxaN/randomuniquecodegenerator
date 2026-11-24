@@ -389,6 +389,15 @@ class ProjectActivity : AppCompatActivity() {
      * them spaced out (YouTube publishes scheduled videos itself, even if the phone is off).
      */
     private fun askUpload(indices: List<Int>) {
+        val origin = project?.origin
+        if (origin != null) {
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.not_postable_title)
+                .setMessage(getString(R.string.not_postable_body, origin))
+                .setPositiveButton(R.string.ok, null)
+                .show()
+            return
+        }
         if (indices.isEmpty()) {
             Ui.toast(this, getString(R.string.nothing_to_upload))
             return

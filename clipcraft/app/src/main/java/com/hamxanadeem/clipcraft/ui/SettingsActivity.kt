@@ -63,6 +63,7 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<MaterialSwitch>(R.id.captions).isChecked = Settings.captions(this)
         findViewById<MaterialSwitch>(R.id.hook).isChecked = Settings.hook(this)
         findViewById<MaterialSwitch>(R.id.reframe).isChecked = Settings.reframe(this)
+        findViewById<MaterialSwitch>(R.id.platform_links).isChecked = Settings.allowPlatformLinks(this)
     }
 
     override fun onResume() {
@@ -86,5 +87,6 @@ class SettingsActivity : AppCompatActivity() {
         Settings.setCaptions(this, findViewById<MaterialSwitch>(R.id.captions).isChecked)
         Settings.setHook(this, findViewById<MaterialSwitch>(R.id.hook).isChecked)
         Settings.setReframe(this, findViewById<MaterialSwitch>(R.id.reframe).isChecked)
+        Settings.setAllowPlatformLinks(this, findViewById<MaterialSwitch>(R.id.platform_links).isChecked)
     }
 }

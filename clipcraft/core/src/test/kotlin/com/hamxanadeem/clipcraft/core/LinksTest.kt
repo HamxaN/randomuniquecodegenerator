@@ -26,6 +26,10 @@ class LinksTest {
             assertTrue(Links.resolve(u) is Links.Result.Refused, u)
         }
         assertTrue((Links.resolve("https://youtu.be/abc") as Links.Result.Refused).reason.contains("YouTube Studio"))
+        // The internal testing switch lets platform links through, labelled with the site.
+        assertEquals(Links.Result.Platform("https://youtu.be/abc", "YouTube"), Links.resolve("https://youtu.be/abc", allowPlatforms = true))
+        assertEquals("TikTok", (Links.resolve("see https://vm.tiktok.com/x", true) as Links.Result.Platform).site)
+        assertTrue(Links.resolve("https://example.com/v.mp4", true) is Links.Result.Download)
     }
 
     @Test

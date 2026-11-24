@@ -28,3 +28,8 @@
 -dontwarn java.lang.reflect.AnnotatedParameterizedType
 -dontwarn com.google.auto.value.AutoValue
 -dontwarn com.google.auto.value.**
+
+# Testing downloader (yt-dlp for Android): JSON is mapped onto these classes by Jackson.
+-keep class com.yausername.** { *; }
+-dontwarn com.yausername.**
+-dontwarn org.apache.commons.compress.**

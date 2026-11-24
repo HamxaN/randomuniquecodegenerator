@@ -34,6 +34,7 @@ import com.hamxanadeem.clipcraft.data.Settings
 import com.hamxanadeem.clipcraft.media.ClipRenderer
 import com.hamxanadeem.clipcraft.media.Downloader
 import com.hamxanadeem.clipcraft.media.FaceTracker
+import com.hamxanadeem.clipcraft.media.PlatformDownloader
 import com.hamxanadeem.clipcraft.media.Speech
 import com.hamxanadeem.clipcraft.media.Style
 import com.hamxanadeem.clipcraft.ui.MainActivity
@@ -133,6 +134,8 @@ object Engine {
      * per clip for scheduled posts, or nulls to post now with [privacy].
      */
     fun upload(id: String, indices: List<Int>, token: String, privacy: String, publishAt: List<String?>) {
+        // Clips cut from someone else's platform video are never posted.
+        if (ProjectStore.get(app, id)?.postable == false) return
         indices.forEachIndexed { k, i ->
             enqueue(cKey(id, i)) { runUpload(id, i, token, privacy, publishAt.getOrNull(k)) }
         }
@@ -192,6 +195,13 @@ object Engine {
      */
     private fun readable(p: Project): Project {
         val uri = Uri.parse(p.video)
+        if (p.origin != null && (uri.scheme == "http" || uri.scheme == "https")) {
+            val key = pKey(p.id)
+            val f = PlatformDownloader.fetch(app, p.video, ProjectStore.dir(app, p.id)) { _, pct ->
+                set(key, if (pct < 0) app.getString(R.string.preparing_download, p.origin) else app.getString(R.string.downloading_video, pct))
+            }
+            return ProjectStore.update(app, p.id) { it.copy(video = Uri.fromFile(f).toString()) } ?: p
+        }
         if (uri.scheme == "http" || uri.scheme == "https") {
             set(pKey(p.id), app.getString(R.string.downloading_video, 0))
             val f = File(ProjectStore.dir(app, p.id), "video.mp4")

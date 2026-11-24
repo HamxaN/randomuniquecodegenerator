@@ -22,6 +22,10 @@ android {
         targetSdk = 36
         versionCode = secret("VERSION_CODE")?.toInt() ?: 1
         versionName = secret("VERSION_NAME") ?: "1.0.0"
+        // Phones only: the bundled downloader (Python + FFmpeg) is large for each CPU type.
+        ndk {
+            abiFilters += setOf("arm64-v8a", "armeabi-v7a")
+        }
     }
 
     signingConfigs {
@@ -50,6 +54,10 @@ android {
     }
 
     packaging {
+        // The testing downloader runs Python and FFmpeg from the extracted native libraries.
+        jniLibs {
+            useLegacyPackaging = true
+        }
         resources {
             excludes += setOf("META-INF/DEPENDENCIES", "META-INF/LICENSE*", "META-INF/NOTICE*", "META-INF/*.kotlin_module",
                 "META-INF/versions/9/OSGI-INF/MANIFEST.MF")
@@ -90,6 +98,8 @@ dependencies {
     implementation(libs.media3.ui)
     implementation(libs.play.services.auth)
     implementation(libs.mlkit.face)
+    implementation(libs.ytdl.library)
+    implementation(libs.ytdl.ffmpeg)
     implementation(libs.anthropic.java)
     implementation(libs.okhttp)
     implementation(libs.guava)

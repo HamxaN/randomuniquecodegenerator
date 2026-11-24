@@ -8,6 +8,9 @@ object Links {
         /** A link to fetch the video file from. */
         data class Download(val url: String, val name: String) : Result()
 
+        /** A video page on a platform (YouTube, TikTok…), fetched with the testing downloader. */
+        data class Platform(val url: String, val site: String) : Result()
+
         /** A link ClipCraft won't fetch, with what to do instead. */
         data class Refused(val reason: String) : Result()
     }
@@ -22,11 +25,16 @@ object Links {
     /** Pulls the first http(s) link out of shared or pasted text. */
     fun find(text: String): String? = Regex("https?://\\S+").find(text)?.value?.trimEnd('.', ',', ')', '"', '\'')
 
-    fun resolve(input: String): Result {
+    /**
+     * [allowPlatforms] is the internal testing switch: platform links are then fetched
+     * instead of refused.
+     */
+    fun resolve(input: String, allowPlatforms: Boolean = false): Result {
         val raw = find(input.trim()) ?: return Result.Refused("That doesn't look like a link. It should start with https://")
         val uri = runCatching { URI(raw) }.getOrNull() ?: return Result.Refused("That link isn't valid.")
         val host = (uri.host ?: return Result.Refused("That link isn't valid.")).lowercase().removePrefix("www.").removePrefix("m.")
         platforms.entries.firstOrNull { host == it.key || host.endsWith("." + it.key) }?.let { (_, site) ->
+            if (allowPlatforms) return Result.Platform(raw, site)
             return Result.Refused(
                 "$site doesn't allow other apps to download its videos, and re-posting someone else's video can get your channel a copyright strike. " +
                     "If it's your own video, download the original file (for YouTube: YouTube Studio → Content → ⋮ → Download) and pick it from your phone."

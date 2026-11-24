@@ -38,14 +38,14 @@ object ProjectStore {
     }
 
     /** Starts a project for a video, keeping long-term read access to it where Android allows. */
-    fun create(c: Context, video: Uri, language: String, name: String? = null): Project {
+    fun create(c: Context, video: Uri, language: String, name: String? = null, origin: String? = null): Project {
         if (video.scheme == "content") {
             runCatching { c.contentResolver.takePersistableUriPermission(video, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
         }
         val now = System.currentTimeMillis()
         val p = Project(UUID.randomUUID().toString().take(12),
             name ?: ("Video " + DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(now))),
-            video.toString(), now, language)
+            video.toString(), now, language, origin = origin)
         save(c, p)
         return p
     }

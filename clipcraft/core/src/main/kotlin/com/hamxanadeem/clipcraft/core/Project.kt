@@ -22,7 +22,11 @@ data class Project(
     val message: String = "",
     val aiUsed: Boolean = false,
     val clips: List<ClipState> = emptyList(),
+    /** Set when the video came from someone's platform page (e.g. "YouTube"); such clips can't be posted. */
+    val origin: String? = null,
 ) {
+    val postable: Boolean get() = origin == null
+
     companion object {
         const val NEW = "new"
         const val WORKING = "working"
@@ -43,6 +47,7 @@ object ProjectCodec {
         append(",\"status\":").append(Json.quote(p.status))
         append(",\"message\":").append(Json.quote(p.message))
         append(",\"ai\":").append(p.aiUsed)
+        p.origin?.let { append(",\"origin\":").append(Json.quote(it)) }
         append(",\"clips\":[")
         p.clips.forEachIndexed { i, c ->
             if (i > 0) append(',')
@@ -88,6 +93,7 @@ object ProjectCodec {
                 } else null
                 ClipState(plan, words, m["rendered"] as? String, m["yt"] as? String, m["ytStatus"] as? String, m["publishAt"] as? String)
             },
+            o["origin"] as? String,
         )
     }.getOrNull()
 }

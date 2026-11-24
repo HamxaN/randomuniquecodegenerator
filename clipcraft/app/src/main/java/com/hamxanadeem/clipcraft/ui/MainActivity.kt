@@ -176,14 +176,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startLink(text: String) {
-        when (val r = Links.resolve(text)) {
+        when (val r = Links.resolve(text, Settings.allowPlatformLinks(this))) {
             is Links.Result.Refused -> MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.link_refused_title)
-                .setMessage(r.reason)
+                .setMessage(r.reason + "\n\n" + getString(R.string.platform_links_hint))
                 .setPositiveButton(R.string.ok, null)
                 .show()
             is Links.Result.Download -> {
                 val p = ProjectStore.create(this, Uri.parse(r.url), Settings.language(this), getString(R.string.link_project_name, r.name.take(40)))
+                Engine.analyze(p.id)
+                open(p.id)
+            }
+            is Links.Result.Platform -> {
+                val p = ProjectStore.create(this, Uri.parse(r.url), Settings.language(this),
+                    getString(R.string.platform_project_name, r.site), origin = r.site)
                 Engine.analyze(p.id)
                 open(p.id)
             }

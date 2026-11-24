@@ -17,6 +17,14 @@ posts them straight to your channel.
    are refused with an explanation. Those sites don't allow downloading, and
    re-posting other people's videos gets channels copyright strikes. For your
    own YouTube videos, download the original from YouTube Studio.
+
+   **Internal testing switch** (Settings → Testing, off by default): allows
+   YouTube, TikTok and Instagram links. The video is downloaded with yt-dlp
+   for Android (bundled with FFmpeg, and updated at most once a day). Clips
+   from these projects can be previewed, edited and saved, but posting them to
+   YouTube is blocked. This switch is meant for a private build. Remove it
+   before publishing anywhere, because Google Play rejects apps that download
+   from YouTube.
 2. **Transcribe on the phone.** The soundtrack is decoded and transcribed offline
    with word timings, using [Vosk](https://alphacephei.com/vosk/). The first time
    you use a language, its speech model (about 40 MB) downloads once. Languages:

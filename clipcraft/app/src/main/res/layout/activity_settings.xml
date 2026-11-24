@@ -149,6 +149,18 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <TextView style="@style/Note" android:text="@string/youtube_note" />
+
+            <TextView style="@style/CardTitle" android:layout_marginTop="20dp" android:text="@string/testing_section" />
+
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/platform_links"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:minHeight="48dp"
+                android:text="@string/platform_links_switch" />
+
+            <TextView style="@style/Note" android:text="@string/platform_links_note" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

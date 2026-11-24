@@ -83,6 +83,10 @@ object Settings {
         return n
     }
 
+    /** Internal testing: allow YouTube/TikTok/Instagram links (clips from them can't be posted). */
+    fun allowPlatformLinks(c: Context): Boolean = p(c).getBoolean("platform_links", false)
+    fun setAllowPlatformLinks(c: Context, v: Boolean) = p(c).edit { putBoolean("platform_links", v) }
+
     /** True when Claude is switched on and has what it needs. */
     fun aiReady(c: Context): Boolean = when (aiMode(c)) {
         AI_KEY -> apiKey(c).isNotBlank()
