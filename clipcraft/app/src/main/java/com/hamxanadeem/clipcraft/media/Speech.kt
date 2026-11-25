@@ -3,6 +3,7 @@ package com.hamxanadeem.clipcraft.media
 import android.content.Context
 import android.net.Uri
 import com.hamxanadeem.clipcraft.core.Copyright
+import com.hamxanadeem.clipcraft.core.Wav
 import com.hamxanadeem.clipcraft.core.Json
 import com.hamxanadeem.clipcraft.core.Transcript
 import com.hamxanadeem.clipcraft.core.Word
@@ -67,7 +68,11 @@ object Speech {
     /** A transcript plus the soundtrack's loudness every half second (for the music check). */
     class Result(val transcript: Transcript, val loudness: FloatArray)
 
-    fun transcribe(context: Context, uri: Uri, m: SpeechModel, onProgress: (Float) -> Unit): Result {
+    /**
+     * Transcribes the video's sound. With [wav] (a 16 kHz soundtrack FFmpeg already made),
+     * that file is read directly instead of decoding the video with the phone's codecs.
+     */
+    fun transcribe(context: Context, uri: Uri, m: SpeechModel, onProgress: (Float) -> Unit, wav: File? = null): Result {
         LibVosk.setLogLevel(LogLevel.WARNINGS)
         val model = Model(modelDir(context, m).absolutePath)
         val rec = Recognizer(model, AudioDecoder.RATE.toFloat())
@@ -78,7 +83,7 @@ object Speech {
         var sumSq = 0.0
         var count = 0
         try {
-            AudioDecoder.decode(context, uri, onProgress) { pcm ->
+            val pcmSink: (ByteArray) -> Unit = { pcm ->
                 var i = 0
                 while (i + 1 < pcm.size) {
                     val v = ((pcm[i + 1].toInt() shl 8) or (pcm[i].toInt() and 0xFF)) / 32768.0
@@ -92,6 +97,11 @@ object Speech {
                     i += 2
                 }
                 if (rec.acceptWaveForm(pcm, pcm.size)) results += rec.result
+            }
+            if (wav != null) {
+                wav.inputStream().use { Wav.read(it, wav.length(), onProgress, pcmSink) }
+            } else {
+                AudioDecoder.decode(context, uri, onProgress, pcmSink)
             }
             results += rec.finalResult
             if (count > 0) loudness += sqrt(sumSq / count).toFloat()

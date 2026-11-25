@@ -231,13 +231,13 @@ object Engine {
             }
             onStatus(app.getString(R.string.transcribing_pct, 0))
             var lastPct = -1
-            val r = Speech.transcribe(app, Uri.parse(p.video), model) { f ->
+            val r = Speech.transcribe(app, Uri.parse(p.video), model, { f ->
                 val pct = (f * 100).toInt()
                 if (pct != lastPct) {
                     lastPct = pct
                     onStatus(app.getString(R.string.transcribing_pct, pct))
                 }
-            }
+            }, PlatformDownloader.soundtrack(dir))
             t = r.transcript
             loud = r.loudness
             Speech.save(tf, t)

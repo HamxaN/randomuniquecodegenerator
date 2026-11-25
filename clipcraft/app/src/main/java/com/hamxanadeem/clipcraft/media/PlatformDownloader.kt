@@ -32,6 +32,9 @@ object PlatformDownloader {
         }
     }
 
+    /** The 16 kHz soundtrack written next to a downloaded video, if there is one. */
+    fun soundtrack(dir: File): File? = File(dir, "video.wav").takeIf { it.length() > 44 }
+
     /** Downloads [url] into [dir] as video.mp4 (best quality up to 1080p) and returns the file. */
     fun fetch(c: Context, url: String, dir: File, onStatus: (String?, Int) -> Unit): File {
         onStatus(null, -1)
@@ -40,12 +43,20 @@ object PlatformDownloader {
         } catch (e: Exception) {
             throw IOException("The downloader couldn't start: ${e.message}", e)
         }
-        dir.listFiles { f -> f.name.startsWith("video.") }?.forEach { it.delete() }
+        dir.listFiles { f -> f.name.startsWith("video") }?.forEach { it.delete() }
         val req = YoutubeDLRequest(url)
             .addOption("--no-playlist")
             .addOption("--no-mtime")
-            .addOption("-f", "bv*[height<=1080][ext=mp4]+ba[ext=m4a]/bv*[height<=1080]+ba/b[height<=1080]/b")
+            // H.264 video + AAC sound play and edit on every Android phone; VP9/AV1/Opus often don't.
+            .addOption("-f", "bv*[height<=1080][vcodec^=avc1]+ba[acodec^=mp4a]/b[height<=1080][vcodec^=avc1][acodec^=mp4a]/" +
+                "bv*[height<=1080][ext=mp4]+ba[ext=m4a]/bv*[height<=1080]+ba/b[height<=1080]/b")
             .addOption("--merge-output-format", "mp4")
+            // Also write the soundtrack as 16 kHz mono WAV with FFmpeg, so transcription
+            // doesn't depend on the phone's own audio decoders. -k keeps the video.
+            .addOption("-x")
+            .addOption("-k")
+            .addOption("--audio-format", "wav")
+            .addOption("--postprocessor-args", "ExtractAudio:-ar 16000 -ac 1 -sample_fmt s16")
             .addOption("-o", File(dir, "video.%(ext)s").absolutePath)
         try {
             YoutubeDL.getInstance().execute(req, "dl-" + dir.name) { progress, _, _ ->
@@ -55,7 +66,8 @@ object PlatformDownloader {
             val msg = e.message?.lineSequence()?.lastOrNull { it.contains("ERROR") }?.substringAfter("ERROR:")?.trim()
             throw IOException(msg ?: "The video couldn't be downloaded. It may be private, age-restricted or region-locked.", e)
         }
-        return dir.listFiles { f -> f.name.startsWith("video.") && !f.name.endsWith(".part") }?.maxByOrNull { it.length() }
+        return dir.listFiles { f -> f.name.startsWith("video.") && !f.name.endsWith(".part") && !f.name.endsWith(".wav") }
+            ?.maxByOrNull { it.length() }
             ?: throw IOException("The download finished but no video file was found.")
     }
 }

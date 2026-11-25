@@ -33,9 +33,19 @@ object AudioDecoder {
         ex.selectTrack(track)
         val fmt = ex.getTrackFormat(track)
         val durationUs = if (fmt.containsKey(MediaFormat.KEY_DURATION)) fmt.getLong(MediaFormat.KEY_DURATION) else 0L
-        val codec = MediaCodec.createDecoderByType(fmt.getString(MediaFormat.KEY_MIME)!!)
-        codec.configure(fmt, null, null, 0)
-        codec.start()
+        val mime = fmt.getString(MediaFormat.KEY_MIME)!!
+        var made: MediaCodec? = null
+        val codec = try {
+            MediaCodec.createDecoderByType(mime).also {
+                made = it
+                it.configure(fmt, null, null, 0)
+                it.start()
+            }
+        } catch (e: Exception) {
+            runCatching { made?.release() }
+            ex.release()
+            throw IllegalStateException("This phone can't decode the video's sound ($mime).", e)
+        }
         var inRate = fmt.getInteger(MediaFormat.KEY_SAMPLE_RATE)
         var channels = fmt.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
         val info = MediaCodec.BufferInfo()
@@ -45,6 +55,7 @@ object AudioDecoder {
         var phase = 0.0
         var prev = 0f
         try {
+          try {
             while (!outputDone) {
                 if (!inputDone) {
                     val ii = codec.dequeueInputBuffer(10_000)
@@ -96,8 +107,11 @@ object AudioDecoder {
                     }
                 }
             }
+          } catch (e: IllegalStateException) {
+            throw IllegalStateException("The phone's decoder failed on this video's sound ($mime).", e)
+          }
         } finally {
-            codec.stop()
+            runCatching { codec.stop() }
             codec.release()
             ex.release()
         }
