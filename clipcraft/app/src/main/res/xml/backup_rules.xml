@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Back up settings only: not the API key, speech models, transcripts or clips. -->
+<full-backup-content>
+    <include domain="sharedpref" path="clipcraft.xml" />
+</full-backup-content>
