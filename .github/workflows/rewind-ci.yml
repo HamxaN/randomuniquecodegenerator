@@ -1,0 +1,54 @@
+name: Rewind Defense CI
+
+on:
+  push:
+    branches: ['**']
+    paths: ['rewind/**', 'gradle/wrapper/**', '.github/workflows/rewind-ci.yml']
+  pull_request:
+    paths: ['rewind/**', 'gradle/wrapper/**', '.github/workflows/rewind-ci.yml']
+
+concurrency:
+  group: rewind-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Test, lint and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Unit tests (game rules, rewind, balance)
+        run: ./gradlew -p rewind coreTest --stacktrace
+
+      - name: Android lint
+        run: ./gradlew -p rewind :app:lintDebug --stacktrace
+
+      - name: Build debug APK and release bundle
+        # Unsigned and with test ads; real releases use rewind-release.yml.
+        run: ./gradlew -p rewind :app:assembleDebug :app:bundleRelease --stacktrace
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: rewind-debug-apk
+          path: rewind/app/build/outputs/apk/debug/*.apk
+          retention-days: 14
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rewind-reports
+          path: |
+            rewind/core/build/reports/
+            rewind/app/build/reports/
+          retention-days: 7
