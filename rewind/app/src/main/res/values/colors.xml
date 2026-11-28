@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg">#FF0E1420</color>
+    <color name="panel">#E6151C2B</color>
+    <color name="panel_solid">#FF1B2335</color>
+    <color name="accent">#FFB388FF</color>
+    <color name="accent_dark">#FF7C4DFF</color>
+    <color name="gold">#FFFFD54F</color>
+    <color name="life">#FFFF6E6E</color>
+    <color name="ink">#FFF3F4F8</color>
+    <color name="ink_soft">#FFA9B0C2</color>
+    <color name="launcher_background">#FF1A1030</color>
+</resources>
