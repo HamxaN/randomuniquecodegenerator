@@ -106,7 +106,7 @@ class GameActivity : AppCompatActivity(), GameView.Listener {
             setPadding(Kit.dp(this@GameActivity, 14), Kit.dp(this@GameActivity, 6), Kit.dp(this@GameActivity, 14), Kit.dp(this@GameActivity, 6))
             visibility = View.GONE
         }
-        root.addView(hint, FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.TOP or Gravity.CENTER_HORIZONTAL).apply { topMargin = Kit.dp(this, 64) })
+        root.addView(hint, FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.TOP or Gravity.CENTER_HORIZONTAL).apply { topMargin = Kit.dp(this@GameActivity, 64) })
 
         // Start wave (bottom centre).
         val startBox = Kit.column(this)

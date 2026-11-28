@@ -190,7 +190,7 @@ class MenuActivity : AppCompatActivity() {
             }
         }
         col.addView(sound, Kit.lp(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
-        val full = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = Kit.dp(this, 6) }
+        val full = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = Kit.dp(this@MenuActivity, 6) }
         if (Store.adsRemoved(this)) {
             col.addView(Kit.text(this, getString(R.string.ads_removed), 16f, bold = true, color = R.color.gold), full)
         } else {
